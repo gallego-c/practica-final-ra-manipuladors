@@ -4,7 +4,7 @@ Welcome to the **UR3 Robot Arm 2×2 Rubik's Cube Solver** repository. This proje
 
 ---
 
-## 📌 1. Physical Setup & Manipulation Constraints
+## 1. Physical Setup & Manipulation Constraints
 
 Standard Rubik's cube solvers assume arbitrary face turns ($U, D, R, L, F, B$). However, when a robotic manipulator solves a cube, it is bound by physical and kinematical constraints:
 1. **Vertical Grasp Constraint**: The UR3 robot arm is mounted above the table and can only grasp the cube **vertically from above** (top-down grasp) using its **Robotiq 85 gripper**.
@@ -13,9 +13,9 @@ Standard Rubik's cube solvers assume arbitrary face turns ($U, D, R, L, F, B$). 
 4. **Whole-Cube Tilts (Reorientation)**: To rotate other faces or make them accessible to the top layer, the robot must lift the cube, tilt/roll it 90° around the horizontal $X$ or $Y$ axis (effectively changing which face is on top), and place it back into the base fixture.
 
 This physical constraints system restricts the robot to exactly **6 atomic manipulation actions**:
-* 🔄 **`rotate_top_cw`** / **`rotate_top_ccw`**: Spin the wrist while holding the cube, turning only the top layer.
-* ↕️ **`tilt_x_pos`** / **`tilt_x_neg`**: Pick the cube, roll/tip it forward or backward ($90^\circ$ around the $X$-axis), and place it back on the fixture.
-* ↔️ **`tilt_y_pos`** / **`tilt_y_neg`**: Pick the cube, roll/tip it rightward or leftward ($90^\circ$ around the $Y$-axis), and place it back on the fixture.
+* **`rotate_top_cw`** / **`rotate_top_ccw`**: Spin the wrist while holding the cube, turning only the top layer.
+* **`tilt_x_pos`** / **`tilt_x_neg`**: Pick the cube, roll/tip it forward or backward ($90^\circ$ around the $X$-axis), and place it back on the fixture.
+* **`tilt_y_pos`** / **`tilt_y_neg`**: Pick the cube, roll/tip it rightward or leftward ($90^\circ$ around the $Y$-axis), and place it back on the fixture.
 
 ---
 
@@ -38,7 +38,7 @@ robotica/cub/
 
 ---
 
-## 🛠️ 3. PDDL Modeling (`robot/domain.pddl`)
+## 3. PDDL Modeling (`robot/domain.pddl`)
 
 The PDDL domain defines the state representation and actions mapping directly to physical robot trajectories.
 
@@ -65,7 +65,7 @@ The PDDL domain defines the state representation and actions mapping directly to
 
 ---
 
-## 🚀 4. Running the Optimal Python Solver
+## 4. Running the Optimal Python Solver
 
 The script `solver.py` contains a high-performance **bidirectional Breadth-First Search (BFS)** solver. It finds the **absolute minimum number of robot actions** to solve the cube from any starting scramble, and automatically outputs the corresponding PDDL `problem.pddl` file.
 
@@ -121,7 +121,7 @@ Solving with bidirectional BFS...
 
 ---
 
-## 🤖 5. Kautham GUI Simulation & Verification
+## 5. Kautham GUI Simulation & Verification
 
 **Kautham** is a motion planning tool that allows you to load robots and obstacles, define queries, and compute obstacle-free trajectories using OMPL algorithms (like RRT-Connect).
 
@@ -145,7 +145,7 @@ We have provided a custom Kautham scene XML file: `kautham/ur3_rubik_kautham.xml
      * A **square fixture** (the block holding the cube, modeled from `square_fixture.urdf`).
      * The **2×2 Rubik's cube** (modeled from `rubik_cube_2x2.urdf`) placed precisely on the fixture.
 
-### 📦 Native 2×2 Rubik's Cube & Fixture URDF Modeling
+### Native 2×2 Rubik's Cube & Fixture URDF Modeling
 
 The 2×2 Rubik's cube and its base holder are modeled locally using native, parameter-based URDF box primitives rather than scaled generic files:
 1. **`rubik_cube_2x2.urdf`**: Models the 2×2 Rubik's cube as a single rigid obstacle (without internal joints) of exactly **$5.0 \text{ cm} \times 5.0 \text{ cm} \times 5.0 \text{ cm}$** ($0.05 \text{ m}$ side length). It is colored matte carbon black.
@@ -168,4 +168,4 @@ By avoiding complex multi-joint models inside Kautham for the cube itself, the p
 Using this setup, each step returned by the PDDL planner or the BFS Python solver (such as `pick`, `rotate_top_cw`, `tilt_x_pos`, `place`) can be mapped directly to a collision-free joint trajectory in Kautham!
 
 ---
-Developed for Robotic Manipulation and Planning with PDDL & Kautham. Enjoy solving! 🚀
+Developed for Robotic Manipulation and Planning with PDDL & Kautham. Enjoy solving!
