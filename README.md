@@ -167,5 +167,12 @@ By avoiding complex multi-joint models inside Kautham for the cube itself, the p
 
 Using this setup, each step returned by the PDDL planner or the BFS Python solver (such as `pick`, `rotate_top_cw`, `tilt_x_pos`, `place`) can be mapped directly to a collision-free joint trajectory in Kautham!
 
+### 6. Visualize the Full Robotic Solution
+
+Once you have run the `generate_taskfile.py` script, you can load the generated full motion sequence into Kautham:
+1. Click on **`File`** $\rightarrow$ **`Open Taskfile`**.
+2. Navigate to and open `kautham/taskfile_rubik_ur3.xml`.
+3. Click **`Play`** or **`Animate`** to watch the UR3 robot perfectly pick up, rotate, tilt, and solve the Rubik's cube dynamically in the 3D environment!
+
 ---
 Developed for Robotic Manipulation and Planning with PDDL & Kautham. Enjoy solving!
