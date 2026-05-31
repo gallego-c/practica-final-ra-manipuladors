@@ -169,20 +169,46 @@ def scramble(move_names):
     return state
 
 
+def is_solved_monochromatic(state):
+    """Returns True if each of the 6 faces is monochromatic (solved in some orientation)."""
+    for face_idx in range(6):
+        face_stickers = state[face_idx*4 : (face_idx+1)*4]
+        if len(set(face_stickers)) > 1:
+            return False
+    return True
+
+
 # ── BFS Solver ────────────────────────────────────────────────────────────────
+
+def get_all_solved_states():
+    """Generates all 24 physically reachable monochromatic states of the 2x2 cube."""
+    solved_states = set()
+    queue = deque([SOLVED_STATE])
+    solved_states.add(SOLVED_STATE)
+    while queue:
+        curr = queue.popleft()
+        for name in ['tilt_x_pos', 'tilt_x_neg', 'tilt_y_pos', 'tilt_y_neg']:
+            perm = ROBOT_MOVES[name]
+            ns = apply_move(curr, perm)
+            if ns not in solved_states:
+                solved_states.add(ns)
+                queue.append(ns)
+    return list(solved_states)
+
 
 def bfs_solve(init_state):
     """
     Bidirectional BFS to find the shortest robot action sequence.
     Returns a list of move names, or None if no solution found.
     """
-    if init_state == SOLVED_STATE:
+    if is_solved_monochromatic(init_state):
         return []
 
+    solved_states = get_all_solved_states()
     fwd = {init_state: []}
-    bwd = {SOLVED_STATE: []}
+    bwd = {s: [] for s in solved_states}
     fwd_q = deque([init_state])
-    bwd_q = deque([SOLVED_STATE])
+    bwd_q = deque(solved_states)
 
     def expand(queue, visited):
         """Expand one level of BFS."""
@@ -267,8 +293,25 @@ def generate_pddl_problem(state, filename="/home/barrendeiro/robotica/cub/robot/
     lines.append("  )")
     lines.append("  (:goal (and")
     lines.append("    (cube-on-fixture)")
-    for i, pos in enumerate(POSITIONS):
-        lines.append(f"    (color-at {pos} {COLORS[SOLVED_STATE[i]]})")
+    
+    # Universal monochromatic goal constraints for all 6 faces
+    faces = {
+        'u': ['u-ufr', 'u-ufl', 'u-ubr', 'u-ubl'],
+        'd': ['d-dfr', 'd-dfl', 'd-dbr', 'd-dbl'],
+        'f': ['f-ufr', 'f-ufl', 'f-dfr', 'f-dfl'],
+        'b': ['b-ubr', 'b-ubl', 'b-dbr', 'b-dbl'],
+        'l': ['l-ufl', 'l-ubl', 'l-dfl', 'l-dbl'],
+        'r': ['r-ufr', 'r-ubr', 'r-dfr', 'r-dbr']
+    }
+    
+    for face_name, positions in faces.items():
+        lines.append(f"    ;; Face {face_name.upper()} must be monochromatic")
+        lines.append("    (or")
+        for color in COLORS:
+            conds = " ".join([f"(color-at {pos} {color})" for pos in positions])
+            lines.append(f"      (and {conds})")
+        lines.append("    )")
+        
     lines.append("  ))")
     lines.append(")")
     
@@ -311,7 +354,7 @@ if __name__ == '__main__':
     print("\n── Scrambled Cube ──")
     print_cube(init_state)
 
-    if init_state == SOLVED_STATE:
+    if is_solved_monochromatic(init_state):
         print("Cube is already solved!")
         sys.exit(0)
 
@@ -333,8 +376,8 @@ if __name__ == '__main__':
     state = init_state
     for action in solution:
         state = apply_move(state, ROBOT_MOVES[action])
-    assert state == SOLVED_STATE, "BUG: Solution verification failed!"
+    assert is_solved_monochromatic(state), "BUG: Solution verification failed!"
     print("\n✓ Verification passed — cube is solved.")
     print()
     print("── Solved Cube ──")
-    print_cube(SOLVED_STATE)
+    print_cube(state)

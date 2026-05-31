@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UR3 Rubik 2x2 Solver</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Notion Dark Mode Palette */
+            --bg-page: #191919;
+            --bg-panel: #202020;
+            --text-primary: #e3e3e3;
+            --text-secondary: #9b9a97;
+            --border-primary: rgba(255, 255, 255, 0.08);
+            --border-heavy: rgba(255, 255, 255, 0.16);
+            --accent-blue: #2eaadc;
+            --accent-blue-hover: #1e9acb;
+            --accent-green: #2ecc71;
+            --accent-green-hover: #27ae60;
+
+            /* Colores de celdas transparentes para escaneo (Modo Oscuro con transparencia) */
+            --cube-w-trans: rgba(255, 255, 255, 0.12);
+            --cube-y-trans: rgba(230, 190, 80, 0.12);
+            --cube-r-trans: rgba(235, 90, 90, 0.12);
+            /* Rosa */
+            --cube-o-trans: rgba(235, 130, 60, 0.12);
+            --cube-b-trans: rgba(70, 130, 180, 0.12);
+            --cube-g-trans: rgba(60, 160, 90, 0.12);
+
+            --cube-w-border: rgba(200, 200, 200, 0.6);
+            --cube-y-border: rgba(230, 190, 80, 0.8);
+            --cube-r-border: rgba(235, 90, 90, 0.8);
+            --cube-o-border: rgba(235, 130, 60, 0.8);
+            --cube-b-border: rgba(70, 130, 180, 0.8);
+            --cube-g-border: rgba(60, 160, 90, 0.8);
+
+            /* Colores de stickers sólidos en Mini-Mapa (slightly stronger pastels) */
+            --cube-w-solid: #f5f5f4;
+            --cube-y-solid: #ffd026;
+            --cube-r-solid: #ff8093;
+            /* Rosa */
+            --cube-o-solid: #ffae70;
+            --cube-b-solid: #70b3db;
+            --cube-g-solid: #95d5a2;
+            --cube-empty: #262626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-primary);
+            background: var(--bg-page);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .status-badge {
+            background: rgba(55, 53, 47, 0.05);
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 32px;
+            padding: 32px 40px;
+            flex-grow: 1;
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Panel Izquierdo: Escáner y Cámara */
+        .scanner-card {
+            background: var(--bg-page);
+            border-radius: 6px;
+            border: 1px solid var(--border-primary);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .video-overlay-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(32, 32, 32, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 50;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .video-arrow-graphic {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            line-height: 1;
+        }
+
+        .video-arrow-text {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .video-arrow-graphic.arrow-up {
+            animation: bounce-v 1.5s infinite ease-in-out;
+        }
+        .video-arrow-graphic.arrow-left {
+            animation: bounce-h 1.5s infinite ease-in-out;
+        }
+        .video-arrow-graphic.arrow-down {
+            animation: bounce-v-down 1.5s infinite ease-in-out;
+        }
+
+        @keyframes bounce-v {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes bounce-h {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-4px); }
+        }
+        @keyframes bounce-v-down {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(4px); }
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            /* Efecto espejo activo para alineación intuitiva */
+        }
+
+        canvas#video-canvas {
+            display: none;
+        }
+
+        /* Cuadrícula de alineación con Transparencia Notion */
+        .grid-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 240px;
+            border: 1.5px solid rgba(55, 53, 47, 0.2);
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            overflow: hidden;
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .grid-cell {
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .grid-cell:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* Instrucciones de rotación y Flechas */
+        .instruction-bar {
+            padding: 16px 20px;
+            background: rgba(55, 53, 47, 0.03);
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .arrow-container {
+            width: 44px;
+            height: 44px;
+            border-radius: 4px;
+            background: rgba(55, 53, 47, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .arrow-graphic {
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .arrow-text {
+            font-size: 0.55rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-top: 1px;
+            letter-spacing: 0.3px;
+        }
+
+        .instruction-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .instruction-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .instruction-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        /* Barra de progreso de escaneo */
+        .progress-bar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            padding: 12px 20px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .progress-step {
+            height: 24px;
+            border-radius: 3px;
+            background: rgba(55, 53, 47, 0.04);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .progress-step.active {
+            background: rgba(55, 53, 47, 0.08);
+            border: 1px solid rgba(55, 53, 47, 0.2);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .progress-step.completed {
+            background: rgba(15, 123, 78, 0.06);
+            color: #0f7b4e;
+            border: 1px solid rgba(15, 123, 78, 0.2);
+            font-weight: 600;
+        }
+
+        /* Panel Derecho: Mini-Mapa 2D en cruz y botones */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .panel-card {
+            background: var(--bg-page);
+            border-radius: 6px;
+            border: 1px solid var(--border-primary);
+            padding: 24px;
+        }
+
+        .panel-card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-primary);
+            padding-bottom: 10px;
+        }
+
+        /* Despliegue en cruz 2D */
+        .cube-cross {
+            display: grid;
+            grid-template-columns: repeat(4, 52px);
+            grid-template-rows: repeat(3, 52px);
+            gap: 6px;
+            justify-content: center;
+            margin: 24px auto;
+        }
+
+        .face-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            background: var(--bg-panel);
+            border: 1px dashed var(--border-heavy);
+            padding: 2px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .face-box.active {
+            border: 1.5px solid var(--accent-blue);
+            background: var(--bg-page);
+        }
+
+        .face-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(55, 53, 47, 0.15);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .mini-sticker {
+            border-radius: 2px;
+            border: 1px solid rgba(55, 53, 47, 0.08);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            z-index: 20;
+        }
+
+        .mini-sticker:hover {
+            transform: scale(1.08);
+        }
+
+        .pos-u {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .pos-l {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .pos-f {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .pos-r {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .pos-b {
+            grid-column: 4;
+            grid-row: 2;
+        }
+
+        .pos-d {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        /* Botones de control minimalistas */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 8px 14px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 100ms ease, border-color 100ms ease;
+            border: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-heavy);
+        }
+
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-heavy);
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-primary:disabled {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-primary);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-green {
+            background: rgba(46, 204, 113, 0.08);
+            border: 1px solid rgba(46, 204, 113, 0.25);
+            color: #58d68d;
+            font-weight: 600;
+        }
+
+        .btn-green:hover:not(:disabled) {
+            background: rgba(46, 204, 113, 0.16);
+            border-color: rgba(46, 204, 113, 0.4);
+        }
+
+        .btn-green:disabled {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-primary);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Panel de solución */
+        .solution-panel {
+            background: var(--bg-panel);
+            border-radius: 4px;
+            padding: 16px;
+            border: 1px solid var(--border-primary);
+            margin-top: 15px;
+            display: none;
+        }
+
+        .solution-title {
+            color: var(--accent-green);
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .step-item {
+            background: var(--bg-page);
+            border: 1px solid var(--border-primary);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-primary);
+        }
+
+        .step-num {
+            font-weight: 600;
+            color: #0f7b4e;
+            background: rgba(15, 123, 78, 0.08);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* Clases de colores transparentes (escáner) */
+        .c-w {
+            background-color: var(--cube-w-trans) !important;
+            border-color: var(--cube-w-border) !important;
+        }
+
+        .c-y {
+            background-color: var(--cube-y-trans) !important;
+            border-color: var(--cube-y-border) !important;
+        }
+
+        .c-r {
+            background-color: var(--cube-r-trans) !important;
+            border-color: var(--cube-r-border) !important;
+        }
+
+        /* Rosa */
+        .c-o {
+            background-color: var(--cube-o-trans) !important;
+            border-color: var(--cube-o-border) !important;
+        }
+
+        .c-b {
+            background-color: var(--cube-b-trans) !important;
+            border-color: var(--cube-b-border) !important;
+        }
+
+        .c-g {
+            background-color: var(--cube-g-trans) !important;
+            border-color: var(--cube-g-border) !important;
+        }
+
+        /* Clases de colores sólidos (mini-mapa) */
+        .solid-w {
+            background-color: var(--cube-w-solid) !important;
+        }
+
+        .solid-y {
+            background-color: var(--cube-y-solid) !important;
+        }
+
+        .solid-r {
+            background-color: var(--cube-r-solid) !important;
+        }
+
+        .solid-o {
+            background-color: var(--cube-o-solid) !important;
+        }
+
+        .solid-b {
+            background-color: var(--cube-b-solid) !important;
+        }
+
+        .solid-g {
+            background-color: var(--cube-g-solid) !important;
+        }
+
+        .solid-empty {
+            background-color: var(--cube-empty) !important;
+        }
+
+        /* Estilos de la recreación 3D del Cubo en la Plataforma */
+        .scene3d {
+            width: 100%;
+            height: 240px;
+            perspective: 800px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: #111111;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .cube-wrapper {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(40deg);
+        }
+        .cube3d {
+            width: 80px;
+            height: 80px;
+            position: absolute;
+            transform-style: preserve-3d;
+            transform: translateY(-20px); /* Eleva el cubo sobre la plataforma */
+        }
+        .face3d {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            background: #191919;
+            border: 1.5px solid #191919;
+            box-sizing: border-box;
+            backface-visibility: visible;
+        }
+        
+        /* Ubicaciones de las caras del cubo 3D */
+        .face3d-u { transform: rotateX(90deg) translateZ(40px); }
+        .face3d-d { transform: rotateX(-90deg) translateZ(40px); }
+        .face3d-f { transform: translateZ(40px); }
+        .face3d-b { transform: rotateY(180deg) translateZ(40px); }
+        .face3d-l { transform: rotateY(-90deg) translateZ(40px); }
+        .face3d-r { transform: rotateY(90deg) translateZ(40px); }
+
+        .sticker3d {
+            border-radius: 2px;
+            background-color: var(--cube-empty);
+            border: 0.5px solid rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.15);
+            transition: background-color 0.3s ease;
+        }
+
+        /* Plataforma plana inferior */
+        .platform3d {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            left: 50%;
+            top: 50%;
+            margin-left: -80px;
+            margin-top: -80px;
+            background: rgba(46, 204, 113, 0.04);
+            border: 1.5px dashed rgba(46, 204, 113, 0.35);
+            border-radius: 6px;
+            transform: rotateX(90deg) translateZ(-20px);
+            transform-style: preserve-3d;
+            box-sizing: border-box;
+        }
+
+        /* Etiquetas direccionales de la plataforma en proyección 3D */
+        .label-3d {
+            position: absolute;
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-family: 'Inter', sans-serif;
+        }
+        .label-f { bottom: 6px; left: 50%; transform: translateX(-50%); color: #2ecc71; }
+        .label-r { right: 6px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+        .label-b { top: 6px; left: 50%; transform: translateX(-50%); }
+        .label-l { left: 6px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>UR3 Rubik 2x2 Solver</h1>
+        <div id="status" class="status-badge">Scan Face: U</div>
+    </header>
+
+    <div class="main-container">
+        <!-- Left Column: Video Scanner -->
+        <div class="scanner-card">
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-step active" id="prog-U">U</div>
+                <div class="progress-step" id="prog-F">F</div>
+                <div class="progress-step" id="prog-R">R</div>
+                <div class="progress-step" id="prog-B">B</div>
+                <div class="progress-step" id="prog-L">L</div>
+                <div class="progress-step" id="prog-D">D</div>
+            </div>
+
+            <div class="video-container">
+                <video id="webcam-video" autoplay playsinline></video>
+
+                <!-- Transparent 2x2 Alignment Grid -->
+                <div class="grid-overlay" id="grid">
+                    <div class="grid-cell" id="cell-0" onclick="cycleCell(0)">W</div>
+                    <div class="grid-cell" id="cell-1" onclick="cycleCell(1)">W</div>
+                    <div class="grid-cell" id="cell-2" onclick="cycleCell(2)">W</div>
+                    <div class="grid-cell" id="cell-3" onclick="cycleCell(3)">W</div>
+                </div>
+
+                <!-- Floating Video HUD Badge -->
+                <div id="video-dir-badge" class="video-overlay-badge">
+                    <div id="video-dir-arrow" class="video-arrow-graphic">|</div>
+                    <div id="video-dir-text" class="video-arrow-text">Front</div>
+                </div>
+            </div>
+
+            <!-- Invisible Canvas for JS Image Sampling -->
+            <canvas id="video-canvas" width="640" height="480"></canvas>
+
+            <!-- Dynamic Guide and Directional Indicator -->
+            <div class="instruction-bar">
+                <div class="arrow-container">
+                    <div id="visual-arrow" class="arrow-graphic">|</div>
+                    <div id="visual-arrow-desc" class="arrow-text">Front</div>
+                </div>
+                <div class="instruction-content">
+                    <div class="instruction-title" id="guide-title font-semibold text-sm">Face Scan</div>
+                    <div class="instruction-text" id="guide-desc">Start scanning by holding the corresponding face in front of the camera.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: 2D Map, 3D View and Controls -->
+        <div class="control-panel">
+            <div class="panel-card">
+                <div class="panel-card-title">
+                    <span>2D Cross Map</span>
+                    <span id="validation-counts" style="font-size: 0.7rem; color: var(--text-secondary);">W:0 Y:0 R:0
+                        O:0 B:0 G:0</span>
+                </div>
+
+                <!-- Unfolded 2D Cube Cross Map -->
+                <div class="cube-cross">
+                    <!-- U Face -->
+                    <div class="face-box pos-u active" id="face-box-U">
+                        <div class="face-label">U</div>
+                    </div>
+                    <!-- L Face -->
+                    <div class="face-box pos-l" id="face-box-L">
+                        <div class="face-label">L</div>
+                    </div>
+                    <!-- F Face -->
+                    <div class="face-box pos-f" id="face-box-F">
+                        <div class="face-label">F</div>
+                    </div>
+                    <!-- R Face -->
+                    <div class="face-box pos-r" id="face-box-R">
+                        <div class="face-label">R</div>
+                    </div>
+                    <!-- B Face -->
+                    <div class="face-box pos-b" id="face-box-B">
+                        <div class="face-label">B</div>
+                    </div>
+                    <!-- D Face -->
+                    <div class="face-box pos-d" id="face-box-D">
+                        <div class="face-label">D</div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-primary" id="btn-capture" onclick="captureFace()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" style="margin-right: 2px;">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                        Capture Face (Space)
+                    </button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button onclick="goToPrevFace()">Back (R)</button>
+                        <button onclick="resetAll()">Reset</button>
+                    </div>
+                    <button class="btn-green" id="btn-solve" onclick="sendToSolver()" disabled>
+                        Solve Cube (PDDL)
+                    </button>
+                </div>
+
+                <!-- Optimal BFS Solution Step List -->
+                <div class="solution-panel" id="solution-box">
+                    <div class="solution-title">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24" style="margin-right: 2px;">
+                            <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                        Optimal Solution:
+                    </div>
+                    <div class="step-list" id="steps-container">
+                        <!-- Dynamic Steps -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permanent Interactive 3D View -->
+            <div class="panel-card">
+                <div class="panel-card-title">
+                    <span>Interactive 3D View</span>
+                    <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: none; font-weight: normal;">
+                        U: <span id="robot-color-up" style="font-weight: 600; text-transform: uppercase; color: var(--accent-green);">-</span> | 
+                        F: <span id="robot-color-front" style="font-weight: 600; text-transform: uppercase; color: var(--accent-green);">-</span>
+                    </span>
+                </div>
+                <div class="scene3d" id="interactive-scene" style="margin-top: 0; cursor: grab; user-select: none;">
+                    <div class="cube-wrapper" id="cube-wrapper-3d">
+                        <!-- Bottom platform -->
+                        <div class="platform3d">
+                            <div class="label-3d label-f">Front</div>
+                            <div class="label-3d label-r">Right</div>
+                            <div class="label-3d label-b">Back</div>
+                            <div class="label-3d label-l">Left</div>
+                        </div>
+
+                        <!-- 3D CSS Cube -->
+                        <div class="cube3d">
+                            <!-- U Face -->
+                            <div class="face3d face3d-u" id="face3d-U">
+                                <div class="sticker3d" id="s3d-U-0"></div>
+                                <div class="sticker3d" id="s3d-U-1"></div>
+                                <div class="sticker3d" id="s3d-U-2"></div>
+                                <div class="sticker3d" id="s3d-U-3"></div>
+                            </div>
+                            <!-- D Face -->
+                            <div class="face3d face3d-d" id="face3d-D">
+                                <div class="sticker3d" id="s3d-D-0"></div>
+                                <div class="sticker3d" id="s3d-D-1"></div>
+                                <div class="sticker3d" id="s3d-D-2"></div>
+                                <div class="sticker3d" id="s3d-D-3"></div>
+                            </div>
+                            <!-- F Face -->
+                            <div class="face3d face3d-f" id="face3d-F">
+                                <div class="sticker3d" id="s3d-F-0"></div>
+                                <div class="sticker3d" id="s3d-F-1"></div>
+                                <div class="sticker3d" id="s3d-F-2"></div>
+                                <div class="sticker3d" id="s3d-F-3"></div>
+                            </div>
+                            <!-- B Face -->
+                            <div class="face3d face3d-b" id="face3d-B">
+                                <div class="sticker3d" id="s3d-B-0"></div>
+                                <div class="sticker3d" id="s3d-B-1"></div>
+                                <div class="sticker3d" id="s3d-B-2"></div>
+                                <div class="sticker3d" id="s3d-B-3"></div>
+                            </div>
+                            <!-- L Face -->
+                            <div class="face3d face3d-l" id="face3d-L">
+                                <div class="sticker3d" id="s3d-L-0"></div>
+                                <div class="sticker3d" id="s3d-L-1"></div>
+                                <div class="sticker3d" id="s3d-L-2"></div>
+                                <div class="sticker3d" id="s3d-L-3"></div>
+                            </div>
+                            <!-- R Face -->
+                            <div class="face3d face3d-r" id="face3d-R">
+                                <div class="sticker3d" id="s3d-R-0"></div>
+                                <div class="sticker3d" id="s3d-R-1"></div>
+                                <div class="sticker3d" id="s3d-R-2"></div>
+                                <div class="sticker3d" id="s3d-R-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const FACE_ORDER = ["U", "F", "R", "B", "L", "D"];
+        const COLOR_CLASSES = { "W": "c-w", "Y": "c-y", "R": "c-r", "O": "c-o", "B": "c-b", "G": "c-g" };
+        const SOLID_COLOR_CLASSES = { "W": "solid-w", "Y": "solid-y", "R": "solid-r", "O": "solid-o", "B": "solid-b", "G": "solid-g" };
+        const COLOR_LIST = ["W", "Y", "R", "O", "B", "G"];
+
+        let faceIdx = 0;
+        let faceData = {}; // {"U": ["W","W","W","W"], ...}
+        let activeColors = ["W", "W", "W", "W"]; // Buffer for the active face color sampling
+
+        const ROTATE_GUIDES = {
+            "U": {
+                title: "Face U (Up) - Start",
+                desc: "U on front. F pointing down.",
+                arrow: "|",
+                arrowDesc: "Initial"
+            },
+            "F": {
+                title: "Face F (Front)",
+                desc: "Tilt 90° up.",
+                arrow: "↑",
+                arrowDesc: "Up"
+            },
+            "R": {
+                title: "Face R (Right)",
+                desc: "Rotate 90° left.",
+                arrow: "←",
+                arrowDesc: "Left"
+            },
+            "B": {
+                title: "Face B (Back)",
+                desc: "Rotate 90° left.",
+                arrow: "←",
+                arrowDesc: "Left"
+            },
+            "L": {
+                title: "Face L (Left)",
+                desc: "Rotate 90° left.",
+                arrow: "←",
+                arrowDesc: "Left"
+            },
+            "D": {
+                title: "Face D (Down)",
+                desc: "Return to Front and tilt 90° down.",
+                arrow: "↓",
+                arrowDesc: "Down"
+            }
+        };
+
+        const video = document.getElementById("webcam-video");
+        const canvas = document.getElementById("video-canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Conectar cámara web
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 } })
+            .then(stream => {
+                video.srcObject = stream;
+                setInterval(sampleColorsFromVideo, 100);
+            })
+            .catch(err => {
+                console.warn("Entrando en modo de entrada manual interactiva sin cámara física.", err);
+            });
+
+        function sampleColorsFromVideo() {
+            if (video.paused || video.ended) return;
+
+            // Draw raw (un-mirrored) frame — video CSS mirror is visual-only.
+            // Sticker indices must match physical left/right as seen by camera.
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const grid_w = 240;
+            const cell_size = 120;
+            const x0 = (canvas.width - grid_w) / 2;
+            const y0 = (canvas.height - grid_w) / 2;
+
+            for (let row = 0; row < 2; row++) {
+                for (let col = 0; col < 2; col++) {
+                    // The video element has CSS scaleX(-1) so the user sees a mirror.
+                    // The raw canvas pixel at col=0 corresponds to what the user
+                    // sees on the RIGHT side of the overlay, so we must flip the
+                    // column when reading to keep indices [0=TL,1=TR,2=BL,3=BR]
+                    // aligned with what the user sees on screen.
+                    const flippedCol = 1 - col;
+                    const cx = Math.floor(x0 + flippedCol * cell_size + cell_size / 2);
+                    const cy = Math.floor(y0 + row * cell_size + cell_size / 2);
+
+                    const imgData = ctx.getImageData(cx - 3, cy - 3, 7, 7).data;
+                    let r = 0, g = 0, b = 0;
+                    for (let i = 0; i < imgData.length; i += 4) {
+                        r += imgData[i];
+                        g += imgData[i + 1];
+                        b += imgData[i + 2];
+                    }
+                    const n = imgData.length / 4;
+                    r = Math.floor(r / n);
+                    g = Math.floor(g / n);
+                    b = Math.floor(b / n);
+
+                    const color = classifyColorRGB(r, g, b);
+                    const cellIdx = row * 2 + col;
+                    activeColors[cellIdx] = color;
+                }
+            }
+            updateGridDisplay();
+        }
+
+        // Umbrales de clasificación de color HSV relajados e indulgentes
+        function classifyColorRGB(r, g, b) {
+            let rf = r / 255, gf = g / 255, bf = b / 255;
+            let max = Math.max(rf, gf, bf), min = Math.min(rf, gf, bf);
+            let h, s, v = max;
+            let d = max - min;
+            s = max === 0 ? 0 : d / max;
+
+            if (max === min) {
+                h = 0;
+            } else {
+                switch (max) {
+                    case rf: h = (gf - bf) / d + (gf < bf ? 6 : 0); break;
+                    case gf: h = (bf - rf) / d + 2; break;
+                    case bf: h = (rf - gf) / d + 4; break;
+                }
+                h /= 6;
+            }
+            h *= 360; s *= 100; v *= 100;
+
+            // 1. Blanco: Muy baja saturación, O brillo intenso con saturación media (típico de reflejo de luz)
+            if (s < 22) return "W";
+            if (v > 82 && s < 36) return "W"; // Glare/Reflejo sobre cara blanca
+            if (r > 195 && g > 195 && b > 195) return "W"; // Sobreexposición blanca
+
+            // 2. Azul (saturado significativamente para distinguirlo de reflejo azulado en blanco)
+            if (h >= 160 && h < 250 && s >= 24) return "B";
+
+            // 3. Verde
+            if (h >= 70 && h < 160) return "G";
+
+            // 4. Amarillo: optimizado para iluminación débil
+            if (h >= 38 && h < 70) return "Y";
+
+            // 5. Naranja
+            if (h >= 12 && h < 38) return "O";
+
+            // 6. Rosa / Rojo (F)
+            if (h < 12 || h >= 320) return "R";
+
+            // Redundancias RGB por seguridad
+            if (r > 150 && g > 150 && b > 150 && Math.abs(r - g) < 25 && Math.abs(r - b) < 25) return "W";
+            if (r > 150 && g > 140 && b < 100) return "Y";
+            if (r > 150 && b > 100 && g < 100) return "R";
+
+            return "W";
+        }
+
+        function updateGridDisplay() {
+            for (let i = 0; i < 4; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                const c = activeColors[i];
+                cell.className = `grid-cell ${COLOR_CLASSES[c]}`;
+                cell.innerText = c === "R" ? "R" : c;
+            }
+            updateStickerCounts();
+            update3DCube();
+        }
+
+        function cycleCell(cellIdx) {
+            const currentC = activeColors[cellIdx];
+            const nextIdx = (COLOR_LIST.indexOf(currentC) + 1) % COLOR_LIST.length;
+            activeColors[cellIdx] = COLOR_LIST[nextIdx];
+            updateGridDisplay();
+        }
+
+        function captureFace() {
+            const face = FACE_ORDER[faceIdx];
+            faceData[face] = [...activeColors];
+
+            renderMiniMapFace(face, faceData[face]);
+            update3DCube();
+
+            if (faceIdx < 5) {
+                faceIdx++;
+                updateUIState();
+            } else {
+                faceIdx = 6;
+                updateUIState();
+                checkGlobalValidity();
+            }
+        }
+
+        function renderMiniMapFace(face, colors) {
+            const box = document.getElementById(`face-box-${face}`);
+            box.innerHTML = `<div class="face-label">${face}</div>`;
+
+            for (let i = 0; i < 4; i++) {
+                const sticker = document.createElement("div");
+                sticker.className = `mini-sticker ${SOLID_COLOR_CLASSES[colors[i]]}`;
+                sticker.setAttribute("onclick", `cycleMiniSticker('${face}', ${i})`);
+                box.appendChild(sticker);
+            }
+        }
+
+        function cycleMiniSticker(face, stickerIdx) {
+            if (!faceData[face]) return;
+            const currentC = faceData[face][stickerIdx];
+            const nextIdx = (COLOR_LIST.indexOf(currentC) + 1) % COLOR_LIST.length;
+            faceData[face][stickerIdx] = COLOR_LIST[nextIdx];
+            renderMiniMapFace(face, faceData[face]);
+            updateStickerCounts();
+            checkGlobalValidity();
+            update3DCube();
+        }
+
+        function goToPrevFace() {
+            if (faceIdx > 0) {
+                faceIdx = Math.min(faceIdx - 1, 5);
+                const prevFace = FACE_ORDER[faceIdx];
+                if (faceData[prevFace]) {
+                    activeColors = [...faceData[prevFace]];
+                }
+                updateUIState();
+                document.getElementById("btn-solve").disabled = true;
+            }
+        }
+
+        function updateUIState() {
+            const face = FACE_ORDER[faceIdx] || "D";
+
+            if (faceIdx >= 6) {
+                document.getElementById("status").innerText = "Scan complete";
+                document.getElementById("status").className = "status-badge";
+                document.getElementById("status").removeAttribute("style");
+
+                const videoArrow = document.getElementById("video-dir-arrow");
+                const videoText = document.getElementById("video-dir-text");
+                videoArrow.innerText = "✓";
+                videoText.innerText = "Done";
+                videoArrow.className = "video-arrow-graphic";
+
+                FACE_ORDER.forEach((f) => {
+                    const step = document.getElementById(`prog-${f}`);
+                    step.className = "progress-step";
+                    if (faceData[f]) step.classList.add("completed");
+                });
+                update3DCube();
+                return;
+            }
+
+            document.getElementById("status").innerText = `Scan Face: ${face}`;
+            document.getElementById("status").className = "status-badge";
+            document.getElementById("status").removeAttribute("style");
+
+            const guide = ROTATE_GUIDES[face];
+            document.getElementById("guide-title font-semibold text-sm").innerText = guide.title;
+            document.getElementById("guide-desc").innerText = guide.desc;
+            document.getElementById("visual-arrow").innerText = guide.arrow;
+            document.getElementById("visual-arrow-desc").innerText = guide.arrowDesc;
+
+            const videoArrow = document.getElementById("video-dir-arrow");
+            const videoText = document.getElementById("video-dir-text");
+            videoArrow.innerText = guide.arrow;
+            videoText.innerText = guide.arrowDesc === "Initial" ? "Initial" : `Rotate ${guide.arrowDesc}`;
+
+            videoArrow.className = "video-arrow-graphic";
+            if (guide.arrow === "↑") videoArrow.classList.add("arrow-up");
+            else if (guide.arrow === "←") videoArrow.classList.add("arrow-left");
+            else if (guide.arrow === "↓") videoArrow.classList.add("arrow-down");
+
+            FACE_ORDER.forEach((f) => {
+                const step = document.getElementById(`prog-${f}`);
+                step.className = "progress-step";
+                if (f === face) step.classList.add("active");
+                if (faceData[f]) step.classList.add("completed");
+            });
+
+            document.querySelectorAll(".face-box").forEach(box => box.classList.remove("active"));
+            document.getElementById(`face-box-${face}`).classList.add("active");
+            update3DCube();
+        }
+
+        function updateStickerCounts() {
+            let counts = { "W": 0, "Y": 0, "R": 0, "O": 0, "B": 0, "G": 0 };
+
+            Object.values(faceData).forEach(colors => {
+                colors.forEach(c => counts[c]++);
+            });
+
+            const text = `White: ${counts.W} | Yellow: ${counts.Y} | Red: ${counts.R} | Orange: ${counts.O} | Blue: ${counts.B} | Green: ${counts.G}`;
+            document.getElementById("validation-counts").innerText = text;
+
+            let isValid = true;
+            for (let c in counts) {
+                if (counts[c] !== 4 && Object.keys(faceData).length === 6) {
+                    isValid = false;
+                }
+            }
+            document.getElementById("validation-counts").style.color = isValid ? "var(--text-secondary)" : "#ffe2dd";
+        }
+
+        function checkGlobalValidity() {
+            let counts = { "W": 0, "Y": 0, "R": 0, "O": 0, "B": 0, "G": 0 };
+            Object.values(faceData).forEach(colors => {
+                colors.forEach(c => counts[c]++);
+            });
+            const allValid = Object.values(counts).every(v => v === 4);
+            document.getElementById("btn-solve").disabled = !allValid || Object.keys(faceData).length < 6;
+        }
+
+        function resetAll() {
+            faceIdx = 0;
+            faceData = {};
+            activeColors = ["W", "W", "W", "W"];
+
+            FACE_ORDER.forEach(f => {
+                const box = document.getElementById(`face-box-${f}`);
+                box.innerHTML = `<div class="face-label">${f}</div>`;
+                box.className = `face-box pos-${f.toLowerCase()}`;
+            });
+
+            const videoBadge = document.getElementById("video-dir-badge");
+            videoBadge.removeAttribute("style");
+            const videoArrow = document.getElementById("video-dir-arrow");
+            videoArrow.removeAttribute("style");
+            const videoText = document.getElementById("video-dir-text");
+            videoText.removeAttribute("style");
+
+            updateUIState();
+            updateGridDisplay();
+            update3DCube();
+            document.getElementById("btn-solve").disabled = true;
+            document.getElementById("solution-box").style.display = "none";
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.code === "Space") {
+                e.preventDefault();
+                if (faceIdx < 6) captureFace();
+            } else if (e.code === "KeyR" || e.code === "Keyr") {
+                goToPrevFace();
+            }
+        });
+
+        function sendToSolver() {
+            document.getElementById("btn-solve").disabled = true;
+            document.getElementById("btn-solve").innerText = "Solving...";
+
+            fetch("/solve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(faceData)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("btn-solve").disabled = false;
+                    document.getElementById("btn-solve").innerText = "Solve Cube (PDDL)";
+
+                    if (data.status === "success") {
+                        const container = document.getElementById("steps-container");
+                        container.innerHTML = "";
+
+                        const movements = data.solution.filter(step => step !== "pick" && step !== "place");
+                        movements.forEach((step, idx) => {
+                            const div = document.createElement("div");
+                            div.className = "step-item";
+
+                            let friendlyStep = step;
+                            if (step === "rotate_top_cw") friendlyStep = "Rotate top layer Clockwise (Wrist CW)";
+                            else if (step === "rotate_top_ccw") friendlyStep = "Rotate top layer Counter-Clockwise (Wrist CCW)";
+                            else if (step === "tilt_x_pos") friendlyStep = "Tilt cube Forward (Front to Top)";
+                            else if (step === "tilt_x_neg") friendlyStep = "Tilt cube Backward (Back to Top)";
+                            else if (step === "tilt_y_pos") friendlyStep = "Tilt cube Right (Right to Top)";
+                            else if (step === "tilt_y_neg") friendlyStep = "Tilt cube Left (Left to Top)";
+
+                            div.innerHTML = `<span class="step-num">Step ${idx + 1}</span> <span>${friendlyStep}</span>`;
+                            container.appendChild(div);
+                        });
+
+                        update3DCube();
+
+                        document.getElementById("solution-box").style.display = "block";
+                        document.getElementById("solution-box").scrollIntoView({ behavior: "smooth" });
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("btn-solve").disabled = false;
+                    document.getElementById("btn-solve").innerText = "Solve Cube (PDDL)";
+                    alert("Connection error with solver: " + err);
+                });
+        }
+
+        function getDominantColorName(colorsList) {
+            if (!colorsList || colorsList.length === 0) return "-";
+            const colorNames = {
+                "W": "White",
+                "Y": "Yellow",
+                "R": "Red",
+                "O": "Orange",
+                "B": "Blue",
+                "G": "Green"
+            };
+            let counts = {};
+            colorsList.forEach(c => counts[c] = (counts[c] || 0) + 1);
+            let dominant = colorsList[0];
+            let maxCount = 0;
+            for (let c in counts) {
+                if (counts[c] > maxCount) {
+                    maxCount = counts[c];
+                    dominant = c;
+                }
+            }
+            return colorNames[dominant] || dominant;
+        }
+
+        function update3DCube() {
+            const colorsMap = {
+                "W": "var(--cube-w-solid)",
+                "Y": "var(--cube-y-solid)",
+                "R": "var(--cube-r-solid)",
+                "O": "var(--cube-o-solid)",
+                "B": "var(--cube-b-solid)",
+                "G": "var(--cube-g-solid)"
+            };
+
+            // Sticker index remap per face so the 3D model matches the
+            // physical cube as seen from outside.
+            //
+            // Capture order (row*2+col): [0=TL, 1=TR, 2=BL, 3=BR]
+            // viewed from OUTSIDE each face, looking straight at it.
+            //
+            // CSS grid fills left-to-right, top-to-bottom, so the 3D
+            // face grid also goes [0=TL, 1=TR, 2=BL, 3=BR] when viewed
+            // from outside — EXCEPT the B face, which the CSS cube places
+            // rotated 180° (rotateY(180deg)), so its grid is reversed.
+            //
+            // For U/D the capture is looking straight down/up at the face;
+            // the CSS face is also seen from above, so no remap needed.
+            //
+            // B face: scanned from behind the cube, so left/right AND
+            // top/bottom are both physically flipped vs the 3D face
+            // orientation → remap [0,1,2,3] → [3,2,1,0] (full reverse).
+            const FACE_REMAP = {
+                "U": [0, 1, 2, 3],  // as-is
+                "D": [0, 1, 2, 3],  // as-is
+                "F": [0, 1, 2, 3],  // as-is
+                "R": [0, 1, 2, 3],  // as-is
+                "L": [0, 1, 2, 3],  // as-is
+                "B": [3, 2, 1, 0]   // full reverse: B is seen mirrored in 3D
+            };
+
+            FACE_ORDER.forEach(face => {
+                const currentFace = FACE_ORDER[faceIdx];
+                let colors = null;
+                if (face === currentFace && faceIdx < 6) {
+                    colors = activeColors;
+                } else if (faceData[face]) {
+                    colors = faceData[face];
+                }
+
+                const remap = FACE_REMAP[face] || [0, 1, 2, 3];
+                for (let i = 0; i < 4; i++) {
+                    const sticker = document.getElementById(`s3d-${face}-${i}`);
+                    if (sticker) {
+                        const srcIdx = remap[i];
+                        if (colors && colors[srcIdx] !== undefined) {
+                            sticker.style.backgroundColor = colorsMap[colors[srcIdx]] || "var(--cube-empty)";
+                        } else {
+                            sticker.style.backgroundColor = "var(--cube-empty)";
+                        }
+                    }
+                }
+            });
+
+            const upEl = document.getElementById("robot-color-up");
+            const frontEl = document.getElementById("robot-color-front");
+            if (upEl && faceData["U"]) {
+                upEl.innerText = getDominantColorName(faceData["U"]);
+            } else if (upEl) {
+                upEl.innerText = "-";
+            }
+            if (frontEl && faceData["F"]) {
+                frontEl.innerText = getDominantColorName(faceData["F"]);
+            } else if (frontEl) {
+                frontEl.innerText = "-";
+            }
+        }
+
+        // Drag to rotate implementation
+        let rotX = -20;
+        let rotY = 40;
+        const sceneEl = document.getElementById("interactive-scene");
+        const wrapperEl = document.getElementById("cube-wrapper-3d");
+        let isDragging = false;
+        let startX, startY;
+
+        sceneEl.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            sceneEl.style.cursor = "grabbing";
+        });
+
+        window.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            rotY += dx * 0.6;
+            rotX -= dy * 0.6;
+            
+            if (rotX > 80) rotX = 80;
+            if (rotX < -80) rotX = -80;
+
+            wrapperEl.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        });
+
+        window.addEventListener("mouseup", () => {
+            if (isDragging) {
+                isDragging = false;
+                sceneEl.style.cursor = "grab";
+            }
+        });
+
+        // Touch support
+        sceneEl.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }
+        });
+
+        window.addEventListener("touchmove", (e) => {
+            if (!isDragging || e.touches.length !== 1) return;
+            const dx = e.touches[0].clientX - startX;
+            const dy = e.touches[0].clientY - startY;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+
+            rotY += dx * 0.6;
+            rotX -= dy * 0.6;
+            
+            if (rotX > 80) rotX = 80;
+            if (rotX < -80) rotX = -80;
+
+            wrapperEl.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        });
+
+        window.addEventListener("touchend", () => {
+            isDragging = false;
+        });
+
+        // Initialize 3D Cube on startup
+        update3DCube();
+    </script>
+</body>
+
+</html>
