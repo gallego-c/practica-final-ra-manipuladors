@@ -224,6 +224,7 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
                         self.send_json_response({
                             "status": "success",
                             "solution": manipulation_plan,
+                            "cube_solution": solution,
                             "solver": "robot.solver.bfs_solve + Fast Downward",
                             "solve_seconds": round(solve_seconds, 3)
                         })

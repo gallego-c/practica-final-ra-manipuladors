@@ -1504,6 +1504,27 @@
                         const container = document.getElementById("steps-container");
                         container.innerHTML = "";
 
+                        // Render Level 1: Abstract Rubik's Cube Solution
+                        const cubeSol = data.cube_solution || [];
+                        const cubeSolStr = cubeSol.map(m => m.replace("_PRIME", "'")).join(" ➔ ");
+                        
+                        container.innerHTML += `
+                            <div style="background: rgba(46, 170, 220, 0.08); border-left: 3.5px solid #2eaadc; padding: 12px; border-radius: 4px; margin-bottom: 18px;">
+                                <strong style="display: block; color: #ffffff; margin-bottom: 6px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;">
+                                    Abstract Rubik's Cube Solution (Level 1)
+                                </strong>
+                                <span style="font-family: 'Outfit', monospace; font-size: 1.25rem; font-weight: 700; color: #2eaadc; letter-spacing: 1px;">
+                                    ${cubeSolStr || "Already Solved"}
+                                </span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong style="display: block; color: #ffffff; margin-bottom: 6px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;">
+                                    Robotic Physical Plan (Level 2 - PDDL)
+                                </strong>
+                            </div>
+                        `;
+
+                        // Render Level 2: Fast Downward physical steps
                         data.solution.forEach((step, idx) => {
                             const div = document.createElement("div");
                             div.className = "step-item";
