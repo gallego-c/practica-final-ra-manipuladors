@@ -20,11 +20,12 @@ if str(workspace_root) not in sys.path:
     sys.path.insert(0, str(workspace_root))
 
 try:
-    from robot.solver import COLOR_IDX, generate_pddl_problem, bfs_solve, print_cube
+    from robot.solver import COLOR_IDX, bfs_solve, print_cube
+    from robot.generate_taskfile import generate_manipulation_problem, run_fast_downward
     SOLVER_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     SOLVER_AVAILABLE = False
-    print("Warning: robot.solver module is not available. Solving locally is disabled.")
+    print(f"Warning: robot modules not available. Solving locally is disabled. Error: {e}")
 
 PORT = 5000
 FACE_ORDER = ["U", "F", "R", "B", "L", "D"]
@@ -202,23 +203,37 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
                 # inspection, then solve with the in-process bidirectional BFS.
                 # The temp file avoids overwriting robot/problem.pddl.
                 with tempfile.TemporaryDirectory(prefix="cub_scan_pddl_") as tmp:
-                    work_dir = Path(tmp)
-                    pddl_path = work_dir / "problem.pddl"
-                    generate_pddl_problem(state_tuple, filename=str(pddl_path))
-
                     print("Solving with robot.solver bidirectional BFS...")
                     t0 = time.perf_counter()
                     solution, solver_error = solve_with_timeout(state_tuple)
                     solve_seconds = time.perf_counter() - t0
 
                 if solution is not None:
-                    print(f"Solution found: {len(solution)} actions in {solve_seconds:.3f}s.")
-                    self.send_json_response({
-                        "status": "success",
-                        "solution": solution,
-                        "solver": "robot.solver.bfs_solve",
-                        "solve_seconds": round(solve_seconds, 3)
-                    })
+                    # Nivel 2: Fast Downward para calcular el plan de manipulación
+                    print("Solving symbolic manipulation with Fast Downward...")
+                    prob_file = workspace_root / "robot" / "manipulation_problem.pddl"
+                    dom_file = workspace_root / "robot" / "manipulation_domain.pddl"
+                    
+                    t0_fd = time.perf_counter()
+                    generate_manipulation_problem(solution, filename=str(prob_file))
+                    manipulation_plan = run_fast_downward(domain_path=str(dom_file), problem_path=str(prob_file))
+                    solve_seconds += (time.perf_counter() - t0_fd)
+                    
+                    if manipulation_plan is not None:
+                        print(f"PDDL Plan found: {len(manipulation_plan)} physical moves in {solve_seconds:.3f}s total.")
+                        self.send_json_response({
+                            "status": "success",
+                            "solution": manipulation_plan,
+                            "solver": "robot.solver.bfs_solve + Fast Downward",
+                            "solve_seconds": round(solve_seconds, 3)
+                        })
+                    else:
+                        self.send_json_response({
+                            "status": "error",
+                            "message": "Fast Downward failed to plan the physical transitions.",
+                            "solver": "robot.solver.bfs_solve + Fast Downward",
+                            "solve_seconds": round(solve_seconds, 3)
+                        })
                 else:
                     if solver_error == "timeout":
                         message = (
