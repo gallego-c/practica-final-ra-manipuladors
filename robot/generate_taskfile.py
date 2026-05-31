@@ -309,6 +309,106 @@ class RRTTaskfileGenerator(Node):
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# ── Generador PDDL y Planificador Fast Downward ───────────────────────────────
+
+def generate_manipulation_problem(solution, filename="/home/barrendeiro/robotica/cub/robot/manipulation_problem.pddl"):
+    """Genera el problema PDDL simplificado de manipulación para la secuencia de solución."""
+    lines = []
+    lines.append(";;; ============================================================")
+    lines.append(";;; PROBLEM: solve-manipulation-sequence")
+    lines.append(";;; ============================================================")
+    lines.append("(define (problem solve-manipulation-sequence)")
+    lines.append("  (:domain robot-manipulation)")
+    
+    # Declarar los objetos paso (step1, step2, ..., stepN)
+    steps = [f"step{i+1}" for i in range(len(solution) + 1)]
+    lines.append("  (:objects")
+    lines.append("    " + " ".join(steps) + " - step")
+    lines.append("  )")
+    
+    lines.append("  (:init")
+    lines.append("    ;; Estado físico inicial del robot y el cubo")
+    lines.append("    (cube-on-fixture)")
+    lines.append("    (not (robot-holding))")
+    lines.append("")
+    lines.append("    ;; Paso inicial de la receta")
+    lines.append("    (current-step step1)")
+    lines.append("")
+    
+    # Secuencia y tipos de pasos
+    for i, action in enumerate(solution):
+        lines.append(f"    (next-step step{i+1} step{i+2})")
+        # Asignar tipo de paso
+        if action == 'rotate_top_cw':
+            lines.append(f"    (step-type-rotate-cw step{i+1})")
+        elif action == 'rotate_top_ccw':
+            lines.append(f"    (step-type-rotate-ccw step{i+1})")
+        elif action == 'tilt_x_pos':
+            lines.append(f"    (step-type-tilt-x-pos step{i+1})")
+        elif action == 'tilt_x_neg':
+            lines.append(f"    (step-type-tilt-x-neg step{i+1})")
+        elif action == 'tilt_y_pos':
+            lines.append(f"    (step-type-tilt-y-pos step{i+1})")
+        elif action == 'tilt_y_neg':
+            lines.append(f"    (step-type-tilt-y-neg step{i+1})")
+            
+    lines.append("  )")
+    
+    # Meta: todos los pasos completados, cubo en fixture y gripper libre
+    lines.append("  (:goal (and")
+    for i in range(len(solution)):
+        lines.append(f"    (step-completed step{i+1})")
+    lines.append("    (cube-on-fixture)")
+    lines.append("    (not (robot-holding))")
+    lines.append("  ))")
+    lines.append(")")
+    
+    with open(filename, 'w') as f:
+        f.write("\n".join(lines))
+    print(f"✓ PDDL manipulation problem written to {filename}")
+
+
+def run_fast_downward(domain_path="/home/barrendeiro/robotica/cub/robot/manipulation_domain.pddl", 
+                      problem_path="/home/barrendeiro/robotica/cub/robot/manipulation_problem.pddl"):
+    """Ejecuta Fast Downward para resolver la tarea física de manipulación robótica."""
+    import subprocess
+    print("Invocando a Fast Downward...")
+    
+    # Usamos el wrapper fast-downward ejecutado con el python del sistema para evitar incompatibilidades
+    cmd = [
+        "/usr/bin/python3",
+        "/usr/bin/fast-downward",
+        domain_path,
+        problem_path,
+        "--search", "astar(blind())"
+    ]
+    
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+    plan_file = "sas_plan"
+    if os.path.exists(plan_file):
+        actions = []
+        with open(plan_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith(";"):
+                    break
+                # Extrae el nombre de la acción PDDL
+                action_name = line.replace("(", "").replace(")", "").split()[0]
+                actions.append(action_name)
+        os.remove(plan_file)
+        return actions
+    else:
+        print("ERROR: Fast Downward no generó ningún plan.")
+        print("Salida de FD:", result.stdout)
+        print("Errores de FD:", result.stderr)
+        return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIN
+# ═══════════════════════════════════════════════════════════════════════════════
+
 def main():
     rclpy.init()
 
@@ -325,31 +425,45 @@ def main():
             sys.exit(1)
 
     print("=" * 60)
-    print("  Generador RRT de Taskfile — UR3 Rubik 2×2")
+    print("  Generador RRT de Taskfile — UR3 Rubik 2×2 (Arquitectura Jerárquica TAMP)")
     print("=" * 60)
     print(f"\nScramble ({len(scramble_seq)} movimientos):")
     for i, m in enumerate(scramble_seq):
         print(f"  {i+1}. {m}")
 
-    # ── Resolver con BFS ──────────────────────────────────────────────────────
+    # ── 1. Nivel de Tarea Abstracta: Resolver con BFS ─────────────────────────
     init_state = scramble(scramble_seq)
 
     if init_state == SOLVED_STATE:
         print("\nEl cubo ya está resuelto. No se genera taskfile.")
         sys.exit(0)
 
-    print("\nResolviendo con BFS bidireccional...")
+    print("\n[Nivel 1] Resolviendo cubo con BFS óptimo...")
     solution = bfs_solve(init_state)
 
     if solution is None:
         print("ERROR: No se encontró solución.")
         sys.exit(1)
 
-    print(f"\n✓ SOLUCIÓN ÓPTIMA ({len(solution)} acciones)")
+    print(f"\n✓ SOLUCIÓN DEL CUBO ({len(solution)} movimientos abstractos):")
     for i, action in enumerate(solution):
-        print(f"  Paso {i+1:2d}: {action}")
+        print(f"  Movimiento {i+1:2d}: {action}")
 
-    # ── Generar XML usando Kautham RRT ────────────────────────────────────────
+    # ── 2. Nivel Simbólico de Manipulación: Fast Downward ─────────────────────
+    print("\n[Nivel 2] Planificando tareas físicas con Fast Downward...")
+    generate_manipulation_problem(solution)
+    manipulation_plan = run_fast_downward()
+    
+    if manipulation_plan is None:
+        print("ERROR: Fast Downward falló en la planificación física.")
+        sys.exit(1)
+        
+    print(f"\n✓ PLAN DE MANIPULACIÓN ROBÓTICA SIMBÓLICA (Fast Downward):")
+    for i, act in enumerate(manipulation_plan):
+        print(f"  Acción {i+1:2d}: {act}")
+
+    # ── 3. Nivel Geométrico/Cinemático: RRT-Connect con Kautham ───────────────
+    print("\n[Nivel 3] Planificando trayectorias geométricas en Kautham...")
     generator = RRTTaskfileGenerator()
     success = generator.run(solution)
     

@@ -1,0 +1,21 @@
+ID,Profundidad Scramble,Secuencia Mezcla,BFS Tiempo (s),BFS Movs Cubo,Downward Tiempo (s),Downward Movs Robot,Estado Downward
+1,2,tilt_y_neg rotate_top_cw,0.0004,1,0.3942,3,SUCCESS
+2,2,rotate_top_cw tilt_y_neg,0.0007,2,0.3251,4,SUCCESS
+3,3,tilt_x_pos rotate_top_ccw rotate_top_ccw,0.0009,2,0.3205,4,SUCCESS
+4,3,rotate_top_ccw tilt_y_neg rotate_top_cw,0.0008,3,0.3064,7,SUCCESS
+5,4,tilt_y_neg tilt_y_neg rotate_top_cw tilt_y_pos,0.0006,2,0.3276,4,SUCCESS
+6,4,tilt_x_neg rotate_top_cw rotate_top_cw rotate_top_cw,0.0003,1,0.3275,3,SUCCESS
+7,4,rotate_top_ccw rotate_top_ccw tilt_y_pos tilt_y_pos,0.0008,2,0.2952,4,SUCCESS
+8,5,rotate_top_cw tilt_y_pos rotate_top_ccw tilt_y_neg tilt_y_neg,0.0021,5,0.3090,9,SUCCESS
+9,5,tilt_y_neg tilt_x_neg rotate_top_ccw tilt_x_neg tilt_y_pos,0.0007,3,0.3230,5,SUCCESS
+10,5,tilt_x_pos rotate_top_cw tilt_y_neg tilt_x_neg rotate_top_ccw,0.0018,4,0.3377,8,SUCCESS
+11,6,rotate_top_ccw tilt_x_pos rotate_top_cw rotate_top_cw tilt_x_neg rotate_top_cw,0.0049,6,0.3071,12,SUCCESS
+12,6,tilt_x_pos tilt_x_pos tilt_y_pos tilt_x_pos rotate_top_cw tilt_y_neg,0.0006,2,0.3166,4,SUCCESS
+13,6,tilt_x_neg tilt_y_pos rotate_top_cw tilt_x_neg rotate_top_cw tilt_y_pos,0.0016,4,0.3271,8,SUCCESS
+14,6,tilt_x_pos tilt_y_neg tilt_x_pos tilt_y_pos rotate_top_ccw tilt_y_neg,0.0007,2,0.3082,4,SUCCESS
+15,7,rotate_top_cw rotate_top_cw tilt_y_neg rotate_top_ccw tilt_x_pos rotate_top_cw rotate_top_cw,0.0063,7,0.3234,13,SUCCESS
+16,7,tilt_x_neg tilt_x_neg tilt_y_neg tilt_x_pos rotate_top_ccw tilt_x_pos tilt_x_pos,0.0002,1,0.3167,3,SUCCESS
+17,7,rotate_top_ccw tilt_y_neg tilt_x_pos tilt_y_neg tilt_y_neg tilt_y_neg rotate_top_cw,0.0019,5,0.3401,9,SUCCESS
+18,8,tilt_y_pos rotate_top_ccw tilt_y_pos rotate_top_ccw rotate_top_ccw tilt_x_neg tilt_x_neg tilt_y_neg,0.0025,5,0.3282,9,SUCCESS
+19,8,tilt_y_neg rotate_top_ccw tilt_y_neg tilt_x_pos rotate_top_cw rotate_top_cw tilt_x_pos tilt_x_pos,0.0013,4,0.2988,8,SUCCESS
+20,8,rotate_top_cw tilt_y_pos tilt_x_pos rotate_top_ccw tilt_y_neg tilt_x_neg tilt_x_neg tilt_y_neg,0.0153,8,0.3255,12,SUCCESS
