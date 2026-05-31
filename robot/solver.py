@@ -272,54 +272,6 @@ def print_cube(state):
     print("Layout: [L][F][R][B], U=top, D=bottom")
 
 
-# ── PDDL Problem Generator ─────────────────────────────────────────────────────
-
-def generate_pddl_problem(state, filename="/home/barrendeiro/robotica/cub/robot/problem.pddl"):
-    """Write the PDDL problem file for the given scrambled state."""
-    lines = []
-    lines.append(";;; ============================================================")
-    lines.append(";;; PROBLEM: rubik-robot-scrambled")
-    lines.append(";;; ============================================================")
-    lines.append("(define (problem rubik-robot-scrambled)")
-    lines.append("  (:domain rubik-robot)")
-    lines.append("  (:objects")
-    lines.append("    white yellow red orange blue green - color")
-    lines.append("    " + " ".join(POSITIONS) + " - position")
-    lines.append("  )")
-    lines.append("  (:init")
-    lines.append("    (cube-on-fixture)")
-    for i, pos in enumerate(POSITIONS):
-        lines.append(f"    (color-at {pos} {COLORS[state[i]]})")
-    lines.append("  )")
-    lines.append("  (:goal (and")
-    lines.append("    (cube-on-fixture)")
-    
-    # Universal monochromatic goal constraints for all 6 faces
-    faces = {
-        'u': ['u-ufr', 'u-ufl', 'u-ubr', 'u-ubl'],
-        'd': ['d-dfr', 'd-dfl', 'd-dbr', 'd-dbl'],
-        'f': ['f-ufr', 'f-ufl', 'f-dfr', 'f-dfl'],
-        'b': ['b-ubr', 'b-ubl', 'b-dbr', 'b-dbl'],
-        'l': ['l-ufl', 'l-ubl', 'l-dfl', 'l-dbl'],
-        'r': ['r-ufr', 'r-ubr', 'r-dfr', 'r-dbr']
-    }
-    
-    for face_name, positions in faces.items():
-        lines.append(f"    ;; Face {face_name.upper()} must be monochromatic")
-        lines.append("    (or")
-        for color in COLORS:
-            conds = " ".join([f"(color-at {pos} {color})" for pos in positions])
-            lines.append(f"      (and {conds})")
-        lines.append("    )")
-        
-    lines.append("  ))")
-    lines.append(")")
-    
-    with open(filename, 'w') as f:
-        f.write("\n".join(lines))
-    print(f"✓ PDDL problem file written to {filename}")
-
-
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
@@ -349,7 +301,6 @@ if __name__ == '__main__':
         print(f"  {i+1}. {m}")
 
     init_state = scramble(scramble_seq)
-    generate_pddl_problem(init_state)
 
     print("\n── Scrambled Cube ──")
     print_cube(init_state)
