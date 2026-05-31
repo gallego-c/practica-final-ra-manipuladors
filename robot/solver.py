@@ -10,8 +10,9 @@ Available robot actions:
   - tilt_y_pos      : tip cube rightward (R→top, pick+reorient+place)
   - tilt_y_neg      : tip cube leftward  (L→top, pick+reorient+place)
 
-rotate_top_180 (U2) is included as an atomic action to keep the robot-action
-BFS small for arbitrary scanned states.
+Note: rotate_top_180 (U2) is NOT included as an atomic action.
+The BFS will find it naturally as two rotate_top_cw/ccw moves.
+You can add it to ROBOT_MOVES for efficiency if desired.
 
 State: tuple of 24 integers (one per sticker position), color index 0-5.
 """
@@ -131,14 +132,12 @@ TILT_Y_POS_CYCLES = [
 
 # Build all robot move permutations
 _rtcw = build_perm(ROTATE_TOP_CW_CYCLES)
-_rt180 = tuple(_rtcw[_rtcw[i]] for i in range(len(POSITIONS)))
 _txp  = build_perm(TILT_X_POS_CYCLES)
 _typ  = build_perm(TILT_Y_POS_CYCLES)
 
 ROBOT_MOVES = {
     'rotate_top_cw':  _rtcw,
     'rotate_top_ccw': invert_perm(_rtcw),
-    'rotate_top_180': _rt180,
     'tilt_x_pos':     _txp,
     'tilt_x_neg':     invert_perm(_txp),
     'tilt_y_pos':     _typ,
@@ -148,7 +147,6 @@ ROBOT_MOVES = {
 INVERSE_MOVE = {
     'rotate_top_cw':  'rotate_top_ccw',
     'rotate_top_ccw': 'rotate_top_cw',
-    'rotate_top_180': 'rotate_top_180',
     'tilt_x_pos':     'tilt_x_neg',
     'tilt_x_neg':     'tilt_x_pos',
     'tilt_y_pos':     'tilt_y_neg',

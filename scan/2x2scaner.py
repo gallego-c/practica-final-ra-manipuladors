@@ -9,6 +9,9 @@ import http.server
 import socketserver
 import json
 import sys
+import time
+import tempfile
+import multiprocessing as mp
 from pathlib import Path
 
 # Add workspace root to system path for imports
@@ -25,6 +28,7 @@ except ImportError:
 
 PORT = 5000
 FACE_ORDER = ["U", "F", "R", "B", "L", "D"]
+SOLVER_TIMEOUT_SECONDS = 12
 
 def build_solver_state(face_data):
     """Maps the 6 scanned faces (4 facelets each) to the 24-sticker solver state.
@@ -83,6 +87,28 @@ def build_solver_state(face_data):
     state[23] = color_to_idx[face_data["R"][3]]  # 'r-dbr' -> R[3]
 
     return tuple(state)
+
+def _bfs_worker(state, queue):
+    try:
+        queue.put({"solution": bfs_solve(state), "error": None})
+    except Exception as e:
+        queue.put({"solution": None, "error": str(e)})
+
+def solve_with_timeout(state, timeout_seconds=SOLVER_TIMEOUT_SECONDS):
+    """Run BFS in a child process so invalid/hard scans cannot hang the server."""
+    ctx = mp.get_context("fork")
+    queue = ctx.Queue()
+    proc = ctx.Process(target=_bfs_worker, args=(state, queue))
+    proc.start()
+    proc.join(timeout_seconds)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(1)
+        return None, "timeout"
+    if queue.empty():
+        return None, "empty"
+    result = queue.get()
+    return result["solution"], result["error"]
 
 class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -172,23 +198,43 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
                 print("-"*50)
                 print_cube(state_tuple)
 
-                # Write problem.pddl for the solver
-                pddl_path = workspace_root / "robot" / "problem.pddl"
-                generate_pddl_problem(state_tuple, filename=str(pddl_path))
+                # Match robot/solver.py's fast path: generate a problem file for
+                # inspection, then solve with the in-process bidirectional BFS.
+                # The temp file avoids overwriting robot/problem.pddl.
+                with tempfile.TemporaryDirectory(prefix="cub_scan_pddl_") as tmp:
+                    work_dir = Path(tmp)
+                    pddl_path = work_dir / "problem.pddl"
+                    generate_pddl_problem(state_tuple, filename=str(pddl_path))
 
-                # Solve cube optimally using BFS
-                print("Solving cube optimally with BFS...")
-                solution = bfs_solve(state_tuple)
+                    print("Solving with robot.solver bidirectional BFS...")
+                    t0 = time.perf_counter()
+                    solution, solver_error = solve_with_timeout(state_tuple)
+                    solve_seconds = time.perf_counter() - t0
 
                 if solution is not None:
-                    print(f"Solution found: {len(solution)} moves.")
+                    print(f"Solution found: {len(solution)} actions in {solve_seconds:.3f}s.")
                     self.send_json_response({
                         "status": "success",
                         "solution": solution,
-                        "pddl_path": str(pddl_path.relative_to(workspace_root))
+                        "solver": "robot.solver.bfs_solve",
+                        "solve_seconds": round(solve_seconds, 3)
                     })
                 else:
-                    self.send_json_response({"status": "error", "message": "Invalid color mix. Please verify 2D cross map."})
+                    if solver_error == "timeout":
+                        message = (
+                            f"Solver timed out after {SOLVER_TIMEOUT_SECONDS}s. "
+                            "The scan may be unreachable for the robot model; please verify the 2D cross map."
+                        )
+                    elif solver_error:
+                        message = f"Solver error: {solver_error}"
+                    else:
+                        message = "No solution found. Please verify the 2D cross map."
+                    self.send_json_response({
+                        "status": "error",
+                        "message": message,
+                        "solver": "robot.solver.bfs_solve",
+                        "solve_seconds": round(solve_seconds, 3)
+                    })
 
             except Exception as e:
                 self.send_json_response({"status": "error", "message": f"Server error: {str(e)}"})
