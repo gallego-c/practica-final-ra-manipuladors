@@ -1,0 +1,3 @@
+pick
+execute_rotate_top_cw
+place
