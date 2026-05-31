@@ -362,7 +362,7 @@
             margin: auto;
         }
 
-        .guide-icon-slot .guide-icon-img[hidden] {
+        .guide-icon-slot .guide-icon-img.is-hidden {
             display: none !important;
         }
 
@@ -437,8 +437,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: nowrap;
+            gap: 8px;
             border-bottom: 1px solid var(--border-primary);
             padding-bottom: 10px;
+        }
+
+        .panel-card-title > span:first-child {
+            flex-shrink: 0;
+        }
+
+        #validation-counts {
+            font-size: 0.62rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            text-transform: none;
+            letter-spacing: 0;
+            flex-shrink: 1;
+            min-width: 0;
         }
 
         /* Despliegue en cruz 2D */
@@ -876,9 +893,14 @@
                 <!-- Floating Video HUD Badge -->
                 <div id="video-dir-badge" class="video-overlay-badge">
                     <div id="video-dir-arrow" class="video-arrow-graphic guide-icon-slot">
-                        <svg id="video-icon-init" class="guide-icon-img" viewBox="0 0 32 32" fill="none"><rect x="8" y="8" width="16" height="16" rx="2" stroke="#888" stroke-width="1.5" fill="rgba(46,170,220,0.12)"/></svg>
-                        <img id="video-icon-up" class="guide-icon-img" src="/icons/up-arrow-cube_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
-                        <img id="video-icon-left" class="guide-icon-img" src="/icons/cube-arrow-left_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
+                        <svg id="video-icon-init" class="guide-icon-img" viewBox="0 0 32 32" fill="none">
+                            <rect x="8" y="8" width="16" height="16" rx="2" stroke="#888" stroke-width="1.5"
+                                fill="rgba(46,170,220,0.12)" />
+                        </svg>
+                        <img id="video-icon-up" class="guide-icon-img is-hidden" src="/icons/up-arrow-cube_no_background.png"
+                            alt="" decoding="async" fetchpriority="high">
+                        <img id="video-icon-left" class="guide-icon-img is-hidden" src="/icons/cube-arrow-left_no_background.png"
+                            alt="" decoding="async" fetchpriority="high">
                     </div>
                     <div id="video-dir-text" class="video-arrow-text">Initial</div>
                 </div>
@@ -888,15 +910,21 @@
             <div class="instruction-bar">
                 <div class="arrow-container">
                     <div id="visual-arrow" class="arrow-graphic guide-icon-slot">
-                        <svg id="panel-icon-init" class="guide-icon-img" viewBox="0 0 32 32" fill="none"><rect x="8" y="8" width="16" height="16" rx="2" stroke="#888" stroke-width="1.5" fill="rgba(46,170,220,0.12)"/></svg>
-                        <img id="panel-icon-up" class="guide-icon-img" src="/icons/up-arrow-cube_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
-                        <img id="panel-icon-left" class="guide-icon-img" src="/icons/cube-arrow-left_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
+                        <svg id="panel-icon-init" class="guide-icon-img" viewBox="0 0 32 32" fill="none">
+                            <rect x="8" y="8" width="16" height="16" rx="2" stroke="#888" stroke-width="1.5"
+                                fill="rgba(46,170,220,0.12)" />
+                        </svg>
+                        <img id="panel-icon-up" class="guide-icon-img is-hidden" src="/icons/up-arrow-cube_no_background.png"
+                            alt="" decoding="async" fetchpriority="high">
+                        <img id="panel-icon-left" class="guide-icon-img is-hidden" src="/icons/cube-arrow-left_no_background.png"
+                            alt="" decoding="async" fetchpriority="high">
                     </div>
                     <div id="visual-arrow-desc" class="arrow-text">Initial</div>
                 </div>
                 <div class="instruction-content">
                     <div class="instruction-title" id="guide-title font-semibold text-sm">Face U</div>
-                    <div class="instruction-text" id="guide-desc">Hold U toward the camera. Align the face with the grid, then press Capture.</div>
+                    <div class="instruction-text" id="guide-desc">Hold U toward the camera. Align the face with the
+                        grid, then press Capture.</div>
                 </div>
             </div>
         </div>
@@ -906,8 +934,7 @@
             <div class="panel-card">
                 <div class="panel-card-title">
                     <span>2D Cross Map</span>
-                    <span id="validation-counts" style="font-size: 0.7rem; color: var(--text-secondary);">W:0 Y:0 R:0
-                        O:0 B:0 G:0</span>
+                    <span id="validation-counts">W:0 Y:0 R:0 O:0 B:0 G:0</span>
                 </div>
 
                 <!-- Unfolded 2D Cube Cross Map -->
@@ -1103,9 +1130,10 @@
 
         function setGuideIconKind(kind) {
             GUIDE_ICON_IDS.forEach(prefix => {
-                document.getElementById(`${prefix}-icon-init`).hidden = kind !== "init";
-                document.getElementById(`${prefix}-icon-up`).hidden = kind !== "up";
-                document.getElementById(`${prefix}-icon-left`).hidden = kind !== "left";
+                ["init", "up", "left"].forEach(k => {
+                    const el = document.getElementById(`${prefix}-icon-${k}`);
+                    if (el) el.classList.toggle("is-hidden", k !== kind);
+                });
             });
         }
 
@@ -1403,7 +1431,7 @@
                 colors.forEach(c => counts[c]++);
             });
 
-            const text = `White: ${counts.W} | Yellow: ${counts.Y} | Red: ${counts.R} \n| Orange: ${counts.O} | Blue: ${counts.B} | Green: ${counts.G}`;
+            const text = `W:${counts.W} Y:${counts.Y} R:${counts.R} O:${counts.O} B:${counts.B} G:${counts.G}`;
             document.getElementById("validation-counts").innerText = text;
 
             let isValid = true;
