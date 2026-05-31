@@ -331,6 +331,14 @@ def generate_manipulation_problem(solution, filename="/home/barrendeiro/robotica
     lines.append("    (cube-on-fixture)")
     lines.append("    (not (robot-holding))")
     lines.append("")
+    lines.append("    ;; Orientación 3D inicial del cubo en la base")
+    lines.append("    (top-face face_u)")
+    lines.append("    (bottom-face face_d)")
+    lines.append("    (front-face face_f)")
+    lines.append("    (back-face face_b)")
+    lines.append("    (left-face face_l)")
+    lines.append("    (right-face face_r)")
+    lines.append("")
     lines.append("    ;; Paso inicial de la receta")
     lines.append("    (current-step step1)")
     lines.append("")
@@ -338,19 +346,9 @@ def generate_manipulation_problem(solution, filename="/home/barrendeiro/robotica
     # Secuencia y tipos de pasos
     for i, action in enumerate(solution):
         lines.append(f"    (next-step step{i+1} step{i+2})")
-        # Asignar tipo de paso
-        if action == 'rotate_top_cw':
-            lines.append(f"    (step-type-rotate-cw step{i+1})")
-        elif action == 'rotate_top_ccw':
-            lines.append(f"    (step-type-rotate-ccw step{i+1})")
-        elif action == 'tilt_x_pos':
-            lines.append(f"    (step-type-tilt-x-pos step{i+1})")
-        elif action == 'tilt_x_neg':
-            lines.append(f"    (step-type-tilt-x-neg step{i+1})")
-        elif action == 'tilt_y_pos':
-            lines.append(f"    (step-type-tilt-y-pos step{i+1})")
-        elif action == 'tilt_y_neg':
-            lines.append(f"    (step-type-tilt-y-neg step{i+1})")
+        # Asignar tipo de paso según la nomenclatura estándar
+        act_pddl = action.replace("_PRIME", "-prime")
+        lines.append(f"    (step-type-{act_pddl} step{i+1})")
             
     lines.append("  )")
     

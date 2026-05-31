@@ -132,25 +132,48 @@ TILT_Y_POS_CYCLES = [
 
 # Build all robot move permutations
 _rtcw = build_perm(ROTATE_TOP_CW_CYCLES)
+_rtccw = invert_perm(_rtcw)
 _txp  = build_perm(TILT_X_POS_CYCLES)
+_txn  = invert_perm(_txp)
 _typ  = build_perm(TILT_Y_POS_CYCLES)
+_tyn  = invert_perm(_typ)
 
+def compose_perms(*perms):
+    """Composes multiple permutations in sequence."""
+    p = list(range(len(perms[0])))
+    for perm in perms:
+        p = [p[perm[i]] for i in range(len(p))]
+    return tuple(p)
+
+# Compose standard Rubik's moves (U, D, R, L, F, B)
 ROBOT_MOVES = {
-    'rotate_top_cw':  _rtcw,
-    'rotate_top_ccw': invert_perm(_rtcw),
-    'tilt_x_pos':     _txp,
-    'tilt_x_neg':     invert_perm(_txp),
-    'tilt_y_pos':     _typ,
-    'tilt_y_neg':     invert_perm(_typ),
+    'U':       _rtcw,
+    'U_PRIME': _rtccw,
+    'D':       compose_perms(_txp, _txp, _rtcw, _txp, _txp),
+    'D_PRIME': compose_perms(_txp, _txp, _rtccw, _txp, _txp),
+    'R':       compose_perms(_typ, _rtcw, _tyn),
+    'R_PRIME': compose_perms(_typ, _rtccw, _tyn),
+    'L':       compose_perms(_tyn, _rtcw, _typ),
+    'L_PRIME': compose_perms(_tyn, _rtccw, _typ),
+    'F':       compose_perms(_txp, _rtcw, _txn),
+    'F_PRIME': compose_perms(_txp, _rtccw, _txn),
+    'B':       compose_perms(_txn, _rtcw, _txp),
+    'B_PRIME': compose_perms(_txn, _rtccw, _txp),
 }
 
 INVERSE_MOVE = {
-    'rotate_top_cw':  'rotate_top_ccw',
-    'rotate_top_ccw': 'rotate_top_cw',
-    'tilt_x_pos':     'tilt_x_neg',
-    'tilt_x_neg':     'tilt_x_pos',
-    'tilt_y_pos':     'tilt_y_neg',
-    'tilt_y_neg':     'tilt_y_pos',
+    'U':       'U_PRIME',
+    'U_PRIME': 'U',
+    'D':       'D_PRIME',
+    'D_PRIME': 'D',
+    'R':       'R_PRIME',
+    'R_PRIME': 'R',
+    'L':       'L_PRIME',
+    'L_PRIME': 'L',
+    'F':       'F_PRIME',
+    'F_PRIME': 'F',
+    'B':       'B_PRIME',
+    'B_PRIME': 'B',
 }
 
 
@@ -187,8 +210,7 @@ def get_all_solved_states():
     solved_states.add(SOLVED_STATE)
     while queue:
         curr = queue.popleft()
-        for name in ['tilt_x_pos', 'tilt_x_neg', 'tilt_y_pos', 'tilt_y_neg']:
-            perm = ROBOT_MOVES[name]
+        for perm in [_txp, _txn, _typ, _tyn]:
             ns = apply_move(curr, perm)
             if ns not in solved_states:
                 solved_states.add(ns)
@@ -283,8 +305,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         scramble_seq = sys.argv[1:]
     else:
-        # Default: a simple 4-move scramble
-        scramble_seq = ['tilt_x_pos', 'rotate_top_cw', 'tilt_y_pos', 'rotate_top_ccw']
+        # Default: a simple 4-move scramble using standard Rubik's moves
+        scramble_seq = ['R', 'U', 'L_PRIME', 'F']
 
     # Validate moves
     for m in scramble_seq:
@@ -294,7 +316,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
     print("=" * 60)
-    print("  UR3 Robot — 2×2 Rubik's Cube Solver")
+    print("  UR3 Robot — 2×2 Rubik's Cube Solver (Standard Moves)")
     print("=" * 60)
     print(f"\nScramble sequence ({len(scramble_seq)} moves):")
     for i, m in enumerate(scramble_seq):
@@ -318,7 +340,7 @@ if __name__ == '__main__':
         print("No solution found (this should not happen for a valid 2x2 state).")
         sys.exit(1)
 
-    print(f"\n✓ OPTIMAL SOLUTION  ({len(solution)} robot actions)  [{t1-t0:.3f}s]")
+    print(f"\n✓ OPTIMAL SOLUTION  ({len(solution)} standard Rubik moves)  [{t1-t0:.3f}s]")
     print()
     for i, action in enumerate(solution):
         print(f"  Step {i+1:2d}: {action}")

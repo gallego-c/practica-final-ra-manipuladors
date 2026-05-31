@@ -1,3 +1,16 @@
+tilt_y_pos
 pick
-execute_rotate_top_cw
+execute_r
+place
+tilt_x_pos
+pick
+execute_f
+place
+tilt_x_neg
+pick
+execute_r
+place
+tilt_y_neg
+pick
+execute_u
 place

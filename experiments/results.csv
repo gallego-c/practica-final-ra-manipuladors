@@ -1,21 +1,21 @@
 ID,Profundidad Scramble,Secuencia Mezcla,BFS Tiempo (s),BFS Movs Cubo,Downward Tiempo (s),Downward Movs Robot,Estado Downward
-1,2,tilt_y_neg rotate_top_cw,0.0004,1,0.3203,3,SUCCESS
-2,2,rotate_top_cw tilt_y_neg,0.0009,2,0.3375,4,SUCCESS
-3,3,tilt_x_pos rotate_top_ccw rotate_top_ccw,0.0006,2,0.3589,4,SUCCESS
-4,3,rotate_top_ccw tilt_y_neg rotate_top_cw,0.0007,3,0.3096,7,SUCCESS
-5,4,tilt_y_neg tilt_y_neg rotate_top_cw tilt_y_pos,0.0007,2,0.3343,4,SUCCESS
-6,4,tilt_x_neg rotate_top_cw rotate_top_cw rotate_top_cw,0.0004,1,0.3509,3,SUCCESS
-7,4,rotate_top_ccw rotate_top_ccw tilt_y_pos tilt_y_pos,0.0006,2,0.3330,4,SUCCESS
-8,5,rotate_top_cw tilt_y_pos rotate_top_ccw tilt_y_neg tilt_y_neg,0.0027,5,0.3169,9,SUCCESS
-9,5,tilt_y_neg tilt_x_neg rotate_top_ccw tilt_x_neg tilt_y_pos,0.0012,3,0.3406,5,SUCCESS
-10,5,tilt_x_pos rotate_top_cw tilt_y_neg tilt_x_neg rotate_top_ccw,0.0022,4,0.3336,8,SUCCESS
-11,6,rotate_top_ccw tilt_x_pos rotate_top_cw rotate_top_cw tilt_x_neg rotate_top_cw,0.0055,6,0.3347,12,SUCCESS
-12,6,tilt_x_pos tilt_x_pos tilt_y_pos tilt_x_pos rotate_top_cw tilt_y_neg,0.0009,2,0.3233,4,SUCCESS
-13,6,tilt_x_neg tilt_y_pos rotate_top_cw tilt_x_neg rotate_top_cw tilt_y_pos,0.0013,4,0.3304,8,SUCCESS
-14,6,tilt_x_pos tilt_y_neg tilt_x_pos tilt_y_pos rotate_top_ccw tilt_y_neg,0.0008,2,0.3252,4,SUCCESS
-15,7,rotate_top_cw rotate_top_cw tilt_y_neg rotate_top_ccw tilt_x_pos rotate_top_cw rotate_top_cw,0.0067,7,0.3521,13,SUCCESS
-16,7,tilt_x_neg tilt_x_neg tilt_y_neg tilt_x_pos rotate_top_ccw tilt_x_pos tilt_x_pos,0.0004,1,0.2997,3,SUCCESS
-17,7,rotate_top_ccw tilt_y_neg tilt_x_pos tilt_y_neg tilt_y_neg tilt_y_neg rotate_top_cw,0.0021,5,0.3613,9,SUCCESS
-18,8,tilt_y_pos rotate_top_ccw tilt_y_pos rotate_top_ccw rotate_top_ccw tilt_x_neg tilt_x_neg tilt_y_neg,0.0028,5,0.3206,9,SUCCESS
-19,8,tilt_y_neg rotate_top_ccw tilt_y_neg tilt_x_pos rotate_top_cw rotate_top_cw tilt_x_pos tilt_x_pos,0.0013,4,0.3364,8,SUCCESS
-20,8,rotate_top_cw tilt_y_pos tilt_x_pos rotate_top_ccw tilt_y_neg tilt_x_neg tilt_x_neg tilt_y_neg,0.0136,8,0.3372,12,SUCCESS
+1,2,tilt_y_neg rotate_top_cw,0.0003,1,0.3527,3,SUCCESS
+2,2,rotate_top_cw tilt_y_neg,0.0007,2,0.3042,4,SUCCESS
+3,3,tilt_x_pos rotate_top_ccw rotate_top_ccw,0.0007,2,0.3167,4,SUCCESS
+4,3,rotate_top_ccw tilt_y_neg rotate_top_cw,0.0008,3,0.3136,7,SUCCESS
+5,4,tilt_y_neg tilt_y_neg rotate_top_cw tilt_y_pos,0.0008,2,0.3244,4,SUCCESS
+6,4,tilt_x_neg rotate_top_cw rotate_top_cw rotate_top_cw,0.0003,1,0.3165,3,SUCCESS
+7,4,rotate_top_ccw rotate_top_ccw tilt_y_pos tilt_y_pos,0.0006,2,0.3130,4,SUCCESS
+8,5,rotate_top_cw tilt_y_pos rotate_top_ccw tilt_y_neg tilt_y_neg,0.0022,5,0.3080,9,SUCCESS
+9,5,tilt_y_neg tilt_x_neg rotate_top_ccw tilt_x_neg tilt_y_pos,0.0009,3,0.3200,5,SUCCESS
+10,5,tilt_x_pos rotate_top_cw tilt_y_neg tilt_x_neg rotate_top_ccw,0.0021,4,0.3206,8,SUCCESS
+11,6,rotate_top_ccw tilt_x_pos rotate_top_cw rotate_top_cw tilt_x_neg rotate_top_cw,0.0044,6,0.3205,12,SUCCESS
+12,6,tilt_x_pos tilt_x_pos tilt_y_pos tilt_x_pos rotate_top_cw tilt_y_neg,0.0007,2,0.3336,4,SUCCESS
+13,6,tilt_x_neg tilt_y_pos rotate_top_cw tilt_x_neg rotate_top_cw tilt_y_pos,0.0015,4,0.3137,8,SUCCESS
+14,6,tilt_x_pos tilt_y_neg tilt_x_pos tilt_y_pos rotate_top_ccw tilt_y_neg,0.0008,2,0.3088,4,SUCCESS
+15,7,rotate_top_cw rotate_top_cw tilt_y_neg rotate_top_ccw tilt_x_pos rotate_top_cw rotate_top_cw,0.0073,7,0.3335,13,SUCCESS
+16,7,tilt_x_neg tilt_x_neg tilt_y_neg tilt_x_pos rotate_top_ccw tilt_x_pos tilt_x_pos,0.0004,1,0.3097,3,SUCCESS
+17,7,rotate_top_ccw tilt_y_neg tilt_x_pos tilt_y_neg tilt_y_neg tilt_y_neg rotate_top_cw,0.0030,5,0.3041,9,SUCCESS
+18,8,tilt_y_pos rotate_top_ccw tilt_y_pos rotate_top_ccw rotate_top_ccw tilt_x_neg tilt_x_neg tilt_y_neg,0.0021,5,0.3356,9,SUCCESS
+19,8,tilt_y_neg rotate_top_ccw tilt_y_neg tilt_x_pos rotate_top_cw rotate_top_cw tilt_x_pos tilt_x_pos,0.0014,4,0.3080,8,SUCCESS
+20,8,rotate_top_cw tilt_y_pos tilt_x_pos rotate_top_ccw tilt_y_neg tilt_x_neg tilt_x_neg tilt_y_neg,0.0152,8,0.3159,12,SUCCESS
