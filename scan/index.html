@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UR3 Rubik 2x2 Solver</title>
+    <link rel="preload" as="image" href="/icons/up-arrow-cube_no_background.png">
+    <link rel="preload" as="image" href="/icons/cube-arrow-left_no_background.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <style>
@@ -141,13 +143,13 @@
             gap: 8px;
             z-index: 50;
             pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .video-arrow-graphic {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             line-height: 1;
         }
 
@@ -162,36 +164,75 @@
         .video-arrow-graphic.arrow-up {
             animation: bounce-v 1.5s infinite ease-in-out;
         }
+
         .video-arrow-graphic.arrow-left {
             animation: bounce-h 1.5s infinite ease-in-out;
         }
+
+        .video-arrow-graphic.arrow-right {
+            animation: bounce-h-right 1.5s infinite ease-in-out;
+        }
+
         .video-arrow-graphic.arrow-down {
             animation: bounce-v-down 1.5s infinite ease-in-out;
         }
 
         @keyframes bounce-v {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
-        @keyframes bounce-h {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(-4px); }
-        }
-        @keyframes bounce-v-down {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(4px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
         }
 
-        video {
+        @keyframes bounce-h {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(-4px);
+            }
+        }
+
+        @keyframes bounce-h-right {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(4px);
+            }
+        }
+
+        @keyframes bounce-v-down {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(4px);
+            }
+        }
+
+        #webcam-video {
+            display: none;
+        }
+
+        #camera-preview {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1);
-            /* Efecto espejo activo para alineación intuitiva */
-        }
-
-        canvas#video-canvas {
-            display: none;
         }
 
         /* Cuadrícula de alineación con Transparencia Notion */
@@ -202,6 +243,7 @@
             transform: translate(-50%, -50%);
             width: 240px;
             height: 240px;
+            z-index: 10;
             border: 1.5px solid rgba(55, 53, 47, 0.2);
             border-radius: 4px;
             display: grid;
@@ -241,30 +283,53 @@
         }
 
         .arrow-container {
-            width: 44px;
-            height: 44px;
+            width: 64px;
+            min-height: 64px;
             border-radius: 4px;
             background: rgba(55, 53, 47, 0.05);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: 4px;
+            padding: 6px 4px;
         }
 
         .arrow-graphic {
-            font-size: 1.4rem;
-            font-weight: 500;
-            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             line-height: 1;
         }
 
+        .guide-icon-img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* PNG icons are black-on-transparent; invert for dark UI */
+        img.guide-icon-img {
+            filter: invert(1);
+        }
+
+        .video-arrow-graphic .guide-icon-img {
+            width: 40px;
+            height: 40px;
+        }
+
         .arrow-text {
-            font-size: 0.55rem;
+            font-size: 0.58rem;
             font-weight: 500;
             color: var(--text-secondary);
             text-transform: uppercase;
-            margin-top: 1px;
             letter-spacing: 0.3px;
+            text-align: center;
+            line-height: 1.25;
+            max-width: 62px;
         }
 
         .instruction-content {
@@ -283,6 +348,32 @@
             font-size: 0.8rem;
             color: var(--text-secondary);
             line-height: 1.45;
+        }
+
+        .guide-icon-slot {
+            position: relative;
+            width: 48px;
+            height: 48px;
+        }
+
+        .guide-icon-slot .guide-icon-img {
+            position: absolute;
+            inset: 0;
+            margin: auto;
+        }
+
+        .guide-icon-slot .guide-icon-img[hidden] {
+            display: none !important;
+        }
+
+        .video-arrow-graphic.guide-icon-slot {
+            width: 40px;
+            height: 40px;
+        }
+
+        .video-arrow-graphic.guide-icon-slot .guide-icon-img {
+            width: 40px;
+            height: 40px;
         }
 
         /* Barra de progreso de escaneo */
@@ -625,20 +716,24 @@
             margin-top: 15px;
             overflow: hidden;
         }
+
         .cube-wrapper {
             width: 80px;
             height: 80px;
             position: relative;
             transform-style: preserve-3d;
-            transform: rotateX(-20deg) rotateY(40deg);
+            transform: rotateX(-20deg) rotateY(-40deg);
         }
+
         .cube3d {
             width: 80px;
             height: 80px;
             position: absolute;
             transform-style: preserve-3d;
-            transform: translateY(-20px); /* Eleva el cubo sobre la plataforma */
+            transform: translateY(-20px);
+            /* Eleva el cubo sobre la plataforma */
         }
+
         .face3d {
             position: absolute;
             width: 80px;
@@ -650,22 +745,39 @@
             background: #191919;
             border: 1.5px solid #191919;
             box-sizing: border-box;
-            backface-visibility: visible;
+            backface-visibility: hidden;
         }
-        
+
         /* Ubicaciones de las caras del cubo 3D */
-        .face3d-u { transform: rotateX(90deg) translateZ(40px); }
-        .face3d-d { transform: rotateX(-90deg) translateZ(40px); }
-        .face3d-f { transform: translateZ(40px); }
-        .face3d-b { transform: rotateY(180deg) translateZ(40px); }
-        .face3d-l { transform: rotateY(-90deg) translateZ(40px); }
-        .face3d-r { transform: rotateY(90deg) translateZ(40px); }
+        .face3d-u {
+            transform: rotateX(90deg) translateZ(40px);
+        }
+
+        .face3d-d {
+            transform: rotateX(-90deg) translateZ(40px);
+        }
+
+        .face3d-f {
+            transform: translateZ(40px);
+        }
+
+        .face3d-b {
+            transform: rotateY(180deg) translateZ(40px);
+        }
+
+        .face3d-l {
+            transform: rotateY(-90deg) translateZ(40px);
+        }
+
+        .face3d-r {
+            transform: rotateY(90deg) translateZ(40px);
+        }
 
         .sticker3d {
             border-radius: 2px;
             background-color: var(--cube-empty);
-            border: 0.5px solid rgba(0,0,0,0.3);
-            box-shadow: inset 0 0 4px rgba(0,0,0,0.15);
+            border: 0.5px solid rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.15);
             transition: background-color 0.3s ease;
         }
 
@@ -696,10 +808,31 @@
             text-transform: uppercase;
             font-family: 'Inter', sans-serif;
         }
-        .label-f { bottom: 6px; left: 50%; transform: translateX(-50%); color: #2ecc71; }
-        .label-r { right: 6px; top: 50%; transform: translateY(-50%) rotate(90deg); }
-        .label-b { top: 6px; left: 50%; transform: translateX(-50%); }
-        .label-l { left: 6px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+        .label-f {
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #2ecc71;
+        }
+
+        .label-r {
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+        }
+
+        .label-b {
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .label-l {
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+        }
     </style>
 </head>
 
@@ -707,7 +840,12 @@
 
     <header>
         <h1>UR3 Rubik 2x2 Solver</h1>
-        <div id="status" class="status-badge">Scan Face: U</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <a href="/calibrate.html"
+                style="font-size:0.75rem;color:var(--accent-orange);text-decoration:none;font-weight:500;">Calibración
+                (temp)</a>
+            <div id="status" class="status-badge">Face U</div>
+        </div>
     </header>
 
     <div class="main-container">
@@ -725,6 +863,7 @@
 
             <div class="video-container">
                 <video id="webcam-video" autoplay playsinline></video>
+                <canvas id="camera-preview" width="640" height="480"></canvas>
 
                 <!-- Transparent 2x2 Alignment Grid -->
                 <div class="grid-overlay" id="grid">
@@ -736,23 +875,28 @@
 
                 <!-- Floating Video HUD Badge -->
                 <div id="video-dir-badge" class="video-overlay-badge">
-                    <div id="video-dir-arrow" class="video-arrow-graphic">|</div>
-                    <div id="video-dir-text" class="video-arrow-text">Front</div>
+                    <div id="video-dir-arrow" class="video-arrow-graphic guide-icon-slot">
+                        <svg id="video-icon-init" class="guide-icon-img" viewBox="0 0 32 32" fill="none"><rect x="8" y="8" width="16" height="16" rx="2" stroke="#888" stroke-width="1.5" fill="rgba(46,170,220,0.12)"/></svg>
+                        <img id="video-icon-up" class="guide-icon-img" src="/icons/up-arrow-cube_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
+                        <img id="video-icon-left" class="guide-icon-img" src="/icons/cube-arrow-left_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
+                    </div>
+                    <div id="video-dir-text" class="video-arrow-text">Initial</div>
                 </div>
             </div>
-
-            <!-- Invisible Canvas for JS Image Sampling -->
-            <canvas id="video-canvas" width="640" height="480"></canvas>
 
             <!-- Dynamic Guide and Directional Indicator -->
             <div class="instruction-bar">
                 <div class="arrow-container">
-                    <div id="visual-arrow" class="arrow-graphic">|</div>
-                    <div id="visual-arrow-desc" class="arrow-text">Front</div>
+                    <div id="visual-arrow" class="arrow-graphic guide-icon-slot">
+                        <svg id="panel-icon-init" class="guide-icon-img" viewBox="0 0 32 32" fill="none"><rect x="8" y="8" width="16" height="16" rx="2" stroke="#888" stroke-width="1.5" fill="rgba(46,170,220,0.12)"/></svg>
+                        <img id="panel-icon-up" class="guide-icon-img" src="/icons/up-arrow-cube_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
+                        <img id="panel-icon-left" class="guide-icon-img" src="/icons/cube-arrow-left_no_background.png" alt="" decoding="async" fetchpriority="high" hidden>
+                    </div>
+                    <div id="visual-arrow-desc" class="arrow-text">Initial</div>
                 </div>
                 <div class="instruction-content">
-                    <div class="instruction-title" id="guide-title font-semibold text-sm">Face Scan</div>
-                    <div class="instruction-text" id="guide-desc">Start scanning by holding the corresponding face in front of the camera.</div>
+                    <div class="instruction-title" id="guide-title font-semibold text-sm">Face U</div>
+                    <div class="instruction-text" id="guide-desc">Hold U toward the camera. Align the face with the grid, then press Capture.</div>
                 </div>
             </div>
         </div>
@@ -800,7 +944,7 @@
                             viewBox="0 0 24 24" style="margin-right: 2px;">
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
-                        Capture Face (Space)
+                        Capture (Space)
                     </button>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <button onclick="goToPrevFace()">Back (R)</button>
@@ -830,9 +974,12 @@
             <div class="panel-card">
                 <div class="panel-card-title">
                     <span>Interactive 3D View</span>
-                    <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: none; font-weight: normal;">
-                        U: <span id="robot-color-up" style="font-weight: 600; text-transform: uppercase; color: var(--accent-green);">-</span> | 
-                        F: <span id="robot-color-front" style="font-weight: 600; text-transform: uppercase; color: var(--accent-green);">-</span>
+                    <span
+                        style="font-size: 0.7rem; color: var(--text-secondary); text-transform: none; font-weight: normal;">
+                        U: <span id="robot-color-up"
+                            style="font-weight: 600; text-transform: uppercase; color: var(--accent-green);">-</span> |
+                        F: <span id="robot-color-front"
+                            style="font-weight: 600; text-transform: uppercase; color: var(--accent-green);">-</span>
                     </span>
                 </div>
                 <div class="scene3d" id="interactive-scene" style="margin-top: 0; cursor: grab; user-select: none;">
@@ -896,110 +1043,185 @@
         </div>
     </div>
 
+    <script src="/cube-interp.js"></script>
     <script>
-        const FACE_ORDER = ["U", "F", "R", "B", "L", "D"];
         const COLOR_CLASSES = { "W": "c-w", "Y": "c-y", "R": "c-r", "O": "c-o", "B": "c-b", "G": "c-g" };
         const SOLID_COLOR_CLASSES = { "W": "solid-w", "Y": "solid-y", "R": "solid-r", "O": "solid-o", "B": "solid-b", "G": "solid-g" };
         const COLOR_LIST = ["W", "Y", "R", "O", "B", "G"];
 
+        // Raw capture: faceData[scanStep] = colors as photographed at that scan step.
+        // CUBE_INTERPRET (cube-interp.js) maps scan steps → physical cube face.
+
+        const SCAN_CORNERS = {
+            U: ["ubl", "ubr", "ufl", "ufr"],
+            F: ["ufl", "ufr", "dfl", "dfr"],
+            R: ["ufr", "ubr", "dfr", "dbr"],
+            B: ["ubr", "ubl", "dbr", "dbl"],
+            L: ["ubl", "ufl", "dbl", "dfl"],
+            D: ["dfl", "dfr", "dbl", "dbr"]
+        };
+
         let faceIdx = 0;
-        let faceData = {}; // {"U": ["W","W","W","W"], ...}
-        let activeColors = ["W", "W", "W", "W"]; // Buffer for the active face color sampling
+        let faceData = {}; // raw per scan step (U,F,R,B,L,D capture order)
+        let activeColors = ["W", "W", "W", "W"];
+
+        function liveScanContext() {
+            if (faceIdx >= 6) return null;
+            return { scanStep: FACE_ORDER[faceIdx], activeColors };
+        }
+
+        /** Physical cube face colors from raw captures. */
+        function getCubeFaceColorsForView(cubeFace) {
+            return getCubeFaceColors(cubeFace, faceData, liveScanContext());
+        }
+
+        function buildSolverFaceData() {
+            const out = {};
+            FACE_ORDER.forEach(face => {
+                const colors = getCubeFaceColorsForView(face);
+                if (colors) out[face] = colors;
+            });
+            return out;
+        }
+
+        function refreshCrossMap() {
+            FACE_ORDER.forEach(face => {
+                const colors = getCubeFaceColorsForView(face);
+                if (colors) renderMiniMapFace(face, colors);
+            });
+        }
+
+        // Rotation hints (UI only). PNGs stay in DOM — toggled, not re-created each step.
+        const GUIDE_ICON_IDS = ["panel", "video"];
+
+        function preloadGuideIcons() {
+            ["/icons/up-arrow-cube_no_background.png", "/icons/cube-arrow-left_no_background.png"].forEach(src => {
+                const img = new Image();
+                img.src = src;
+            });
+        }
+
+        function setGuideIconKind(kind) {
+            GUIDE_ICON_IDS.forEach(prefix => {
+                document.getElementById(`${prefix}-icon-init`).hidden = kind !== "init";
+                document.getElementById(`${prefix}-icon-up`).hidden = kind !== "up";
+                document.getElementById(`${prefix}-icon-left`).hidden = kind !== "left";
+            });
+        }
 
         const ROTATE_GUIDES = {
             "U": {
-                title: "Face U (Up) - Start",
-                desc: "U on front. F pointing down.",
-                arrow: "|",
-                arrowDesc: "Initial"
+                title: "Face U",
+                desc: "Hold U toward the camera. Align the face with the grid, then press Capture.",
+                arrowDesc: "Initial",
+                iconKind: "init",
+                anim: ""
             },
             "F": {
-                title: "Face F (Front)",
-                desc: "Tilt 90° up.",
-                arrow: "↑",
-                arrowDesc: "Up"
+                title: "Face F",
+                desc: "Tilt the cube up so F is centered in the grid. Keep U pointing up.",
+                arrowDesc: "Rotate up",
+                iconKind: "up",
+                anim: "up"
             },
             "R": {
-                title: "Face R (Right)",
-                desc: "Rotate 90° left.",
-                arrow: "←",
-                arrowDesc: "Left"
+                title: "Face R",
+                desc: "Keep U on top. Turn the whole cube left on the Z axis until R is centered.",
+                arrowDesc: "Rotate left",
+                iconKind: "left",
+                anim: "left"
             },
             "B": {
-                title: "Face B (Back)",
-                desc: "Rotate 90° left.",
-                arrow: "←",
-                arrowDesc: "Left"
+                title: "Face B",
+                desc: "Keep U on top. Turn left on Z again until B is centered in the grid.",
+                arrowDesc: "Rotate left",
+                iconKind: "left",
+                anim: "left"
             },
             "L": {
-                title: "Face L (Left)",
-                desc: "Rotate 90° left.",
-                arrow: "←",
-                arrowDesc: "Left"
+                title: "Face L",
+                desc: "Keep U on top. Turn left on Z once more until L is centered.",
+                arrowDesc: "Rotate left",
+                iconKind: "left",
+                anim: "left"
             },
             "D": {
-                title: "Face D (Down)",
-                desc: "Return to Front and tilt 90° down.",
-                arrow: "↓",
-                arrowDesc: "Down"
+                title: "Face D",
+                desc: "Tilt up so D faces the camera. Align with the grid and capture.",
+                arrowDesc: "Rotate up",
+                iconKind: "up",
+                anim: "up"
             }
         };
 
-        const video = document.getElementById("webcam-video");
-        const canvas = document.getElementById("video-canvas");
-        const ctx = canvas.getContext("2d");
+        preloadGuideIcons();
 
-        // Conectar cámara web
+        const video = document.getElementById("webcam-video");
+        const preview = document.getElementById("camera-preview");
+        const previewCtx = preview.getContext("2d", { willReadFrequently: true });
+
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 } })
             .then(stream => {
                 video.srcObject = stream;
-                setInterval(sampleColorsFromVideo, 100);
+                video.onloadedmetadata = () => {
+                    preview.width = video.videoWidth || 640;
+                    preview.height = video.videoHeight || 480;
+                    requestAnimationFrame(cameraLoop);
+                };
             })
             .catch(err => {
-                console.warn("Entrando en modo de entrada manual interactiva sin cámara física.", err);
+                console.warn("Modo manual sin cámara.", err);
             });
+
+        let lastColorSample = 0;
+
+        function drawCameraPreview() {
+            if (video.readyState < video.HAVE_CURRENT_DATA) return;
+            previewCtx.setTransform(1, 0, 0, 1, 0, 0);
+            previewCtx.clearRect(0, 0, preview.width, preview.height);
+            previewCtx.translate(preview.width, 0);
+            previewCtx.scale(-1, 1);
+            previewCtx.drawImage(video, 0, 0, preview.width, preview.height);
+            previewCtx.setTransform(1, 0, 0, 1, 0, 0);
+        }
 
         function sampleColorsFromVideo() {
             if (video.paused || video.ended) return;
 
-            // Draw raw (un-mirrored) frame — video CSS mirror is visual-only.
-            // Sticker indices must match physical left/right as seen by camera.
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const previewRect = preview.getBoundingClientRect();
+            if (previewRect.width === 0 || previewRect.height === 0) return;
 
-            const grid_w = 240;
-            const cell_size = 120;
-            const x0 = (canvas.width - grid_w) / 2;
-            const y0 = (canvas.height - grid_w) / 2;
+            for (let i = 0; i < 4; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                const cellRect = cell.getBoundingClientRect();
+                const cx = Math.floor(
+                    ((cellRect.left + cellRect.width / 2 - previewRect.left) / previewRect.width) * preview.width
+                );
+                const cy = Math.floor(
+                    ((cellRect.top + cellRect.height / 2 - previewRect.top) / previewRect.height) * preview.height
+                );
 
-            for (let row = 0; row < 2; row++) {
-                for (let col = 0; col < 2; col++) {
-                    // The video element has CSS scaleX(-1) so the user sees a mirror.
-                    // The raw canvas pixel at col=0 corresponds to what the user
-                    // sees on the RIGHT side of the overlay, so we must flip the
-                    // column when reading to keep indices [0=TL,1=TR,2=BL,3=BR]
-                    // aligned with what the user sees on screen.
-                    const flippedCol = 1 - col;
-                    const cx = Math.floor(x0 + flippedCol * cell_size + cell_size / 2);
-                    const cy = Math.floor(y0 + row * cell_size + cell_size / 2);
-
-                    const imgData = ctx.getImageData(cx - 3, cy - 3, 7, 7).data;
-                    let r = 0, g = 0, b = 0;
-                    for (let i = 0; i < imgData.length; i += 4) {
-                        r += imgData[i];
-                        g += imgData[i + 1];
-                        b += imgData[i + 2];
-                    }
-                    const n = imgData.length / 4;
-                    r = Math.floor(r / n);
-                    g = Math.floor(g / n);
-                    b = Math.floor(b / n);
-
-                    const color = classifyColorRGB(r, g, b);
-                    const cellIdx = row * 2 + col;
-                    activeColors[cellIdx] = color;
+                const imgData = previewCtx.getImageData(cx - 3, cy - 3, 7, 7).data;
+                let r = 0, g = 0, b = 0;
+                for (let p = 0; p < imgData.length; p += 4) {
+                    r += imgData[p];
+                    g += imgData[p + 1];
+                    b += imgData[p + 2];
                 }
+                const n = imgData.length / 4;
+                activeColors[i] = classifyColorRGB(Math.floor(r / n), Math.floor(g / n), Math.floor(b / n));
             }
             updateGridDisplay();
+        }
+
+        function cameraLoop() {
+            drawCameraPreview();
+            const now = Date.now();
+            if (now - lastColorSample >= 100) {
+                sampleColorsFromVideo();
+                lastColorSample = now;
+            }
+            requestAnimationFrame(cameraLoop);
         }
 
         // Umbrales de clasificación de color HSV relajados e indulgentes
@@ -1071,8 +1293,7 @@
         function captureFace() {
             const face = FACE_ORDER[faceIdx];
             faceData[face] = [...activeColors];
-
-            renderMiniMapFace(face, faceData[face]);
+            refreshCrossMap();
             update3DCube();
 
             if (faceIdx < 5) {
@@ -1097,12 +1318,14 @@
             }
         }
 
-        function cycleMiniSticker(face, stickerIdx) {
-            if (!faceData[face]) return;
-            const currentC = faceData[face][stickerIdx];
+        function cycleMiniSticker(cubeFace, stickerIdx) {
+            const { scanKey, remap } = CUBE_INTERPRET[cubeFace];
+            if (!faceData[scanKey]) return;
+            const rawIdx = remap[stickerIdx];
+            const currentC = faceData[scanKey][rawIdx];
             const nextIdx = (COLOR_LIST.indexOf(currentC) + 1) % COLOR_LIST.length;
-            faceData[face][stickerIdx] = COLOR_LIST[nextIdx];
-            renderMiniMapFace(face, faceData[face]);
+            faceData[scanKey][rawIdx] = COLOR_LIST[nextIdx];
+            refreshCrossMap();
             updateStickerCounts();
             checkGlobalValidity();
             update3DCube();
@@ -1124,15 +1347,14 @@
             const face = FACE_ORDER[faceIdx] || "D";
 
             if (faceIdx >= 6) {
-                document.getElementById("status").innerText = "Scan complete";
+                document.getElementById("status").innerText = "Complete";
                 document.getElementById("status").className = "status-badge";
                 document.getElementById("status").removeAttribute("style");
 
                 const videoArrow = document.getElementById("video-dir-arrow");
                 const videoText = document.getElementById("video-dir-text");
-                videoArrow.innerText = "✓";
+                videoArrow.style.display = "none";
                 videoText.innerText = "Done";
-                videoArrow.className = "video-arrow-graphic";
 
                 FACE_ORDER.forEach((f) => {
                     const step = document.getElementById(`prog-${f}`);
@@ -1143,25 +1365,24 @@
                 return;
             }
 
-            document.getElementById("status").innerText = `Scan Face: ${face}`;
+            document.getElementById("status").innerText = `Face ${face}`;
             document.getElementById("status").className = "status-badge";
             document.getElementById("status").removeAttribute("style");
 
             const guide = ROTATE_GUIDES[face];
             document.getElementById("guide-title font-semibold text-sm").innerText = guide.title;
             document.getElementById("guide-desc").innerText = guide.desc;
-            document.getElementById("visual-arrow").innerText = guide.arrow;
             document.getElementById("visual-arrow-desc").innerText = guide.arrowDesc;
+            setGuideIconKind(guide.iconKind);
 
             const videoArrow = document.getElementById("video-dir-arrow");
             const videoText = document.getElementById("video-dir-text");
-            videoArrow.innerText = guide.arrow;
-            videoText.innerText = guide.arrowDesc === "Initial" ? "Initial" : `Rotate ${guide.arrowDesc}`;
+            videoArrow.style.display = "";
+            videoText.innerText = guide.arrowDesc;
 
-            videoArrow.className = "video-arrow-graphic";
-            if (guide.arrow === "↑") videoArrow.classList.add("arrow-up");
-            else if (guide.arrow === "←") videoArrow.classList.add("arrow-left");
-            else if (guide.arrow === "↓") videoArrow.classList.add("arrow-down");
+            videoArrow.className = "video-arrow-graphic guide-icon-slot";
+            if (guide.anim === "up") videoArrow.classList.add("arrow-up");
+            else if (guide.anim === "left") videoArrow.classList.add("arrow-left");
 
             FACE_ORDER.forEach((f) => {
                 const step = document.getElementById(`prog-${f}`);
@@ -1182,7 +1403,7 @@
                 colors.forEach(c => counts[c]++);
             });
 
-            const text = `White: ${counts.W} | Yellow: ${counts.Y} | Red: ${counts.R} | Orange: ${counts.O} | Blue: ${counts.B} | Green: ${counts.G}`;
+            const text = `White: ${counts.W} | Yellow: ${counts.Y} | Red: ${counts.R} \n| Orange: ${counts.O} | Blue: ${counts.B} | Green: ${counts.G}`;
             document.getElementById("validation-counts").innerText = text;
 
             let isValid = true;
@@ -1244,7 +1465,7 @@
             fetch("/solve", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(faceData)
+                body: JSON.stringify(buildSolverFaceData())
             })
                 .then(res => res.json())
                 .then(data => {
@@ -1320,64 +1541,30 @@
                 "G": "var(--cube-g-solid)"
             };
 
-            // Sticker index remap per face so the 3D model matches the
-            // physical cube as seen from outside.
-            //
-            // Capture order (row*2+col): [0=TL, 1=TR, 2=BL, 3=BR]
-            // viewed from OUTSIDE each face, looking straight at it.
-            //
-            // CSS grid fills left-to-right, top-to-bottom, so the 3D
-            // face grid also goes [0=TL, 1=TR, 2=BL, 3=BR] when viewed
-            // from outside — EXCEPT the B face, which the CSS cube places
-            // rotated 180° (rotateY(180deg)), so its grid is reversed.
-            //
-            // For U/D the capture is looking straight down/up at the face;
-            // the CSS face is also seen from above, so no remap needed.
-            //
-            // B face: scanned from behind the cube, so left/right AND
-            // top/bottom are both physically flipped vs the 3D face
-            // orientation → remap [0,1,2,3] → [3,2,1,0] (full reverse).
-            const FACE_REMAP = {
-                "U": [0, 1, 2, 3],  // as-is
-                "D": [0, 1, 2, 3],  // as-is
-                "F": [0, 1, 2, 3],  // as-is
-                "R": [0, 1, 2, 3],  // as-is
-                "L": [0, 1, 2, 3],  // as-is
-                "B": [3, 2, 1, 0]   // full reverse: B is seen mirrored in 3D
-            };
-
             FACE_ORDER.forEach(face => {
-                const currentFace = FACE_ORDER[faceIdx];
-                let colors = null;
-                if (face === currentFace && faceIdx < 6) {
-                    colors = activeColors;
-                } else if (faceData[face]) {
-                    colors = faceData[face];
-                }
-
-                const remap = FACE_REMAP[face] || [0, 1, 2, 3];
+                const colors = getCubeFaceColorsForView(face);
                 for (let i = 0; i < 4; i++) {
                     const sticker = document.getElementById(`s3d-${face}-${i}`);
-                    if (sticker) {
-                        const srcIdx = remap[i];
-                        if (colors && colors[srcIdx] !== undefined) {
-                            sticker.style.backgroundColor = colorsMap[colors[srcIdx]] || "var(--cube-empty)";
-                        } else {
-                            sticker.style.backgroundColor = "var(--cube-empty)";
-                        }
+                    if (!sticker) continue;
+                    if (colors && colors[i] !== undefined) {
+                        sticker.style.backgroundColor = colorsMap[colors[i]] || "var(--cube-empty)";
+                    } else {
+                        sticker.style.backgroundColor = "var(--cube-empty)";
                     }
                 }
             });
 
             const upEl = document.getElementById("robot-color-up");
             const frontEl = document.getElementById("robot-color-front");
-            if (upEl && faceData["U"]) {
-                upEl.innerText = getDominantColorName(faceData["U"]);
+            const uColors = getCubeFaceColorsForView("U");
+            const fColors = getCubeFaceColorsForView("F");
+            if (upEl && uColors) {
+                upEl.innerText = getDominantColorName(uColors);
             } else if (upEl) {
                 upEl.innerText = "-";
             }
-            if (frontEl && faceData["F"]) {
-                frontEl.innerText = getDominantColorName(faceData["F"]);
+            if (frontEl && fColors) {
+                frontEl.innerText = getDominantColorName(fColors);
             } else if (frontEl) {
                 frontEl.innerText = "-";
             }
@@ -1385,7 +1572,7 @@
 
         // Drag to rotate implementation
         let rotX = -20;
-        let rotY = 40;
+        let rotY = -40;
         const sceneEl = document.getElementById("interactive-scene");
         const wrapperEl = document.getElementById("cube-wrapper-3d");
         let isDragging = false;
@@ -1407,7 +1594,7 @@
 
             rotY += dx * 0.6;
             rotX -= dy * 0.6;
-            
+
             if (rotX > 80) rotX = 80;
             if (rotX < -80) rotX = -80;
 
@@ -1439,7 +1626,7 @@
 
             rotY += dx * 0.6;
             rotX -= dy * 0.6;
-            
+
             if (rotX > 80) rotX = 80;
             if (rotX < -80) rotX = -80;
 
@@ -1451,6 +1638,7 @@
         });
 
         // Initialize 3D Cube on startup
+        updateUIState();
         update3DCube();
     </script>
 </body>

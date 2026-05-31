@@ -27,7 +27,11 @@ PORT = 5000
 FACE_ORDER = ["U", "F", "R", "B", "L", "D"]
 
 def build_solver_state(face_data):
-    """Maps the 6 scanned faces (4 facelets each) to the 24-sticker solver state."""
+    """Maps the 6 scanned faces (4 facelets each) to the 24-sticker solver state.
+
+    face_data[face] order: [TL, TR, BL, BR] viewed from outside that face.
+    Same convention as SCAN_CORNERS in scan/index.html.
+    """
     if not SOLVER_AVAILABLE:
         return None
 
@@ -93,6 +97,54 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(content.encode("utf-8"))
             except FileNotFoundError:
                 self.wfile.write(b"Error: index.html not found.")
+        elif self.path == "/calibrate.html":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            html_path = Path(__file__).resolve().parent / "calibrate.html"
+            try:
+                with open(html_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                self.wfile.write(content.encode("utf-8"))
+            except FileNotFoundError:
+                self.wfile.write(b"Error: calibrate.html not found.")
+        elif self.path == "/cube-interp.js":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/javascript; charset=utf-8")
+            self.end_headers()
+            js_path = Path(__file__).resolve().parent / "cube-interp.js"
+            try:
+                with open(js_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                self.wfile.write(content.encode("utf-8"))
+            except FileNotFoundError:
+                self.wfile.write(b"console.error('cube-interp.js not found');")
+        elif self.path.startswith("/icons/"):
+            from urllib.parse import unquote
+            req_path = unquote(self.path.split("?", 1)[0])
+            icon_path = Path(__file__).resolve().parent / req_path.lstrip("/")
+            icons_dir = Path(__file__).resolve().parent / "icons"
+            try:
+                icon_path = icon_path.resolve()
+                if not str(icon_path).startswith(str(icons_dir.resolve())):
+                    self.send_error(403, "Forbidden")
+                    return
+                if not icon_path.is_file():
+                    self.send_error(404, "Not Found")
+                    return
+                ext = icon_path.suffix.lower()
+                ctype = {
+                    ".jpg": "image/jpeg",
+                    ".jpeg": "image/jpeg",
+                    ".svg": "image/svg+xml",
+                    ".png": "image/png",
+                }.get(ext, "application/octet-stream")
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.end_headers()
+                self.wfile.write(icon_path.read_bytes())
+            except OSError:
+                self.send_error(404, "Not Found")
         else:
             self.send_error(404, "Not Found")
 
@@ -140,6 +192,22 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
 
             except Exception as e:
                 self.send_json_response({"status": "error", "message": f"Server error: {str(e)}"})
+        elif self.path == "/calibrate-log":
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+            try:
+                payload = json.loads(post_data.decode("utf-8"))
+                log_dir = Path(__file__).resolve().parent / "calibrate_logs"
+                log_dir.mkdir(exist_ok=True)
+                from datetime import datetime
+                fname = f"calibration_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                log_path = log_dir / fname
+                with open(log_path, "w", encoding="utf-8") as f:
+                    json.dump(payload, f, indent=2, ensure_ascii=False)
+                print(f"\n[calibrate] Saved: {log_path}")
+                self.send_json_response({"status": "success", "path": str(log_path.relative_to(workspace_root))})
+            except Exception as e:
+                self.send_json_response({"status": "error", "message": str(e)})
         else:
             self.send_error(404, "Not Found")
 
