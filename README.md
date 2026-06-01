@@ -4,7 +4,7 @@ Welcome to the **UR3 Robot Arm 2×2 Rubik's Cube TAMP (Task and Motion Planning)
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 1. **Agnostic Rubik's Solver (Level 1 - IDA\* Search)**:
    - Uses a clean and optimal **IDA\* (Iterative Deepening A\*)** search algorithm.
@@ -23,7 +23,7 @@ Welcome to the **UR3 Robot Arm 2×2 Rubik's Cube TAMP (Task and Motion Planning)
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```
 robotica/cub/
@@ -52,7 +52,7 @@ robotica/cub/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Web Scanner Server (2D Mapping & 3D Interactive Preview)
 Launch the local web scanner using system python to scan physical cubes and plan moves:
@@ -62,7 +62,7 @@ python3 scan/2x2scaner.py
 ```
 Open your browser and navigate to `http://localhost:5000` to interact with the visual interface!
 
-### 2. End-to-End Command-Line Validation
+### 2. End-to-End Command-Line Verification
 To verify the complete two-level symbolic TAMP pipeline (IDA\* standard moves + Fast Downward tilts/picks/places) without Kautham or ROS 2 dependencies:
 ```bash
 python3 robot/try_robot_solve.py
@@ -78,7 +78,7 @@ Outputs are fully benchmarked inside `experiments/results.csv`.
 
 ---
 
-## 🛠️ Verification in Kautham GUI
+## Verification in Kautham GUI
 
 1. Open the terminal and launch the Kautham GUI:
    ```bash
