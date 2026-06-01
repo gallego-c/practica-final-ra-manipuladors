@@ -4,7 +4,7 @@
 (define (problem solve-manipulation-sequence)
   (:domain robot-manipulation)
   (:objects
-    step1 step2 step3 step4 - step
+    step1 step2 step3 - step
   )
   (:init
     ;; Estado físico inicial del robot y el cubo
@@ -23,16 +23,13 @@
     (current-step step1)
 
     (next-step step1 step2)
-    (step-type-F step1)
+    (step-type-R-prime step1)
     (next-step step2 step3)
-    (step-type-B-prime step2)
-    (next-step step3 step4)
-    (step-type-U-prime step3)
+    (step-type-U step2)
   )
   (:goal (and
     (step-completed step1)
     (step-completed step2)
-    (step-completed step3)
     (cube-on-fixture)
     (not (robot-holding))
   ))

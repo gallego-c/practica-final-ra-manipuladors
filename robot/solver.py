@@ -121,12 +121,12 @@ TILT_X_POS_CYCLES = [
 #   F face CW: [f-ufl → f-ufr → f-dfr → f-dfl]
 #   B face CCW: [b-ubl → b-ubr → b-dbr → b-dbl]
 TILT_Y_POS_CYCLES = [
-    ('r-ufr', 'u-ufr', 'l-dfl', 'd-dfr'),
-    ('r-ubr', 'u-ubr', 'l-dbl', 'd-dbr'),
-    ('r-dfr', 'u-ufl', 'l-ufl', 'd-dfl'),
-    ('r-dbr', 'u-ubl', 'l-ubl', 'd-dbl'),
-    ('f-ufl', 'f-ufr', 'f-dfr', 'f-dfl'),   # F face CW from front
-    ('b-ubl', 'b-dbl', 'b-dbr', 'b-ubr'),   # B face CW from back (= CCW from front)
+    ('r-ufr', 'u-ufl', 'l-dfl', 'd-dfr'),
+    ('r-dfr', 'u-ufr', 'l-ufl', 'd-dfl'),
+    ('r-ubr', 'u-ubl', 'l-dbl', 'd-dbr'),
+    ('r-dbr', 'u-ubr', 'l-ubl', 'd-dbl'),
+    ('f-ufl', 'f-dfl', 'f-dfr', 'f-ufr'),   # F face CCW from front
+    ('b-ubr', 'b-ubl', 'b-dbl', 'b-dbr'),   # B face CW from back
 ]
 
 
@@ -201,7 +201,7 @@ def is_solved_monochromatic(state):
     return True
 
 
-# ── BFS Solver ────────────────────────────────────────────────────────────────
+# ── IDA* Solver ───────────────────────────────────────────────────────────────
 
 def get_all_solved_states():
     """Generates all 24 physically reachable monochromatic states of the 2x2 cube."""
@@ -217,57 +217,90 @@ def get_all_solved_states():
                 queue.append(ns)
     return list(solved_states)
 
+_HEURISTIC_DB = {}
+
+def init_heuristic_db(max_depth=3):
+    """Precompute a small distance database at startup to serve as an admissible heuristic."""
+    global _HEURISTIC_DB
+    if _HEURISTIC_DB:
+        return
+    solved = get_all_solved_states()
+    queue = deque()
+    for s in solved:
+        _HEURISTIC_DB[s] = 0
+        queue.append((s, 0))
+    while queue:
+        s, d = queue.popleft()
+        if d >= max_depth:
+            continue
+        for name, perm in ROBOT_MOVES.items():
+            ns = apply_move(s, perm)
+            if ns not in _HEURISTIC_DB:
+                _HEURISTIC_DB[ns] = d + 1
+                queue.append((ns, d + 1))
+
+def get_heuristic(state):
+    """Returns an admissible lower bound of moves to solve the state."""
+    return _HEURISTIC_DB.get(state, 4)
 
 def bfs_solve(init_state):
     """
-    Bidirectional BFS to find the shortest robot action sequence.
-    Returns a list of move names, or None if no solution found.
+    IDA* (Iterative Deepening A*) solver for 2x2 Rubik's Cube.
+    Keeps the name 'bfs_solve' for seamless backward compatibility.
     """
+    init_heuristic_db(max_depth=3)
+    
     if is_solved_monochromatic(init_state):
         return []
 
-    solved_states = get_all_solved_states()
-    fwd = {init_state: []}
-    bwd = {s: [] for s in solved_states}
-    fwd_q = deque([init_state])
-    bwd_q = deque(solved_states)
+    def search(path, g, bound):
+        state = path[-1]
+        f = g + get_heuristic(state)
+        if f > bound:
+            return f
+        if is_solved_monochromatic(state):
+            return True
+        
+        min_val = float('inf')
+        last_move = path_moves[-1] if path_moves else None
+        
+        for name, perm in ROBOT_MOVES.items():
+            # Prune inverse moves
+            if last_move and INVERSE_MOVE[name] == last_move:
+                continue
+            
+            # Prune redundant identical moves (e.g. U U U is equivalent to U_PRIME)
+            if len(path_moves) >= 2 and path_moves[-1] == name and path_moves[-2] == name:
+                continue
+                
+            ns = apply_move(state, perm)
+            if ns not in path:
+                path.append(ns)
+                path_moves.append(name)
+                
+                t = search(path, g + 1, bound)
+                if t is True:
+                    return True
+                if t < min_val:
+                    min_val = t
+                    
+                path_moves.pop()
+                path.pop()
+        return min_val
 
-    def expand(queue, visited):
-        """Expand one level of BFS."""
-        if not queue:
-            return
-        current_depth = len(visited[queue[0]])
-        next_visited = {}
-        while queue:
-            s = queue[0]
-            if len(visited[s]) > current_depth:
-                break
-            queue.popleft()
-            for name, perm in ROBOT_MOVES.items():
-                ns = apply_move(s, perm)
-                if ns not in visited and ns not in next_visited:
-                    next_visited[ns] = visited[s] + [name]
-        visited.update(next_visited)
-        for s in next_visited:
-            queue.append(s)
-
-    for depth in range(30):
-        expand(fwd_q, fwd)
-        # Check intersection
-        intersect = set(fwd.keys()) & set(bwd.keys())
-        if intersect:
-            meet = intersect.pop()
-            bwd_path = [INVERSE_MOVE[m] for m in reversed(bwd[meet])]
-            return fwd[meet] + bwd_path
-
-        expand(bwd_q, bwd)
-        # Check intersection
-        intersect = set(fwd.keys()) & set(bwd.keys())
-        if intersect:
-            meet = intersect.pop()
-            bwd_path = [INVERSE_MOVE[m] for m in reversed(bwd[meet])]
-            return fwd[meet] + bwd_path
-
+    bound = get_heuristic(init_state)
+    path = [init_state]
+    path_moves = []
+    
+    # 2x2 Rubik's Cube max distance is 11 in HTM, 14 in QTM
+    while bound <= 14:
+        t = search(path, 0, bound)
+        if t is True:
+            return path_moves
+        if t == float('inf'):
+            break
+        bound = t
+        
     return None
 
 
