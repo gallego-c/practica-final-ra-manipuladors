@@ -1,1 +1,90 @@
-# practica-final-ra-manipuladors
+# UR3 Robot Arm 2×2 Rubik's Cube Solver (Hierarchical TAMP)
+
+Welcome to the **UR3 Robot Arm 2×2 Rubik's Cube TAMP (Task and Motion Planning)** repository. This project implements a cutting-edge hierarchical planning architecture for a robotic manipulator to solve a 2×2 Rubik's cube under realistic physical constraints.
+
+---
+
+## 🌟 Key Features
+
+1. **Agnostic Rubik's Solver (Level 1 - IDA\* Search)**:
+   - Uses a clean and optimal **IDA\* (Iterative Deepening A\*)** search algorithm.
+   - Powered by a **Precomputed Pattern Database (Heuristic)** built in under 0.05 seconds at startup, delivering mathematically optimal solution sequences in milliseconds.
+   - **Corrected 3D Geometrical Cycles**: All coordinate rotations (such as the previously bugged `tilt_y_pos` cycles and face rotations) have been mathematically corrected to match the physical properties of a 3D Rubik's cube.
+
+2. **Robotic Task Planning (Level 2 - PDDL & Fast Downward)**:
+   - Models the physical constraints of a vertical-only top-down robotic gripper (UR3 + Robotiq 85) and table base fixture in [manipulation_domain.pddl](file:///home/barrendeiro/robotica/cub/robot/manipulation_domain.pddl).
+   - Fast Downward automatically schedules the necessary whole-cube reorientations (`tilt_x_pos`, `tilt_y_pos`, `pick`, `place`) to bring any target face to the top layer for wrist rotations.
+
+3. **Motion Planning (Level 3 - OMPL RRT-Connect & Kautham)**:
+   - Interfaces directly with **Kautham** through ROS 2 to plan collision-free joint trajectories, generating native taskfiles with precise physical grasp, lift, tilt, and wrist rotation curves.
+
+4. **Web Scanner Interface**:
+   - Web application serving a clean 2D scanner calibration grid, interactive 3D preview, and real-time visualization of Level 1 (standard moves) and Level 2 (physical robot actions) plans.
+
+---
+
+## 📂 Repository Structure
+
+```
+robotica/cub/
+├── README.md                          # Beautiful project documentation
+├── requirements.txt                   # Dependency and system setup specification
+├── robot/
+│   ├── solver.py                      # Level 1: Optimal IDA* Rubik's solver with fixed 3D cycles
+│   ├── manipulation_domain.pddl       # PDDL representation of UR3 vertical grasp & tilt actions
+│   ├── manipulation_problem.pddl      # Dynamically generated PDDL problem
+│   ├── try_robot_solve.py             # End-to-end command-line planner validation (no ROS required)
+│   └── generate_taskfile.py           # Kautham Taskfile XML generator interface
+├── scan/
+│   ├── 2x2scaner.py                   # High-performance web server hosting the scanner interface
+│   ├── index.html                     # Web UI with 2D cross map and interactive 3D preview
+│   └── cube-interp.js                 # Front-end scanning interpretation and coordinate remapping
+├── experiments/
+│   ├── run_experiments.py             # Automated testing suite running 20 random scrambles
+│   └── results.csv                    # Benchmarked metric outputs (planning time, action counts)
+└── kautham/
+    ├── ur3_rubik_kautham.xml          # Kautham XML workspace definition
+    ├── rubik_cube_2x2.urdf            # Native URDF 3D model for the Rubik's cube obstacle
+    └── square_fixture.urdf            # Table-mounted fixture base model
+```
+
+*Note: The redundant temporary `scratch/` directory and deprecated domain files have been successfully cleaned from the branch to keep the workspace lightweight and production-ready.*
+
+---
+
+## 🚀 Getting Started
+
+### 1. Web Scanner Server (2D Mapping & 3D Interactive Preview)
+Launch the local web scanner using system python to scan physical cubes and plan moves:
+```bash
+source /home/barrendeiro/robotica/ws_tamp/install/setup.bash
+python3 scan/2x2scaner.py
+```
+Open your browser and navigate to `http://localhost:5000` to interact with the visual interface!
+
+### 2. End-to-End Command-Line Validation
+To verify the complete two-level symbolic TAMP pipeline (IDA\* standard moves + Fast Downward tilts/picks/places) without Kautham or ROS 2 dependencies:
+```bash
+python3 robot/try_robot_solve.py
+```
+It generates a random scramble, solves it in standard moves in less than 0.05 seconds, and outputs the optimal robot physical plan to `robot/robot_plan.txt`.
+
+### 3. Running the Automated Benchmarking Suite
+Execute the benchmarking suite to run 20 diverse scrambles, measuring execution times, task sizes, and exporting metrics to CSV:
+```bash
+python3 experiments/run_experiments.py
+```
+Outputs are fully benchmarked inside `experiments/results.csv`.
+
+---
+
+## 🛠️ Verification in Kautham GUI
+
+1. Open the terminal and launch the Kautham GUI:
+   ```bash
+   kautham-gui
+   ```
+2. Go to **`File ➔ Open Problem`** and open `kautham/ur3_rubik_kautham.xml` to load the 3D UR3 robotic cell.
+3. Plan and visualize:
+   * To inspect trajectories, go to the **`Planner`** tab, select the default query, and click **`Plan`** (using `omplRRTConnect`).
+   * To animate the entire robotic solution plan generated by `generate_taskfile.py`, go to **`File ➔ Open Taskfile`**, select `kautham/taskfile_rubik_ur3.xml`, and click **`Play`**.

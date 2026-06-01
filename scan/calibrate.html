@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calibración cubo (temporal)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #191919;
+            --bg-panel: #202020;
+            --text-primary: #e3e3e3;
+            --text-secondary: #9b9a97;
+            --border-primary: rgba(255, 255, 255, 0.08);
+            --accent-blue: #2eaadc;
+            --accent-green: #2ecc71;
+            --accent-orange: #ffae70;
+            --cube-w-solid: #f5f5f4;
+            --cube-y-solid: #ffd026;
+            --cube-r-solid: #ff8093;
+            --cube-o-solid: #ffae70;
+            --cube-b-solid: #70b3db;
+            --cube-g-solid: #95d5a2;
+            --cube-empty: #262626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background: var(--bg-page);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        header h1 { font-size: 1rem; font-weight: 600; }
+        .badge-temp {
+            background: rgba(255, 174, 112, 0.15);
+            color: var(--accent-orange);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .nav-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px 24px;
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-primary);
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .panel-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .video-container {
+            position: relative;
+            aspect-ratio: 4/3;
+            background: #111;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #webcam-video { display: none; }
+        #camera-preview { width: 100%; height: 100%; object-fit: cover; }
+
+        .grid-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 55%; height: 55%;
+            max-width: 240px; max-height: 240px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            z-index: 10;
+            border: 1.5px solid rgba(255,255,255,0.25);
+            border-radius: 4px;
+        }
+
+        .grid-cell {
+            border: 1px solid rgba(255,255,255,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .c-w { background: rgba(255,255,255,0.15) !important; }
+        .c-y { background: rgba(230,190,80,0.15) !important; }
+        .c-r { background: rgba(235,90,90,0.15) !important; }
+        .c-o { background: rgba(235,130,60,0.15) !important; }
+        .c-b { background: rgba(70,130,180,0.15) !important; }
+        .c-g { background: rgba(60,160,90,0.15) !important; }
+
+        .face-tabs {
+            display: flex;
+            gap: 4px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .face-tab {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-primary);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .face-tab.active { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(46,170,220,0.1); }
+        .face-tab.done { border-color: var(--accent-green); color: var(--accent-green); }
+        .face-tab:disabled { cursor: default; opacity: 0.85; }
+
+        button {
+            padding: 8px 14px;
+            border-radius: 4px;
+            border: 1px solid var(--border-primary);
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        button:hover { background: rgba(255,255,255,0.1); }
+        button.primary { background: rgba(46,170,220,0.2); border-color: var(--accent-blue); }
+        button.active-btn { background: rgba(46,170,220,0.35); border-color: var(--accent-blue); }
+
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+        .captures-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .capture-thumb {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            border: 1px dashed var(--border-primary);
+            overflow: hidden;
+            position: relative;
+            background: #111;
+        }
+
+        .capture-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .capture-thumb .lbl {
+            position: absolute;
+            bottom: 2px; left: 0; right: 0;
+            text-align: center;
+            font-size: 0.6rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.6);
+            padding: 2px;
+        }
+
+        .scene3d {
+            width: 100%;
+            height: 280px;
+            perspective: 800px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            border-radius: 4px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .cube-wrapper {
+            width: 80px; height: 80px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(-40deg);
+        }
+
+        .cube3d {
+            width: 80px; height: 80px;
+            position: absolute;
+            transform-style: preserve-3d;
+            transform: translateY(-20px);
+        }
+
+        .face3d {
+            position: absolute;
+            width: 80px; height: 80px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            background: #191919;
+            border: 1.5px solid #333;
+            backface-visibility: hidden;
+            cursor: pointer;
+        }
+
+        .face3d.selected { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+        .face3d.swap-pending { outline: 2px solid var(--accent-orange); }
+
+        .face3d-u { transform: rotateX(90deg) translateZ(40px); }
+        .face3d-d { transform: rotateX(-90deg) translateZ(40px); }
+        .face3d-f { transform: translateZ(40px); }
+        .face3d-b { transform: rotateY(180deg) translateZ(40px); }
+        .face3d-l { transform: rotateY(-90deg) translateZ(40px); }
+        .face3d-r { transform: rotateY(90deg) translateZ(40px); }
+
+        .sticker3d {
+            border-radius: 2px;
+            background: var(--cube-empty);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: rgba(0,0,0,0.5);
+        }
+
+        .face-tag {
+            position: absolute;
+            top: 2px; left: 2px;
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            background: rgba(0,0,0,0.5);
+            padding: 1px 3px;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        .controls-panel { margin-top: 12px; }
+        .controls-panel label { font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-primary);
+            background: var(--bg-page);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .analysis {
+            margin-top: 16px;
+            grid-column: 1 / -1;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-primary);
+            background: #111;
+            color: #a8d4a0;
+            font-family: monospace;
+            font-size: 0.72rem;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .hint { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45; margin-top: 8px; }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <h1>Calibración cubo 3D</h1>
+            <span class="badge-temp">TEMPORAL</span>
+        </div>
+        <a class="nav-link" href="/">← Volver al escáner</a>
+    </header>
+
+    <div class="layout">
+        <!-- Captura -->
+        <div class="panel">
+            <div class="panel-title">1 · Fotografiar caras (orden U F R B L D)</div>
+            <div class="video-container">
+                <video id="webcam-video" autoplay playsinline></video>
+                <canvas id="camera-preview" width="640" height="480"></canvas>
+                <div class="grid-overlay">
+                    <div class="grid-cell c-w" id="cell-0" onclick="cycleCell(0)">TL</div>
+                    <div class="grid-cell c-w" id="cell-1" onclick="cycleCell(1)">TR</div>
+                    <div class="grid-cell c-w" id="cell-2" onclick="cycleCell(2)">BL</div>
+                    <div class="grid-cell c-w" id="cell-3" onclick="cycleCell(3)">BR</div>
+                </div>
+            </div>
+
+            <div class="face-tabs" id="face-tabs"></div>
+            <div class="btn-row">
+                <button class="primary" onclick="capturePhoto()">📷 Capturar cara <span id="cap-label">U</span></button>
+                <button onclick="goBackCapture()">← Atrás</button>
+                <button onclick="resetCaptures()">Reset capturas</button>
+            </div>
+            <p class="hint">Mismo flujo que el escáner: orden fijo U→F→R→B→L→D (sin saltar caras). El 3D usa el mismo mapeo que index.html — p. ej. la cara F del cubo lee la captura B. Las miniaturas son la foto cruda; el 3D ya aplica flips/swaps.</p>
+
+            <div class="captures-grid" id="captures-grid"></div>
+        </div>
+
+        <!-- 3D + controles -->
+        <div class="panel">
+            <div class="panel-title">2 · Reorganizar cubo 3D</div>
+            <div class="scene3d" id="scene3d">
+                <div class="cube-wrapper" id="cube-wrapper">
+                    <div class="cube3d" id="cube3d"></div>
+                </div>
+            </div>
+
+            <div class="controls-panel" id="face-controls" style="display:none;">
+                <label>Panel 3D seleccionado: <strong id="sel-slot-label">F</strong></label>
+                <label>Foto / captura asignada</label>
+                <select id="source-select" onchange="setSource(this.value)"></select>
+                <label>Remap actual (TL,TR,BL,BR)</label>
+                <div id="remap-display" style="font-family:monospace;font-size:0.85rem;margin-bottom:10px;color:var(--accent-blue);">[0, 1, 2, 3]</div>
+                <div class="btn-row">
+                    <button onclick="applyTransform('FLIP_H')">↔ Flip H</button>
+                    <button onclick="applyTransform('FLIP_V')">↕ Flip V</button>
+                </div>
+                <div class="btn-row">
+                    <button onclick="applyTransform('ROT_CCW')">↺ Rotar 90° izq</button>
+                    <button onclick="applyTransform('ROT_CW')">↻ Rotar 90° der</button>
+                    <button onclick="applyTransform('ROT_180')">↻ 180°</button>
+                </div>
+                <div class="btn-row">
+                    <button onclick="applyTransform('DIAG_TL_BR')">↘ Diag TL→BR</button>
+                    <button onclick="applyTransform('DIAG_TR_BL')">↙ Diag TR→BL</button>
+                </div>
+                <div class="btn-row">
+                    <button onclick="resetFaceMapping()">Reset panel → preset escáner</button>
+                    <button onclick="loadScannerPreset()">↺ Cargar preset del escáner</button>
+                </div>
+                <div class="btn-row">
+                    <button id="btn-swap" onclick="startSwapMode()">⇄ Intercambiar dos paneles</button>
+                </div>
+                <p class="hint" id="swap-hint">Parte del mapeo actual del escáner (index.html). Ajusta encima si falta algo; exporta solo lo que cambie respecto al preset.</p>
+            </div>
+        </div>
+
+        <!-- Análisis -->
+        <div class="panel analysis">
+            <div class="panel-title">3 · Análisis (exportar cuando el 3D cuadre)</div>
+            <div class="btn-row">
+                <button class="primary" onclick="updateAnalysis()">Generar análisis</button>
+                <button onclick="copyAnalysis()">Copiar</button>
+                <button onclick="sendAnalysis()">Enviar al servidor</button>
+            </div>
+            <textarea id="analysis-out" readonly placeholder="Captura las 6 caras, ajusta el 3D, luego pulsa Generar análisis…"></textarea>
+        </div>
+    </div>
+
+    <script src="/cube-interp.js"></script>
+    <script>
+        const FACES = FACE_ORDER;
+        const COLOR_LIST = ["W", "Y", "R", "O", "B", "G"];
+        const COLOR_CLASS = { W: "c-w", Y: "c-y", R: "c-r", O: "c-o", B: "c-b", G: "c-g" };
+        const COLOR_SOLID = {
+            W: "var(--cube-w-solid)", Y: "var(--cube-y-solid)", R: "var(--cube-r-solid)",
+            O: "var(--cube-o-solid)", B: "var(--cube-b-solid)", G: "var(--cube-g-solid)"
+        };
+        const SCAN_CORNERS = {
+            U: ["ubl", "ubr", "ufl", "ufr"], F: ["ufl", "ufr", "dfl", "dfr"],
+            R: ["ufr", "ubr", "dfr", "dbr"], B: ["ubr", "ubl", "dbr", "dbl"],
+            L: ["ubl", "ufl", "dbl", "dfl"], D: ["dfl", "dfr", "dbl", "dbr"]
+        };
+
+        // Raw captures keyed by scan label (which photo is which scan step)
+        const captures = {};
+        let captureIdx = 0;
+        let scanComplete = false;
+        let activeColors = ["W", "W", "W", "W"];
+
+        // Must match scan/analyze_calibration.py PRIMITIVES (D4 symmetries).
+        // output[i] = input[remap[i]];  0=TL 1=TR 2=BL 3=BR
+        const IDENTITY_REMAP = [0, 1, 2, 3];
+        const TX = {
+            FLIP_H: [1, 0, 3, 2],
+            FLIP_V: [2, 3, 0, 1],
+            ROT_CW: [2, 0, 3, 1],
+            ROT_CCW: [1, 3, 0, 2],
+            ROT_180: [3, 2, 1, 0],
+            DIAG_TL_BR: [0, 2, 1, 3],
+            DIAG_TR_BL: [3, 1, 2, 0]
+        };
+
+        // Current production mapping from cube-interp.js (CUBE_INTERPRET)
+        const SCANNER_PRESET = loadScannerPresetMapping();
+
+        const TX_LABEL = {
+            FLIP_H: "flip_h",
+            FLIP_V: "flip_v",
+            ROT_CW: "rot_cw",
+            ROT_CCW: "rot_ccw",
+            ROT_180: "rot_180",
+            DIAG_TL_BR: "diag_tl_br",
+            DIAG_TR_BL: "diag_tr_bl"
+        };
+
+        const mapping = {};
+        function clonePresetEntry(entry) {
+            return { source: entry.source, remap: [...entry.remap] };
+        }
+        function loadScannerPreset() {
+            FACES.forEach(f => {
+                mapping[f] = clonePresetEntry(SCANNER_PRESET[f]);
+            });
+            if (selectedSlot) {
+                const m = mapping[selectedSlot];
+                sourceSelect.value = m.source;
+                updateRemapDisplay();
+            }
+            render3D();
+            updateAnalysis();
+        }
+
+        let selectedSlot = null;
+        let swapMode = false;
+        let swapFirst = null;
+
+        const video = document.getElementById("webcam-video");
+        const preview = document.getElementById("camera-preview");
+        const previewCtx = preview.getContext("2d", { willReadFrequently: true });
+
+        // Build 3D cube DOM
+        const cube3d = document.getElementById("cube3d");
+        FACES.forEach(face => {
+            const el = document.createElement("div");
+            el.className = `face3d face3d-${face.toLowerCase()}`;
+            el.dataset.slot = face;
+            el.innerHTML = `<span class="face-tag">${face}</span>` +
+                [0, 1, 2, 3].map(i => `<div class="sticker3d" data-i="${i}"></div>`).join("");
+            el.onclick = (e) => { e.stopPropagation(); selectSlot(face); };
+            cube3d.appendChild(el);
+        });
+
+        // Face tabs
+        const tabsEl = document.getElementById("face-tabs");
+        FACES.forEach((f, i) => {
+            const t = document.createElement("button");
+            t.className = "face-tab" + (i === 0 ? " active" : "");
+            t.id = `tab-${f}`;
+            t.textContent = f;
+            t.disabled = true;
+            tabsEl.appendChild(t);
+        });
+
+        // Captures grid thumbs
+        const capGrid = document.getElementById("captures-grid");
+        FACES.forEach(f => {
+            const d = document.createElement("div");
+            d.className = "capture-thumb";
+            d.id = `thumb-${f}`;
+            d.innerHTML = `<div class="lbl">${f}</div>`;
+            capGrid.appendChild(d);
+        });
+
+        // Source select options
+        const sourceSelect = document.getElementById("source-select");
+        FACES.forEach(f => {
+            const o = document.createElement("option");
+            o.value = f;
+            o.textContent = `Captura ${f}`;
+            sourceSelect.appendChild(o);
+        });
+        loadScannerPreset();
+
+        function classifyColorRGB(r, g, b) {
+            let rf = r / 255, gf = g / 255, bf = b / 255;
+            let max = Math.max(rf, gf, bf), min = Math.min(rf, gf, bf);
+            let h, s, v = max, d = max - min;
+            s = max === 0 ? 0 : d / max;
+            if (max === min) h = 0;
+            else {
+                switch (max) {
+                    case rf: h = (gf - bf) / d + (gf < bf ? 6 : 0); break;
+                    case gf: h = (bf - rf) / d + 2; break;
+                    case bf: h = (rf - gf) / d + 4; break;
+                }
+                h /= 6;
+            }
+            h *= 360; s *= 100; v *= 100;
+            if (s < 22) return "W";
+            if (v > 82 && s < 36) return "W";
+            if (r > 195 && g > 195 && b > 195) return "W";
+            if (h >= 160 && h < 250 && s >= 24) return "B";
+            if (h >= 70 && h < 160) return "G";
+            if (h >= 38 && h < 70) return "Y";
+            if (h >= 12 && h < 38) return "O";
+            if (h < 12 || h >= 320) return "R";
+            return "W";
+        }
+
+        function drawCameraPreview() {
+            if (video.readyState < video.HAVE_CURRENT_DATA) return;
+            previewCtx.setTransform(1, 0, 0, 1, 0, 0);
+            previewCtx.clearRect(0, 0, preview.width, preview.height);
+            previewCtx.translate(preview.width, 0);
+            previewCtx.scale(-1, 1);
+            previewCtx.drawImage(video, 0, 0, preview.width, preview.height);
+            previewCtx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
+        function sampleColors() {
+            const previewRect = preview.getBoundingClientRect();
+            if (previewRect.width === 0) return;
+            for (let i = 0; i < 4; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                const r = cell.getBoundingClientRect();
+                const cx = Math.floor(((r.left + r.width / 2 - previewRect.left) / previewRect.width) * preview.width);
+                const cy = Math.floor(((r.top + r.height / 2 - previewRect.top) / previewRect.height) * preview.height);
+                const px = previewCtx.getImageData(cx - 3, cy - 3, 7, 7).data;
+                let rv = 0, gv = 0, bv = 0;
+                for (let p = 0; p < px.length; p += 4) { rv += px[p]; gv += px[p + 1]; bv += px[p + 2]; }
+                const n = px.length / 4;
+                activeColors[i] = classifyColorRGB(Math.floor(rv / n), Math.floor(gv / n), Math.floor(bv / n));
+            }
+            for (let i = 0; i < 4; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                cell.className = `grid-cell ${COLOR_CLASS[activeColors[i]]}`;
+                cell.textContent = activeColors[i];
+            }
+        }
+
+        let lastSample = 0;
+        function buildCaptureFaceData() {
+            const faceData = {};
+            FACES.forEach(f => {
+                if (captures[f]) faceData[f] = captures[f].colors;
+            });
+            return faceData;
+        }
+
+        function liveCaptureContext() {
+            if (scanComplete) return null;
+            return { scanStep: FACES[captureIdx], activeColors };
+        }
+
+        function cameraLoop() {
+            drawCameraPreview();
+            if (Date.now() - lastSample > 100) {
+                sampleColors();
+                lastSample = Date.now();
+            }
+            render3D();
+            requestAnimationFrame(cameraLoop);
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 } })
+            .then(stream => {
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    preview.width = video.videoWidth || 640;
+                    preview.height = video.videoHeight || 480;
+                    requestAnimationFrame(cameraLoop);
+                };
+            })
+            .catch(() => console.warn("Sin cámara — usa click en celdas para colores"));
+
+        function cycleCell(i) {
+            activeColors[i] = COLOR_LIST[(COLOR_LIST.indexOf(activeColors[i]) + 1) % COLOR_LIST.length];
+            sampleColors();
+            render3D();
+        }
+
+        function cropGridPhoto() {
+            const previewRect = preview.getBoundingClientRect();
+            const cells = [0, 1, 2, 3].map(i => document.getElementById(`cell-${i}`).getBoundingClientRect());
+            const minX = Math.min(...cells.map(c => c.left));
+            const minY = Math.min(...cells.map(c => c.top));
+            const maxX = Math.max(...cells.map(c => c.right));
+            const maxY = Math.max(...cells.map(c => c.bottom));
+            const sx = ((minX - previewRect.left) / previewRect.width) * preview.width;
+            const sy = ((minY - previewRect.top) / previewRect.height) * preview.height;
+            const sw = ((maxX - minX) / previewRect.width) * preview.width;
+            const sh = ((maxY - minY) / previewRect.height) * preview.height;
+            const tmp = document.createElement("canvas");
+            tmp.width = sw; tmp.height = sh;
+            tmp.getContext("2d").drawImage(preview, sx, sy, sw, sh, 0, 0, sw, sh);
+            return tmp.toDataURL("image/jpeg", 0.85);
+        }
+
+        function capturePhoto() {
+            const label = FACES[captureIdx];
+            drawCameraPreview();
+            sampleColors();
+            captures[label] = {
+                colors: [...activeColors],
+                photo: cropGridPhoto(),
+                ts: new Date().toISOString()
+            };
+            const thumb = document.getElementById(`thumb-${label}`);
+            thumb.innerHTML = `<img src="${captures[label].photo}" alt="${label}"><div class="lbl">${label}</div>`;
+            document.getElementById(`tab-${label}`).classList.add("done");
+            if (captureIdx < FACES.length - 1) {
+                captureIdx++;
+            } else {
+                scanComplete = true;
+            }
+            updateCaptureUI();
+            render3D();
+            updateAnalysis();
+        }
+
+        function updateCaptureUI() {
+            FACES.forEach((f, i) => {
+                const tab = document.getElementById(`tab-${f}`);
+                tab.classList.toggle("active", i === captureIdx);
+                tab.classList.toggle("done", !!captures[f]);
+            });
+            document.getElementById("cap-label").textContent = FACES[captureIdx];
+        }
+
+        function goBackCapture() {
+            if (captureIdx <= 0 && !scanComplete) return;
+            scanComplete = false;
+            if (captureIdx >= FACES.length - 1) {
+                captureIdx = FACES.length - 2;
+            } else {
+                captureIdx--;
+            }
+            if (captures[FACES[captureIdx]]) {
+                activeColors = [...captures[FACES[captureIdx]].colors];
+            }
+            updateCaptureUI();
+            render3D();
+        }
+
+        function resetCaptures() {
+            captureIdx = 0;
+            scanComplete = false;
+            FACES.forEach(f => {
+                delete captures[f];
+                document.getElementById(`thumb-${f}`).innerHTML = `<div class="lbl">${f}</div>`;
+                document.getElementById(`tab-${f}`).classList.remove("done", "active");
+            });
+            loadScannerPreset();
+            document.getElementById(`tab-U`).classList.add("active");
+            updateCaptureUI();
+        }
+
+        function describeRemap(remap) {
+            for (const [name, perm] of Object.entries(TX)) {
+                if (perm.every((v, i) => v === remap[i])) return TX_LABEL[name];
+            }
+            return "custom";
+        }
+
+        function updateRemapDisplay() {
+            if (!selectedSlot) return;
+            const m = mapping[selectedSlot];
+            const ops = describeRemap(m.remap);
+            document.getElementById("remap-display").textContent =
+                `[${m.remap.join(", ")}]  (${ops})`;
+        }
+
+        function composeRemap(remap, transform) {
+            return transform.map(i => remap[i]);
+        }
+
+        function applyMapping(slot) {
+            return getFaceColorsFromMapping(slot, buildCaptureFaceData(), mapping, liveCaptureContext());
+        }
+
+        function render3D() {
+            FACES.forEach(slot => {
+                const faceEl = document.querySelector(`.face3d[data-slot="${slot}"]`);
+                const colors = applyMapping(slot);
+                const stickers = faceEl.querySelectorAll(".sticker3d");
+                const m = mapping[slot];
+                faceEl.querySelector(".face-tag").textContent =
+                    colors ? `${slot}←${m.source} [${m.remap.join(",")}]` : slot;
+                stickers.forEach((st, i) => {
+                    if (colors) {
+                        st.style.background = COLOR_SOLID[colors[i]];
+                        st.textContent = colors[i];
+                    } else {
+                        st.style.background = "var(--cube-empty)";
+                        st.textContent = "";
+                    }
+                });
+            });
+        }
+
+        function selectSlot(slot) {
+            if (swapMode) {
+                if (!swapFirst) {
+                    swapFirst = slot;
+                    document.querySelector(`.face3d[data-slot="${slot}"]`).classList.add("swap-pending");
+                    document.getElementById("swap-hint").textContent = `Primer panel: ${slot}. Click en el segundo panel para intercambiar.`;
+                } else if (swapFirst !== slot) {
+                    const tmp = { source: mapping[swapFirst].source, remap: [...mapping[swapFirst].remap] };
+                    mapping[swapFirst] = { source: mapping[slot].source, remap: [...mapping[slot].remap] };
+                    mapping[slot] = tmp;
+                    document.querySelector(`.face3d[data-slot="${swapFirst}"]`).classList.remove("swap-pending");
+                    swapFirst = null;
+                    swapMode = false;
+                    document.getElementById("btn-swap").classList.remove("active-btn");
+                    document.getElementById("swap-hint").textContent = "Intercambio hecho.";
+                    selectSlot(slot);
+                    render3D();
+                    updateAnalysis();
+                }
+                return;
+            }
+            selectedSlot = slot;
+            document.querySelectorAll(".face3d").forEach(el => el.classList.remove("selected"));
+            document.querySelector(`.face3d[data-slot="${slot}"]`).classList.add("selected");
+            document.getElementById("face-controls").style.display = "block";
+            document.getElementById("sel-slot-label").textContent = slot;
+            const m = mapping[slot];
+            sourceSelect.value = m.source;
+            updateRemapDisplay();
+        }
+
+        function setSource(src) {
+            if (!selectedSlot) return;
+            mapping[selectedSlot].source = src;
+            render3D();
+            updateAnalysis();
+        }
+
+        function applyTransform(name) {
+            if (!selectedSlot) return;
+            mapping[selectedSlot].remap = composeRemap(mapping[selectedSlot].remap, TX[name]);
+            updateRemapDisplay();
+            render3D();
+            updateAnalysis();
+        }
+
+        function resetFaceMapping() {
+            if (!selectedSlot) return;
+            mapping[selectedSlot] = clonePresetEntry(SCANNER_PRESET[selectedSlot]);
+            sourceSelect.value = mapping[selectedSlot].source;
+            updateRemapDisplay();
+            render3D();
+            updateAnalysis();
+        }
+
+        function startSwapMode() {
+            swapMode = !swapMode;
+            swapFirst = null;
+            document.querySelectorAll(".face3d").forEach(el => el.classList.remove("swap-pending"));
+            document.getElementById("btn-swap").classList.toggle("active-btn", swapMode);
+            document.getElementById("swap-hint").textContent = swapMode
+                ? "Modo intercambio: click en dos paneles 3D."
+                : "Selecciona un panel 3D (click en la cara).";
+        }
+
+        function buildSolverFaceData() {
+            const faceData = buildCaptureFaceData();
+            const live = liveCaptureContext();
+            const out = {};
+            FACES.forEach(slot => {
+                const colors = getFaceColorsFromMapping(slot, faceData, mapping, live);
+                if (colors) out[slot] = colors;
+            });
+            return out;
+        }
+
+        function updateAnalysis() {
+            const report = {
+                note: "Cuando el cubo 3D coincide con el físico, este JSON define el mapeo correcto.",
+                captures: {},
+                mapping: {},
+                effectiveRemap: {},
+                preset: {},
+                deltaFromScannerPreset: {},
+                solverFaceData: buildSolverFaceData(),
+                suggestedIndexRemap: {}
+            };
+
+            FACES.forEach(f => {
+                if (captures[f]) {
+                    report.captures[f] = {
+                        colors: captures[f].colors,
+                        corners: SCAN_CORNERS[f]
+                    };
+                }
+                const m = mapping[f];
+                const preset = SCANNER_PRESET[f];
+                report.mapping[f] = { source: m.source, remap: [...m.remap] };
+                report.effectiveRemap[f] = [...m.remap];
+                report.preset[f] = { source: preset.source, remap: [...preset.remap] };
+                const differsFromPreset =
+                    m.source !== preset.source ||
+                    !m.remap.every((v, i) => v === preset.remap[i]);
+                if (differsFromPreset) {
+                    report.deltaFromScannerPreset[f] = {
+                        sourceCapture: m.source,
+                        remap: [...m.remap],
+                        geometry: describeRemap(m.remap)
+                    };
+                }
+                report.suggestedIndexRemap[f] = {
+                    sourceCapture: m.source,
+                    remap: [...m.remap]
+                };
+            });
+
+            const code = generateCodeSnippet(report);
+            document.getElementById("analysis-out").value =
+                JSON.stringify(report, null, 2) +
+                "\n\n// --- Pegar en index.html (CUBE_INTERPRET) ---\n\n" + code +
+                "\n\n// Verificar: python3 scan/analyze_calibration.py < este.json";
+        }
+
+        function generateCodeSnippet(report) {
+            let lines = ["const CUBE_INTERPRET = {"];
+            FACES.forEach(f => {
+                const m = report.mapping[f];
+                lines.push(`  ${f}: { scanKey: "${m.source}", remap: [${m.remap.join(", ")}] },`);
+            });
+            lines.push("};");
+            return lines.join("\n");
+        }
+
+        function copyAnalysis() {
+            const t = document.getElementById("analysis-out");
+            t.select();
+            navigator.clipboard.writeText(t.value).then(() => alert("Copiado al portapapeles"));
+        }
+
+        async function sendAnalysis() {
+            updateAnalysis();
+            const payload = JSON.parse(document.getElementById("analysis-out").value.split("\n\n// ---")[0]);
+            try {
+                const res = await fetch("/calibrate-log", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                alert(data.status === "success" ? "Guardado en " + data.path : "Error: " + data.message);
+            } catch (e) {
+                alert("Error de conexión: " + e);
+            }
+        }
+
+        // Drag 3D
+        let rotX = -20, rotY = -40, dragging = false, sx, sy;
+        const wrapper = document.getElementById("cube-wrapper");
+        const scene = document.getElementById("scene3d");
+        scene.addEventListener("mousedown", e => { dragging = true; sx = e.clientX; sy = e.clientY; scene.style.cursor = "grabbing"; });
+        window.addEventListener("mousemove", e => {
+            if (!dragging) return;
+            rotY += (e.clientX - sx) * 0.6; rotX -= (e.clientY - sy) * 0.6;
+            sx = e.clientX; sy = e.clientY;
+            rotX = Math.max(-80, Math.min(80, rotX));
+            wrapper.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        });
+        window.addEventListener("mouseup", () => { dragging = false; scene.style.cursor = "grab"; });
+
+        updateCaptureUI();
+        render3D();
+    </script>
+</body>
+
+</html>

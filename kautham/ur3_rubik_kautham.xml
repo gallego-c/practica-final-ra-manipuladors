@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<Problem name="UR3_Rubik_Solver">
+
+	<!-- Robot: UR3 with Robotiq 85 Gripper -->
+	<Robot robot="./robots/robot_instances/UR_robotiq_85_gripper/ur3_robotiq_85_gripper.urdf.xacro" scale="1.0">
+		<KauthamName name="ur3_right"/>
+		<!-- Homed at X=0.245, Y=0.225, Z=0.0, rotated by 90 deg around Z to align with cube position -->
+		<Home TH="1.570796327" WZ="1.0" WY="0.0" WX="0.0" Z="0.0" Y="0.225" X="0.245" />
+		<ViewLink name="robotiq_85_base_link"/>
+	</Robot>
+
+	<!-- Table base obstacle -->
+	<Obstacle obstacle="./obstacles/chess/flat_chessboard/flat_chessboard.urdf" scale="1.0">
+		<KauthamName name="table_base"/>
+		<Home TH="1.570796327" WZ="1.0" WY="0.0" WX="0.0" Z="-0.01" Y="0.0" X="0.0" />
+	</Obstacle>
+
+	<!-- Square Fixture (holds the cube) -->
+	<Obstacle obstacle="square_fixture.urdf" scale="1.0">
+		<KauthamName name="square_fixture"/>
+		<!-- Sitting on the table at Y=0.4 m, center height Z=0.01 m (bottom at Z=0.00 m) -->
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.01" Y="0.4" X="0.0" />
+	</Obstacle>
+ 
+	<!-- 2x2 Rubik's Cube -->
+	<Obstacle obstacle="rubik_cube_2x2.urdf" scale="1.0">
+		<KauthamName name="rubik_cube"/>
+		<!-- Sitting exactly on top of the fixture: center height Z = 0.02 + 0.025 = 0.045 m -->
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.046" Y="0.4" X="0.0" />
+	</Obstacle>
+
+	<!-- Controls config path -->
+	<Controls robot="./controls/right_ur3_with_gripper.cntr"/>
+
+	<Planner>
+		<Parameters>
+			<Name>omplRRTConnect</Name>
+			<Parameter name="_Cspace Drawn">0</Parameter>
+			<Parameter name="_Incremental (0/1)">0</Parameter>
+			<Parameter name="_Max Planning Time">10</Parameter>
+			<Parameter name="_Path Drawn (0/1)">1</Parameter>
+			<Parameter name="_Simplify Solution">2</Parameter>
+			<Parameter name="_Speed Factor">5</Parameter>
+			<Parameter name="Range">0.5</Parameter>
+		</Parameters>
+		<Queries>
+			<Query>
+				<!-- Initial state: gripper is open and homed above the cube -->
+				<RobotControl name="ur3_right_shoulder_pan_joint" 	init="0.500" goal="0.545"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" 	init="0.375" goal="0.380"/>
+				<RobotControl name="ur3_right_elbow_joint" 			init="0.500" goal="0.835"/>
+				<RobotControl name="ur3_right_wrist_1_joint" 		init="0.375" goal="0.327"/>
+				<RobotControl name="ur3_right_wrist_2_joint" 		init="0.500" goal="0.375"/>
+				<RobotControl name="ur3_right_wrist_3_joint" 		init="0.500" goal="0.425"/>
+				<RobotControl name="ur3_right_gripper_joint" 		init="0.500" goal="0.680"/>
+			</Query>
+		</Queries>
+	</Planner>
+
+</Problem>
