@@ -1,4 +1,4 @@
-# UR3 Robot Arm 2×2 Rubik's Cube Solver (Hierarchical TAMP)
+# UR3 Robot Arm 2×2 Rubik's Cube Solver
 
 Welcome to the **UR3 Robot Arm 2×2 Rubik's Cube TAMP (Task and Motion Planning)** repository. This project implements a cutting-edge hierarchical planning architecture for a robotic manipulator to solve a 2×2 Rubik's cube under realistic physical constraints.
 
