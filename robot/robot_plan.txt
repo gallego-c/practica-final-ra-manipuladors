@@ -1,15 +1,7 @@
 pick
-execute_u_prime
-place
-tilt_y_neg
-pick
-execute_l2
+execute_u
 place
 tilt_y_pos
 pick
-execute_u
-place
-tilt_x_neg
-pick
-execute_b
+execute_r_prime
 place

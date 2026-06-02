@@ -210,7 +210,11 @@ CORNER_ID_DBL = 7
 CORNERS_IDX = tuple(tuple(POS_IDX[pos] for pos in corner) for corner in CORNERS)
 SOLVED_CORNER_COLORS = tuple(tuple(SOLVED_STATE[idx] for idx in corner) for corner in CORNERS_IDX)
 COLOR_SET_TO_CUBIE = {frozenset(colors): idx for idx, colors in enumerate(SOLVED_CORNER_COLORS)}
-U_D_COLORS = {COLOR_IDX['white'], COLOR_IDX['yellow']}
+ORIENTATION_MAPS = (
+    (0, 1, 2),
+    (1, 2, 0),
+    (2, 0, 1),
+)
 MAX_HTM_DEPTH = 11
 
 
@@ -290,6 +294,14 @@ def _apply_cubie_effect(cubie_state, effect):
     return tuple(next_perm), tuple(next_orient)
 
 
+def _oriented_corner_colors(cubie, orient):
+    colors = SOLVED_CORNER_COLORS[cubie]
+    oriented = [None, None, None]
+    for src_idx, dst_idx in enumerate(ORIENTATION_MAPS[orient]):
+        oriented[dst_idx] = colors[src_idx]
+    return tuple(oriented)
+
+
 def _state_to_cubies(state):
     if not has_valid_color_counts(state):
         return None
@@ -302,12 +314,16 @@ def _state_to_cubies(state):
         cubie = COLOR_SET_TO_CUBIE.get(frozenset(colors))
         if cubie is None or cubie in seen_cubies:
             return None
-        seen_cubies.add(cubie)
-        ud_positions = [idx for idx, color in enumerate(colors) if color in U_D_COLORS]
-        if len(ud_positions) != 1:
+        orient = None
+        for candidate in range(3):
+            if colors == _oriented_corner_colors(cubie, candidate):
+                orient = candidate
+                break
+        if orient is None:
             return None
+        seen_cubies.add(cubie)
         corner_perm.append(cubie)
-        corner_orient.append(ud_positions[0])
+        corner_orient.append(orient)
     return tuple(corner_perm), tuple(corner_orient)
 
 
