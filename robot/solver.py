@@ -254,6 +254,27 @@ def _generate_cube_rotations():
 CUBE_ROTATIONS = _generate_cube_rotations()
 
 
+def _generate_position_transforms():
+    transforms = []
+    for axis_order in ((0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)):
+        for signs in ((sx, sy, sz) for sx in (1, -1) for sy in (1, -1) for sz in (1, -1)):
+            matrix = [[0, 0, 0] for _ in range(3)]
+            for dst_axis, src_axis in enumerate(axis_order):
+                matrix[dst_axis][src_axis] = signs[dst_axis]
+
+            transform = [None] * len(POSITIONS)
+            for src_idx, position in enumerate(POSITIONS):
+                coord, normal = _position_geometry(position)
+                dst_coord = tuple(sum(matrix[i][j] * coord[j] for j in range(3)) for i in range(3))
+                dst_normal = tuple(sum(matrix[i][j] * normal[j] for j in range(3)) for i in range(3))
+                transform[_GEOM_TO_POS[(dst_coord, dst_normal)]] = src_idx
+            transforms.append(tuple(transform))
+    return tuple(dict.fromkeys(transforms))
+
+
+POSITION_TRANSFORMS = _generate_position_transforms()
+
+
 def get_all_solved_states():
     """Generate all 24 solved color orientations of the cube."""
     return [apply_move(SOLVED_STATE, rotation) for rotation in CUBE_ROTATIONS]
@@ -377,6 +398,9 @@ def has_valid_color_counts(state):
 
 def is_reachable_state(state):
     """True when the sticker state is a valid physical 2x2 corner state."""
+    if is_solved_monochromatic(state):
+        return True
+
     cubies = _state_to_cubies(state)
     if cubies is None:
         return False
@@ -440,9 +464,8 @@ def _bidirectional_solve_fixed_corner(canonical_state):
     return None
 
 
-def bfs_solve(init_state):
-    """Optimal bidirectional BFS solver for the 2x2 cube, fixing the DBL corner."""
-    cubies = _state_to_cubies(init_state)
+def _solve_state_strict(state):
+    cubies = _state_to_cubies(state)
     if cubies is None:
         return None
 
@@ -456,6 +479,57 @@ def bfs_solve(init_state):
 
     return [_move_to_original(move_name, canonical_rotation) for move_name in canonical_solution]
 
+
+def _apply_solution(state, solution):
+    current = state
+    for move in solution:
+        current = apply_move(current, ROBOT_MOVES[move])
+    return current
+
+
+def _move_from_transformed_to_original(move_name, transform):
+    inverse_transform = invert_perm(transform)
+    move_perm = ROBOT_MOVES[move_name]
+    original_perm = [0] * len(POSITIONS)
+    for dst_pos in range(len(POSITIONS)):
+        original_perm[dst_pos] = transform[move_perm[inverse_transform[dst_pos]]]
+    return {perm: name for name, perm in ROBOT_MOVES.items()}.get(tuple(original_perm))
+
+
+def _map_solution_from_transform(solution, transform):
+    mapped = []
+    for move in solution:
+        mapped_move = _move_from_transformed_to_original(move, transform)
+        if mapped_move is None:
+            return None
+        mapped.append(mapped_move)
+    return mapped
+
+
+def bfs_solve(init_state):
+    """Optimal bidirectional BFS solver for the 2x2 cube, fixing the DBL corner."""
+    if is_solved_monochromatic(init_state):
+        return []
+
+    strict_solution = _solve_state_strict(init_state)
+    if strict_solution is not None and is_solved_monochromatic(_apply_solution(init_state, strict_solution)):
+        return strict_solution
+
+    # Some scanner/cross-map conventions are mirrored relative to the solver's
+    # sticker coordinate frame. Try all cube coordinate symmetries and only
+    # accept a mapped-back solution if it solves the original sticker state.
+    for transform in POSITION_TRANSFORMS:
+        transformed_state = apply_move(init_state, transform)
+        transformed_solution = _solve_state_strict(transformed_state)
+        if transformed_solution is None:
+            continue
+        mapped_solution = _map_solution_from_transform(transformed_solution, transform)
+        if mapped_solution is None:
+            continue
+        if is_solved_monochromatic(_apply_solution(init_state, mapped_solution)):
+            return mapped_solution
+
+    return None
 
 # ── Pretty printer ────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 case,source,scramble_qtm,valid_color_counts,reachable,solver_status,solver_time_s,solver_solution_len,solver_solution,solver_verified,fd_status,fd_time_s,fd_plan_len,error
-gods_number_htm_11_expanded_qtm,known_public_hard_sequence,R U_PRIME R2 U_PRIME F_PRIME R_PRIME U F2 R U_PRIME F,True,True,solver_ok,0.1276,11,F_PRIME U R_PRIME F_PRIME U F2 U R F U_PRIME R2,True,fd_ok,0.4482,44,
-gods_number_htm_11_expanded_qtm_inverse,known_public_hard_sequence_inverse,F_PRIME U R_PRIME F2 U_PRIME R F U R2 U R_PRIME,True,True,solver_ok,0.1328,11,F_PRIME U R_PRIME F_PRIME U F2 U R F U_PRIME R2,True,fd_ok,0.3989,44,
-gods_number_qtm_14,known_public_hard_sequence,U R U F_PRIME R_PRIME F R U F_PRIME R F U R_PRIME F,True,True,solver_ok,0.1254,11,R2 U2 F2 U F2 U2 R2 U F2 U2 R2,True,fd_ok,0.4000,44,
-gods_number_qtm_14_inverse,known_public_hard_sequence_inverse,F_PRIME R U_PRIME F_PRIME R_PRIME F U_PRIME R_PRIME F_PRIME R F U_PRIME R_PRIME U_PRIME,True,True,solver_ok,0.1226,11,R2 U2 F2 U F2 U2 R2 U F2 U2 R2,True,fd_ok,0.3877,44,
+gods_number_htm_11_expanded_qtm,known_public_hard_sequence,R U_PRIME R2 U_PRIME F_PRIME R_PRIME U F2 R U_PRIME F,True,True,solver_ok,0.1161,11,F2 U_PRIME R F U R2 U R_PRIME F_PRIME U R_PRIME,True,fd_ok,0.4172,44,
+gods_number_htm_11_expanded_qtm_inverse,known_public_hard_sequence_inverse,F_PRIME U R_PRIME F2 U_PRIME R F U R2 U R_PRIME,True,True,solver_ok,0.1045,11,F2 U_PRIME R F U R2 U R_PRIME F_PRIME U R_PRIME,True,fd_ok,0.3983,44,
+gods_number_qtm_14,known_public_hard_sequence,U R U F_PRIME R_PRIME F R U F_PRIME R F U R_PRIME F,True,True,solver_ok,0.1220,11,R2 U F_PRIME U F U2 R_PRIME U F R2 F_PRIME,True,fd_ok,0.3799,44,
+gods_number_qtm_14_inverse,known_public_hard_sequence_inverse,F_PRIME R U_PRIME F_PRIME R_PRIME F U_PRIME R_PRIME F_PRIME R F U_PRIME R_PRIME U_PRIME,True,True,solver_ok,0.1111,11,R2 U F_PRIME U F U2 R_PRIME U F R2 F_PRIME,True,fd_ok,0.3655,44,
