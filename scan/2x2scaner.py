@@ -244,7 +244,7 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
                     elif solver_error:
                         message = f"Solver error: {solver_error}"
                     else:
-                        message = "No solution found. Please verify the 2D cross map."
+                        message = "Invalid cube scan or unsupported face mapping. Please verify the 2D cross map and face orientation."
                     self.send_json_response({
                         "status": "error",
                         "message": message,

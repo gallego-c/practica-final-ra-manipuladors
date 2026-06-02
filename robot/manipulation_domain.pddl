@@ -32,16 +32,22 @@
     ;; Types of standard Rubik moves for each step
     (step-type-U ?s - step)
     (step-type-U-prime ?s - step)
+    (step-type-U2 ?s - step)
     (step-type-D ?s - step)
     (step-type-D-prime ?s - step)
+    (step-type-D2 ?s - step)
     (step-type-R ?s - step)
     (step-type-R-prime ?s - step)
+    (step-type-R2 ?s - step)
     (step-type-L ?s - step)
     (step-type-L-prime ?s - step)
+    (step-type-L2 ?s - step)
     (step-type-F ?s - step)
     (step-type-F-prime ?s - step)
+    (step-type-F2 ?s - step)
     (step-type-B ?s - step)
     (step-type-B-prime ?s - step)
+    (step-type-B2 ?s - step)
   )
 
   ;; -----------------------------------------------------------
@@ -150,6 +156,12 @@
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
   )
 
+  (:action execute_U2
+    :parameters (?s - step ?next - step)
+    :precondition (and (current-step ?s) (robot-holding) (step-type-U2 ?s) (next-step ?s ?next) (top-face face_u))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+  )
+
   (:action execute_D
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-D ?s) (next-step ?s ?next) (top-face face_d))
@@ -159,6 +171,12 @@
   (:action execute_D_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-D-prime ?s) (next-step ?s ?next) (top-face face_d))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+  )
+
+  (:action execute_D2
+    :parameters (?s - step ?next - step)
+    :precondition (and (current-step ?s) (robot-holding) (step-type-D2 ?s) (next-step ?s ?next) (top-face face_d))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
   )
 
@@ -174,6 +192,12 @@
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
   )
 
+  (:action execute_R2
+    :parameters (?s - step ?next - step)
+    :precondition (and (current-step ?s) (robot-holding) (step-type-R2 ?s) (next-step ?s ?next) (top-face face_r))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+  )
+
   (:action execute_L
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-L ?s) (next-step ?s ?next) (top-face face_l))
@@ -183,6 +207,12 @@
   (:action execute_L_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-L-prime ?s) (next-step ?s ?next) (top-face face_l))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+  )
+
+  (:action execute_L2
+    :parameters (?s - step ?next - step)
+    :precondition (and (current-step ?s) (robot-holding) (step-type-L2 ?s) (next-step ?s ?next) (top-face face_l))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
   )
 
@@ -198,6 +228,12 @@
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
   )
 
+  (:action execute_F2
+    :parameters (?s - step ?next - step)
+    :precondition (and (current-step ?s) (robot-holding) (step-type-F2 ?s) (next-step ?s ?next) (top-face face_f))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+  )
+
   (:action execute_B
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-B ?s) (next-step ?s ?next) (top-face face_b))
@@ -207,6 +243,12 @@
   (:action execute_B_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-B-prime ?s) (next-step ?s ?next) (top-face face_b))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+  )
+
+  (:action execute_B2
+    :parameters (?s - step ?next - step)
+    :precondition (and (current-step ?s) (robot-holding) (step-type-B2 ?s) (next-step ?s ?next) (top-face face_b))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
   )
 )

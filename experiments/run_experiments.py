@@ -30,12 +30,12 @@ def generate_random_scramble(depth):
     """Genera una secuencia aleatoria de movimientos sin cancelaciones inmediatas."""
     moves = []
     opposite_moves = {
-        'rotate_top_cw': 'rotate_top_ccw',
-        'rotate_top_ccw': 'rotate_top_cw',
-        'tilt_x_pos': 'tilt_x_neg',
-        'tilt_x_neg': 'tilt_x_pos',
-        'tilt_y_pos': 'tilt_y_neg',
-        'tilt_y_neg': 'tilt_y_pos',
+        'U': 'U_PRIME', 'U_PRIME': 'U', 'U2': 'U2',
+        'D': 'D_PRIME', 'D_PRIME': 'D', 'D2': 'D2',
+        'R': 'R_PRIME', 'R_PRIME': 'R', 'R2': 'R2',
+        'L': 'L_PRIME', 'L_PRIME': 'L', 'L2': 'L2',
+        'F': 'F_PRIME', 'F_PRIME': 'F', 'F2': 'F2',
+        'B': 'B_PRIME', 'B_PRIME': 'B', 'B2': 'B2',
     }
     
     last_move = None

@@ -70,7 +70,7 @@ def main():
         
     if state is None:
         print("Warning: problem.pddl not found or empty. Generating default scramble.")
-        default_scramble = ['tilt_x_pos', 'rotate_top_cw', 'tilt_y_pos', 'rotate_top_ccw']
+        default_scramble = ['R', 'U', 'L_PRIME', 'F']
         state = scramble(default_scramble)
         
     print("\n── Scrambled Cube State ──")
@@ -90,14 +90,7 @@ def main():
     print(f"\n✓ OPTIMAL SOLUTION ({len(solution)} active movements)")
     print("-" * 60)
     for idx, move in enumerate(solution):
-        friendly = move
-        if move == "rotate_top_cw": friendly = "Rotate top layer Clockwise (Wrist CW)"
-        elif move == "rotate_top_ccw": friendly = "Rotate top layer Counter-Clockwise (Wrist CCW)"
-        elif move == "tilt_x_pos": friendly = "Tilt cube Forward (Front to Top)"
-        elif move == "tilt_x_neg": friendly = "Tilt cube Backward (Back to Top)"
-        elif move == "tilt_y_pos": friendly = "Tilt cube Right (Right to Top)"
-        elif move == "tilt_y_neg": friendly = "Tilt cube Left (Left to Top)"
-        
+        friendly = move.replace("_PRIME", "'")
         print(f"  Step {idx + 1:2d}: {friendly}")
     print("-" * 60)
     print()
