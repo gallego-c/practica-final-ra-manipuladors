@@ -1,5 +1,5 @@
-case,source,scramble_qtm,valid_color_counts,reachable,ida_status,ida_time_s,ida_solution_len,ida_solution,ida_verified,fd_status,fd_time_s,fd_plan_len,error
-gods_number_htm_11_expanded_qtm,known_public_hard_sequence,R U_PRIME R R U_PRIME F_PRIME R_PRIME U F F R U_PRIME F,True,True,ida_timeout,1.5033,,,False,skipped,0.0000,0,
-gods_number_htm_11_expanded_qtm_inverse,known_public_hard_sequence_inverse,F_PRIME U R_PRIME F_PRIME F_PRIME U_PRIME R F U R_PRIME R_PRIME U R_PRIME,True,True,ida_timeout,1.5017,,,False,skipped,0.0000,0,
-gods_number_qtm_14,known_public_hard_sequence,U R U F_PRIME R_PRIME F R U F_PRIME R F U R_PRIME F,True,True,ida_timeout,1.5021,,,False,skipped,0.0000,0,
-gods_number_qtm_14_inverse,known_public_hard_sequence_inverse,F_PRIME R U_PRIME F_PRIME R_PRIME F U_PRIME R_PRIME F_PRIME R F U_PRIME R_PRIME U_PRIME,True,True,ida_timeout,1.5038,,,False,skipped,0.0000,0,
+case,source,scramble_qtm,valid_color_counts,reachable,solver_status,solver_time_s,solver_solution_len,solver_solution,solver_verified,fd_status,fd_time_s,fd_plan_len,error
+gods_number_htm_11_expanded_qtm,known_public_hard_sequence,R U_PRIME R R U_PRIME F_PRIME R_PRIME U F F R U_PRIME F,True,True,solver_ok,0.1273,13,R U_PRIME R_PRIME U_PRIME F F U_PRIME R U R_PRIME U F F,True,skipped,0.0000,0,
+gods_number_htm_11_expanded_qtm_inverse,known_public_hard_sequence_inverse,F_PRIME U R_PRIME F_PRIME F_PRIME U_PRIME R F U R_PRIME R_PRIME U R_PRIME,True,True,solver_ok,0.1019,13,R U_PRIME R_PRIME U_PRIME F F U_PRIME R U R_PRIME U F F,True,skipped,0.0000,0,
+gods_number_qtm_14,known_public_hard_sequence,U R U F_PRIME R_PRIME F R U F_PRIME R F U R_PRIME F,True,True,solver_ok,0.1163,14,F_PRIME R R F R F_PRIME U U R F R_PRIME U R R,True,skipped,0.0000,0,
+gods_number_qtm_14_inverse,known_public_hard_sequence_inverse,F_PRIME R U_PRIME F_PRIME R_PRIME F U_PRIME R_PRIME F_PRIME R F U_PRIME R_PRIME U_PRIME,True,True,solver_ok,0.1188,14,F_PRIME R R F R F_PRIME U U R F R_PRIME U R R,True,skipped,0.0000,0,

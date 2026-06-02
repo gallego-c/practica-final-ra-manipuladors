@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-solver.py — IDA* solver for the robot-constrained 2x2 Rubik's Cube.
+solver.py — bidirectional BFS solver for the robot-constrained 2x2 Rubik's Cube.
 
 Available robot actions:
   - rotate_top_cw   : spin top layer CW  (U move, robot holds cube)
@@ -11,7 +11,7 @@ Available robot actions:
   - tilt_y_neg      : tip cube leftward  (L→top, pick+reorient+place)
 
 Note: rotate_top_180 (U2) is NOT included as an atomic action.
-IDA* will find it naturally as two rotate_top_cw/ccw moves.
+The solver expands it naturally as two rotate_top_cw/ccw moves.
 You can add it to ROBOT_MOVES for efficiency if desired.
 
 State: tuple of 24 integers (one per sticker position), color index 0-5.
@@ -65,18 +65,6 @@ SOLVED_STATE = (
 # ── Move permutations ─────────────────────────────────────────────────────────
 # Each move is a list of 4-cycles: (p0, p1, p2, p3) means p0→p1→p2→p3→p0
 # i.e., state[p1] ← state[p0], state[p2] ← state[p1], etc.
-
-def build_perm(cycles):
-    """Build permutation array from list of 4-cycles (CW direction)."""
-    n = len(POSITIONS)
-    perm = list(range(n))
-    for cycle in cycles:
-        idxs = [POS_IDX[p] for p in cycle]
-        m = len(idxs)
-        for i in range(m):
-            perm[idxs[(i + 1) % m]] = idxs[i]
-    return tuple(perm)
-
 
 def invert_perm(perm):
     """Invert a permutation."""
@@ -195,11 +183,31 @@ def is_solved_monochromatic(state):
     return True
 
 
-# ── IDA* Solver ───────────────────────────────────────────────────────────────
+# ── Bidirectional BFS solver with fixed DBL corner ────────────────────────────
 
-MAX_QTM_DEPTH = 14
-PRUNING_TABLE_DEPTH = 4
+CORNERS = [
+    ('u-ufr', 'f-ufr', 'r-ufr'),
+    ('u-ufl', 'l-ufl', 'f-ufl'),
+    ('u-ubr', 'r-ubr', 'b-ubr'),
+    ('u-ubl', 'b-ubl', 'l-ubl'),
+    ('d-dfr', 'r-dfr', 'f-dfr'),
+    ('d-dfl', 'f-dfl', 'l-dfl'),
+    ('d-dbr', 'b-dbr', 'r-dbr'),
+    ('d-dbl', 'l-dbl', 'b-dbl'),
+]
+CORNER_ID_DBL = 7
+CORNERS_IDX = tuple(tuple(POS_IDX[pos] for pos in corner) for corner in CORNERS)
+SOLVED_CORNER_COLORS = tuple(tuple(SOLVED_STATE[idx] for idx in corner) for corner in CORNERS_IDX)
+COLOR_SET_TO_CUBIE = {frozenset(colors): idx for idx, colors in enumerate(SOLVED_CORNER_COLORS)}
+U_D_COLORS = {COLOR_IDX['white'], COLOR_IDX['yellow']}
+MAX_HTM_DEPTH = 11
 
+
+def _compose_perms(*perms):
+    p = list(range(len(perms[0])))
+    for perm in perms:
+        p = [p[perm[i]] for i in range(len(p))]
+    return tuple(p)
 
 
 def _build_whole_cube_turn(axis):
@@ -216,64 +224,129 @@ _CUBE_ROT_Y = _build_whole_cube_turn((0, 1, 0))
 _CUBE_ROT_Z = _build_whole_cube_turn((0, 0, 1))
 
 
+def _generate_cube_rotations():
+    rotations = []
+    seen = set()
+    queue = deque([tuple(range(len(POSITIONS)))])
+    generators = (_CUBE_ROT_X, invert_perm(_CUBE_ROT_X), _CUBE_ROT_Y, invert_perm(_CUBE_ROT_Y), _CUBE_ROT_Z, invert_perm(_CUBE_ROT_Z))
+    while queue:
+        rot = queue.popleft()
+        if rot in seen:
+            continue
+        seen.add(rot)
+        rotations.append(rot)
+        for gen in generators:
+            next_rot = _compose_perms(rot, gen)
+            if next_rot not in seen:
+                queue.append(next_rot)
+    return tuple(rotations)
+
+
+CUBE_ROTATIONS = _generate_cube_rotations()
+
+
 def get_all_solved_states():
     """Generate all 24 solved color orientations of the cube."""
-    rotations = [_CUBE_ROT_X, invert_perm(_CUBE_ROT_X), _CUBE_ROT_Y, invert_perm(_CUBE_ROT_Y), _CUBE_ROT_Z, invert_perm(_CUBE_ROT_Z)]
-    solved_states = {SOLVED_STATE}
-    queue = deque([SOLVED_STATE])
-    while queue:
-        state = queue.popleft()
-        for perm in rotations:
-            next_state = apply_move(state, perm)
-            if next_state not in solved_states:
-                solved_states.add(next_state)
-                queue.append(next_state)
-    return list(solved_states)
+    return [apply_move(SOLVED_STATE, rotation) for rotation in CUBE_ROTATIONS]
 
 
-_PRUNING_DB = {}
-_REVERSE_NEXT_MOVE = {}
+def _cubie_move_effect(perm):
+    labels = [None] * len(POSITIONS)
+    for corner_idx, corner in enumerate(CORNERS_IDX):
+        for orient_idx, position_idx in enumerate(corner):
+            labels[position_idx] = (corner_idx, orient_idx)
+
+    moved = apply_move(tuple(labels), perm)
+    effect = []
+    for corner in CORNERS_IDX:
+        labels_at_corner = [moved[position_idx] for position_idx in corner]
+        source_corners = {label[0] for label in labels_at_corner}
+        if len(source_corners) != 1:
+            raise ValueError('Move permutation splits a physical corner')
+        source_corner = labels_at_corner[0][0]
+        orientation_map = [0, 0, 0]
+        for dst_orient, (_, src_orient) in enumerate(labels_at_corner):
+            orientation_map[src_orient] = dst_orient
+        effect.append((source_corner, tuple(orientation_map)))
+    return tuple(effect)
 
 
-def _state_key(state):
-    return bytes(state)
+MOVE_EFFECTS = {name: _cubie_move_effect(perm) for name, perm in ROBOT_MOVES.items()}
+ROTATION_EFFECTS = tuple((rotation, _cubie_move_effect(rotation)) for rotation in CUBE_ROTATIONS)
 
 
-def _apply_perm_key(state_key, perm):
-    return bytes(state_key[perm[i]] for i in range(len(perm)))
+def _apply_cubie_effect(cubie_state, effect):
+    corner_perm, corner_orient = cubie_state
+    next_perm = [0] * len(CORNERS)
+    next_orient = [0] * len(CORNERS)
+    for dst_corner, (src_corner, orientation_map) in enumerate(effect):
+        next_perm[dst_corner] = corner_perm[src_corner]
+        next_orient[dst_corner] = orientation_map[corner_orient[src_corner]]
+    return tuple(next_perm), tuple(next_orient)
 
 
-def init_heuristic_db(max_depth=PRUNING_TABLE_DEPTH):
-    """Build a small admissible reverse pruning table for IDA*."""
-    if _PRUNING_DB:
-        return
-    queue = deque()
-    for state in get_all_solved_states():
-        key = _state_key(state)
-        _PRUNING_DB[key] = 0
-        _REVERSE_NEXT_MOVE[key] = None
-        queue.append((key, 0))
+def _state_to_cubies(state):
+    if not has_valid_color_counts(state):
+        return None
 
-    while queue:
-        state_key, depth = queue.popleft()
-        if depth >= max_depth:
-            continue
-        for name, perm in ROBOT_MOVES.items():
-            next_key = _apply_perm_key(state_key, perm)
-            if next_key in _PRUNING_DB:
-                continue
-            _PRUNING_DB[next_key] = depth + 1
-            _REVERSE_NEXT_MOVE[next_key] = INVERSE_MOVE[name]
-            queue.append((next_key, depth + 1))
+    corner_perm = []
+    corner_orient = []
+    seen_cubies = set()
+    for corner in CORNERS_IDX:
+        colors = tuple(state[position_idx] for position_idx in corner)
+        cubie = COLOR_SET_TO_CUBIE.get(frozenset(colors))
+        if cubie is None or cubie in seen_cubies:
+            return None
+        seen_cubies.add(cubie)
+        ud_positions = [idx for idx, color in enumerate(colors) if color in U_D_COLORS]
+        if len(ud_positions) != 1:
+            return None
+        corner_perm.append(cubie)
+        corner_orient.append(ud_positions[0])
+    return tuple(corner_perm), tuple(corner_orient)
 
 
-def get_heuristic(state):
-    """Return an admissible lower bound for IDA*."""
-    init_heuristic_db()
-    dist = _PRUNING_DB.get(_state_key(state))
-    if dist is not None:
-        return dist
-    return PRUNING_TABLE_DEPTH + 1
+def _cubie_key(cubie_state):
+    corner_perm, corner_orient = cubie_state
+    return bytes(corner_perm + corner_orient)
+
+
+def _canonicalize_fixed_corner(cubie_state):
+    """Rotate the whole cube so the DBL cubie is fixed and oriented."""
+    for rotation_perm, effect in ROTATION_EFFECTS:
+        rotated = _apply_cubie_effect(cubie_state, effect)
+        corner_perm, corner_orient = rotated
+        if corner_perm[CORNER_ID_DBL] == CORNER_ID_DBL and corner_orient[CORNER_ID_DBL] == 0:
+            return rotated, rotation_perm
+    return None, None
+
+
+def _primitive_move_to_original(move_name, canonical_rotation):
+    inverse_rotation = invert_perm(canonical_rotation)
+    move_perm = ROBOT_MOVES[move_name]
+    conjugated = [0] * len(POSITIONS)
+    for pos in range(len(POSITIONS)):
+        conjugated[pos] = canonical_rotation[move_perm[inverse_rotation[pos]]]
+    move_by_perm = {perm: name for name, perm in ROBOT_MOVES.items()}
+    return move_by_perm[tuple(conjugated)]
+
+
+BIDIR_MOVES = []
+for face in ('U', 'R', 'F'):
+    BIDIR_MOVES.append((face, (face,), MOVE_EFFECTS[face]))
+    prime = f'{face}_PRIME'
+    BIDIR_MOVES.append((prime, (prime,), MOVE_EFFECTS[prime]))
+    double_effect = _cubie_move_effect(_compose_perms(ROBOT_MOVES[face], ROBOT_MOVES[face]))
+    BIDIR_MOVES.append((f'{face}2', (face, face), double_effect))
+
+INVERSE_BIDIR_MOVE = {
+    'U': 'U_PRIME', 'U_PRIME': 'U', 'U2': 'U2',
+    'R': 'R_PRIME', 'R_PRIME': 'R', 'R2': 'R2',
+    'F': 'F_PRIME', 'F_PRIME': 'F', 'F2': 'F2',
+}
+BIDIR_MOVE_SEQ = {name: seq for name, seq, _ in BIDIR_MOVES}
+BIDIR_MOVE_EFFECT = {name: effect for name, _, effect in BIDIR_MOVES}
+SOLVED_FIXED_KEY = _cubie_key((tuple(range(len(CORNERS))), (0,) * len(CORNERS)))
 
 
 def has_valid_color_counts(state):
@@ -283,89 +356,89 @@ def has_valid_color_counts(state):
 
 
 def is_reachable_state(state):
-    """Fast pre-check before solving. Full reachability is proven by finding a solution."""
-    return has_valid_color_counts(state)
+    """True when the sticker state is a valid physical 2x2 corner state."""
+    cubies = _state_to_cubies(state)
+    if cubies is None:
+        return False
+    canonical, _ = _canonicalize_fixed_corner(cubies)
+    return canonical is not None
 
 
-def _reverse_solution_from_table(state):
-    init_heuristic_db()
-    key = _state_key(state)
-    if key not in _PRUNING_DB:
-        return None
+def _reconstruct_bidirectional(meet_key, parents_from_start, parents_from_goal):
+    first_half = []
+    key = meet_key
+    while parents_from_start[key][0] is not None:
+        key, move_name = parents_from_start[key]
+        first_half.append(move_name)
+    first_half.reverse()
 
-    suffix = []
-    current = tuple(state)
-    while True:
-        move = _REVERSE_NEXT_MOVE[_state_key(current)]
-        if move is None:
-            return suffix
-        suffix.append(move)
-        current = apply_move(current, ROBOT_MOVES[move])
+    second_half = []
+    key = meet_key
+    while parents_from_goal[key][0] is not None:
+        key, move_name = parents_from_goal[key]
+        second_half.append(INVERSE_BIDIR_MOVE[move_name])
+    return first_half + second_half
+
+
+def _expand_frontier(frontier, own_parents, other_parents):
+    next_frontier = set()
+    for key in frontier:
+        cubie_state = (tuple(key[:8]), tuple(key[8:]))
+        for move_name, _, effect in BIDIR_MOVES:
+            next_state = _apply_cubie_effect(cubie_state, effect)
+            next_key = _cubie_key(next_state)
+            if next_key in own_parents:
+                continue
+            own_parents[next_key] = (key, move_name)
+            if next_key in other_parents:
+                return next_frontier, next_key
+            next_frontier.add(next_key)
+    return next_frontier, None
+
+
+def _bidirectional_solve_fixed_corner(canonical_state):
+    start_key = _cubie_key(canonical_state)
+    if start_key == SOLVED_FIXED_KEY:
+        return []
+
+    parents_from_start = {start_key: (None, None)}
+    parents_from_goal = {SOLVED_FIXED_KEY: (None, None)}
+    frontier_start = {start_key}
+    frontier_goal = {SOLVED_FIXED_KEY}
+    depth_start = 0
+    depth_goal = 0
+
+    while frontier_start and frontier_goal and depth_start + depth_goal < MAX_HTM_DEPTH:
+        if len(frontier_start) <= len(frontier_goal):
+            frontier_start, meet_key = _expand_frontier(frontier_start, parents_from_start, parents_from_goal)
+            depth_start += 1
+        else:
+            frontier_goal, meet_key = _expand_frontier(frontier_goal, parents_from_goal, parents_from_start)
+            depth_goal += 1
+        if meet_key is not None:
+            return _reconstruct_bidirectional(meet_key, parents_from_start, parents_from_goal)
+    return None
 
 
 def bfs_solve(init_state):
-    """
-    IDA* (Iterative Deepening A*) solver for 2x2 Rubik's Cube.
-    Keeps the name 'bfs_solve' for backward compatibility with existing callers.
-    """
-    if not is_reachable_state(init_state):
+    """Optimal bidirectional BFS solver for the 2x2 cube, fixing the DBL corner."""
+    cubies = _state_to_cubies(init_state)
+    if cubies is None:
         return None
-    if is_solved_monochromatic(init_state):
-        return []
 
-    init_heuristic_db()
-    table_solution = _reverse_solution_from_table(init_state)
-    if table_solution is not None:
-        return table_solution
+    canonical_state, canonical_rotation = _canonicalize_fixed_corner(cubies)
+    if canonical_state is None:
+        return None
 
-    path = [init_state]
-    path_moves = []
+    canonical_solution = _bidirectional_solve_fixed_corner(canonical_state)
+    if canonical_solution is None:
+        return None
 
-    def search(g, bound):
-        state = path[-1]
-        suffix = _reverse_solution_from_table(state)
-        if suffix is not None and g + len(suffix) <= bound:
-            path_moves.extend(suffix)
-            return True
-
-        f_score = g + get_heuristic(state)
-        if f_score > bound:
-            return f_score
-        if is_solved_monochromatic(state):
-            return True
-
-        min_overflow = float('inf')
-        last_move = path_moves[-1] if path_moves else None
-        for name, perm in ROBOT_MOVES.items():
-            if last_move and INVERSE_MOVE[name] == last_move:
-                continue
-            if len(path_moves) >= 2 and path_moves[-1] == name and path_moves[-2] == name:
-                continue
-
-            next_state = apply_move(state, perm)
-            if next_state in path:
-                continue
-
-            path.append(next_state)
-            path_moves.append(name)
-            result = search(g + 1, bound)
-            if result is True:
-                return True
-            if result < min_overflow:
-                min_overflow = result
-            path_moves.pop()
-            path.pop()
-        return min_overflow
-
-    bound = get_heuristic(init_state)
-    while bound <= MAX_QTM_DEPTH:
-        result = search(0, bound)
-        if result is True:
-            return path_moves
-        if result == float('inf'):
-            break
-        bound = result
-    return None
+    original_moves = []
+    for move_name in canonical_solution:
+        for primitive_move in BIDIR_MOVE_SEQ[move_name]:
+            original_moves.append(_primitive_move_to_original(primitive_move, canonical_rotation))
+    return original_moves
 
 
 # ── Pretty printer ────────────────────────────────────────────────────────────
@@ -428,7 +501,7 @@ if __name__ == '__main__':
         print("Cube is already solved!")
         sys.exit(0)
 
-    print("Solving with IDA*...")
+    print("Solving with bidirectional BFS...")
     t0 = time.time()
     solution = bfs_solve(init_state)
     t1 = time.time()

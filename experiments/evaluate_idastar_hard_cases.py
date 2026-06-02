@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Evaluate the IDA* solver on fixed hard 2x2 cases.
+Evaluate the bidirectional BFS solver on fixed hard 2x2 cases.
 
 This script intentionally does not generate a full state tree. The hard cases
 come from public God's-number references for the 2x2:
@@ -154,16 +154,16 @@ def solve_with_timeout(state: tuple[int, ...], timeout_seconds: float):
     if proc.is_alive():
         proc.terminate()
         proc.join()
-        return "ida_timeout", None, elapsed, None
+        return "solver_timeout", None, elapsed, None
     if queue.empty():
-        return "ida_error", None, elapsed, "solver exited without result"
+        return "solver_error", None, elapsed, "solver exited without result"
 
     status, solution, error = queue.get()
     if status == "error":
-        return "ida_error", None, elapsed, error
+        return "solver_error", None, elapsed, error
     if solution is None:
-        return "ida_none", None, elapsed, None
-    return "ida_ok", solution, elapsed, None
+        return "solver_none", None, elapsed, None
+    return "solver_ok", solution, elapsed, None
 
 
 def verify_solution(state: tuple[int, ...], solution: list[str] | None) -> bool:
@@ -200,11 +200,11 @@ def write_rows(rows):
         "scramble_qtm",
         "valid_color_counts",
         "reachable",
-        "ida_status",
-        "ida_time_s",
-        "ida_solution_len",
-        "ida_solution",
-        "ida_verified",
+        "solver_status",
+        "solver_time_s",
+        "solver_solution_len",
+        "solver_solution",
+        "solver_verified",
         "fd_status",
         "fd_time_s",
         "fd_plan_len",
@@ -224,7 +224,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 72)
-    print("  IDA* FIXED HARD-CASE EVALUATION FOR 2x2")
+    print("  BIDIRECTIONAL BFS HARD-CASE EVALUATION FOR 2x2")
     print("=" * 72)
 
     cases = build_cases(include_scanned=not args.skip_scanned)
@@ -233,13 +233,13 @@ def main():
         valid_counts = has_valid_color_counts(case.state)
         reachable = is_reachable_state(case.state)
         if not reachable:
-            ida_status, solution, ida_time, error = "invalid_unreachable", None, 0.0, "not reachable"
+            solver_status, solution, ida_time, error = "invalid_unreachable", None, 0.0, "not reachable"
         else:
-            ida_status, solution, ida_time, error = solve_with_timeout(case.state, args.timeout)
+            solver_status, solution, ida_time, error = solve_with_timeout(case.state, args.timeout)
 
         verified = verify_solution(case.state, solution)
         fd_status, fd_plan_len, fd_time = ("skipped", 0, 0.0)
-        if ida_status == "ida_ok" and verified:
+        if solver_status == "solver_ok" and verified:
             fd_status, fd_plan_len, fd_time = run_fast_downward_if_requested(
                 solution,
                 args.run_fast_downward,
@@ -251,11 +251,11 @@ def main():
             "scramble_qtm": case.scramble,
             "valid_color_counts": valid_counts,
             "reachable": reachable,
-            "ida_status": ida_status,
-            "ida_time_s": f"{ida_time:.4f}",
-            "ida_solution_len": len(solution) if solution is not None else "",
-            "ida_solution": " ".join(solution or []),
-            "ida_verified": verified,
+            "solver_status": solver_status,
+            "solver_time_s": f"{ida_time:.4f}",
+            "solver_solution_len": len(solution) if solution is not None else "",
+            "solver_solution": " ".join(solution or []),
+            "solver_verified": verified,
             "fd_status": fd_status,
             "fd_time_s": f"{fd_time:.4f}",
             "fd_plan_len": fd_plan_len,
@@ -263,15 +263,15 @@ def main():
         })
         print(
             f"{idx:2d}. {case.name}: reachable={reachable} "
-            f"status={ida_status} time={ida_time:.4f}s "
+            f"status={solver_status} time={ida_time:.4f}s "
             f"len={len(solution) if solution else '-'} fd={fd_status}"
         )
 
     write_rows(rows)
-    failures = [row for row in rows if row["ida_status"] != "ida_ok"]
+    failures = [row for row in rows if row["solver_status"] != "solver_ok"]
     print("\n" + "=" * 72)
     print(f"CSV written to: {CSV_OUTPUT_PATH}")
-    print(f"IDA* failures/timeouts: {len(failures)}/{len(rows)}")
+    print(f"Solver failures/timeouts: {len(failures)}/{len(rows)}")
     print("=" * 72)
 
 
