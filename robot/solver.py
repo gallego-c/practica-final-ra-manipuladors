@@ -2,17 +2,9 @@
 """
 solver.py — bidirectional BFS solver for the robot-constrained 2x2 Rubik's Cube.
 
-Available robot actions:
-  - rotate_top_cw   : spin top layer CW  (U move, robot holds cube)
-  - rotate_top_ccw  : spin top layer CCW (U' move, robot holds cube)
-  - tilt_x_pos      : tip cube forward   (F→top, pick+reorient+place)
-  - tilt_x_neg      : tip cube backward  (B→top, pick+reorient+place)
-  - tilt_y_pos      : tip cube rightward (R→top, pick+reorient+place)
-  - tilt_y_neg      : tip cube leftward  (L→top, pick+reorient+place)
+Available standard moves: U, D, R, L, F, B, their _PRIME inverses, and 180-degree moves (U2, D2, R2, L2, F2, B2).
 
-Note: rotate_top_180 (U2) is NOT included as an atomic action.
-The solver expands it naturally as two rotate_top_cw/ccw moves.
-You can add it to ROBOT_MOVES for efficiency if desired.
+Half turns (U2, D2, R2, L2, F2, B2) are first-class moves.
 
 State: tuple of 24 integers (one per sticker position), color index 0-5.
 """
@@ -72,6 +64,14 @@ def invert_perm(perm):
     for i, p in enumerate(perm):
         inv[p] = i
     return tuple(inv)
+
+
+def compose_perms(*perms):
+    """Compose permutations in application order."""
+    p = list(range(len(perms[0])))
+    for perm in perms:
+        p = [p[perm[i]] for i in range(len(p))]
+    return tuple(p)
 
 
 # ── Physical face-turn permutations ───────────────────────────────────────────
@@ -142,20 +142,31 @@ ROBOT_MOVES.update({
     f'{name}_PRIME': invert_perm(perm)
     for name, perm in list(ROBOT_MOVES.items())
 })
+ROBOT_MOVES.update({
+    f'{name}2': compose_perms(perm, perm)
+    for name, perm in list(ROBOT_MOVES.items())
+    if not name.endswith('_PRIME')
+})
 
 INVERSE_MOVE = {
     'U':       'U_PRIME',
     'U_PRIME': 'U',
+    'U2':      'U2',
     'D':       'D_PRIME',
     'D_PRIME': 'D',
+    'D2':      'D2',
     'R':       'R_PRIME',
     'R_PRIME': 'R',
+    'R2':      'R2',
     'L':       'L_PRIME',
     'L_PRIME': 'L',
+    'L2':      'L2',
     'F':       'F_PRIME',
     'F_PRIME': 'F',
+    'F2':      'F2',
     'B':       'B_PRIME',
     'B_PRIME': 'B',
+    'B2':      'B2',
 }
 
 
@@ -203,12 +214,6 @@ U_D_COLORS = {COLOR_IDX['white'], COLOR_IDX['yellow']}
 MAX_HTM_DEPTH = 11
 
 
-def _compose_perms(*perms):
-    p = list(range(len(perms[0])))
-    for perm in perms:
-        p = [p[perm[i]] for i in range(len(p))]
-    return tuple(p)
-
 
 def _build_whole_cube_turn(axis):
     perm = list(range(len(POSITIONS)))
@@ -236,7 +241,7 @@ def _generate_cube_rotations():
         seen.add(rot)
         rotations.append(rot)
         for gen in generators:
-            next_rot = _compose_perms(rot, gen)
+            next_rot = compose_perms(rot, gen)
             if next_rot not in seen:
                 queue.append(next_rot)
     return tuple(rotations)
@@ -321,7 +326,7 @@ def _canonicalize_fixed_corner(cubie_state):
     return None, None
 
 
-def _primitive_move_to_original(move_name, canonical_rotation):
+def _move_to_original(move_name, canonical_rotation):
     inverse_rotation = invert_perm(canonical_rotation)
     move_perm = ROBOT_MOVES[move_name]
     conjugated = [0] * len(POSITIONS)
@@ -333,19 +338,18 @@ def _primitive_move_to_original(move_name, canonical_rotation):
 
 BIDIR_MOVES = []
 for face in ('U', 'R', 'F'):
-    BIDIR_MOVES.append((face, (face,), MOVE_EFFECTS[face]))
+    BIDIR_MOVES.append((face, MOVE_EFFECTS[face]))
     prime = f'{face}_PRIME'
-    BIDIR_MOVES.append((prime, (prime,), MOVE_EFFECTS[prime]))
-    double_effect = _cubie_move_effect(_compose_perms(ROBOT_MOVES[face], ROBOT_MOVES[face]))
-    BIDIR_MOVES.append((f'{face}2', (face, face), double_effect))
+    BIDIR_MOVES.append((prime, MOVE_EFFECTS[prime]))
+    double = f'{face}2'
+    BIDIR_MOVES.append((double, MOVE_EFFECTS[double]))
 
 INVERSE_BIDIR_MOVE = {
     'U': 'U_PRIME', 'U_PRIME': 'U', 'U2': 'U2',
     'R': 'R_PRIME', 'R_PRIME': 'R', 'R2': 'R2',
     'F': 'F_PRIME', 'F_PRIME': 'F', 'F2': 'F2',
 }
-BIDIR_MOVE_SEQ = {name: seq for name, seq, _ in BIDIR_MOVES}
-BIDIR_MOVE_EFFECT = {name: effect for name, _, effect in BIDIR_MOVES}
+BIDIR_MOVE_EFFECT = {name: effect for name, effect in BIDIR_MOVES}
 SOLVED_FIXED_KEY = _cubie_key((tuple(range(len(CORNERS))), (0,) * len(CORNERS)))
 
 
@@ -384,7 +388,7 @@ def _expand_frontier(frontier, own_parents, other_parents):
     next_frontier = set()
     for key in frontier:
         cubie_state = (tuple(key[:8]), tuple(key[8:]))
-        for move_name, _, effect in BIDIR_MOVES:
+        for move_name, effect in BIDIR_MOVES:
             next_state = _apply_cubie_effect(cubie_state, effect)
             next_key = _cubie_key(next_state)
             if next_key in own_parents:
@@ -434,11 +438,7 @@ def bfs_solve(init_state):
     if canonical_solution is None:
         return None
 
-    original_moves = []
-    for move_name in canonical_solution:
-        for primitive_move in BIDIR_MOVE_SEQ[move_name]:
-            original_moves.append(_primitive_move_to_original(primitive_move, canonical_rotation))
-    return original_moves
+    return [_move_to_original(move_name, canonical_rotation) for move_name in canonical_solution]
 
 
 # ── Pretty printer ────────────────────────────────────────────────────────────

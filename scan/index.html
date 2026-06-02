@@ -1536,16 +1536,22 @@
                             else if (step === "tilt_y_neg") friendlyStep = "Tilt cube Leftward (Left face to Top)";
                             else if (step === "execute_u") friendlyStep = "Wrist rotation: Spin U face Clockwise";
                             else if (step === "execute_u_prime") friendlyStep = "Wrist rotation: Spin U face Counter-Clockwise";
+                            else if (step === "execute_u2") friendlyStep = "Wrist rotation: Spin U face 180 degrees";
                             else if (step === "execute_d") friendlyStep = "Wrist rotation: Spin D face Clockwise";
                             else if (step === "execute_d_prime") friendlyStep = "Wrist rotation: Spin D face Counter-Clockwise";
+                            else if (step === "execute_d2") friendlyStep = "Wrist rotation: Spin D face 180 degrees";
                             else if (step === "execute_r") friendlyStep = "Wrist rotation: Spin R face Clockwise";
                             else if (step === "execute_r_prime") friendlyStep = "Wrist rotation: Spin R face Counter-Clockwise";
+                            else if (step === "execute_r2") friendlyStep = "Wrist rotation: Spin R face 180 degrees";
                             else if (step === "execute_l") friendlyStep = "Wrist rotation: Spin L face Clockwise";
                             else if (step === "execute_l_prime") friendlyStep = "Wrist rotation: Spin L face Counter-Clockwise";
+                            else if (step === "execute_l2") friendlyStep = "Wrist rotation: Spin L face 180 degrees";
                             else if (step === "execute_f") friendlyStep = "Wrist rotation: Spin F face Clockwise";
                             else if (step === "execute_f_prime") friendlyStep = "Wrist rotation: Spin F face Counter-Clockwise";
+                            else if (step === "execute_f2") friendlyStep = "Wrist rotation: Spin F face 180 degrees";
                             else if (step === "execute_b") friendlyStep = "Wrist rotation: Spin B face Clockwise";
                             else if (step === "execute_b_prime") friendlyStep = "Wrist rotation: Spin B face Counter-Clockwise";
+                            else if (step === "execute_b2") friendlyStep = "Wrist rotation: Spin B face 180 degrees";
 
                             div.innerHTML = `<span class="step-num">Action ${idx + 1}</span> <span>${friendlyStep}</span>`;
                             container.appendChild(div);

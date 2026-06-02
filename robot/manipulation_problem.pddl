@@ -23,13 +23,13 @@
     (current-step step1)
 
     (next-step step1 step2)
-    (step-type-R step1)
+    (step-type-U-prime step1)
     (next-step step2 step3)
-    (step-type-R step2)
+    (step-type-L2 step2)
     (next-step step3 step4)
-    (step-type-B step3)
+    (step-type-U step3)
     (next-step step4 step5)
-    (step-type-R-prime step4)
+    (step-type-B step4)
   )
   (:goal (and
     (step-completed step1)

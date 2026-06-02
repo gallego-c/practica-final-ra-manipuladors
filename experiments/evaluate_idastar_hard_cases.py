@@ -43,22 +43,22 @@ from solver import (  # noqa: E402
 MOVE_ALIASES = {
     "U": ["U"],
     "U'": ["U_PRIME"],
-    "U2": ["U", "U"],
+    "U2": ["U2"],
     "D": ["D"],
     "D'": ["D_PRIME"],
-    "D2": ["D", "D"],
+    "D2": ["D2"],
     "R": ["R"],
     "R'": ["R_PRIME"],
-    "R2": ["R", "R"],
+    "R2": ["R2"],
     "L": ["L"],
     "L'": ["L_PRIME"],
-    "L2": ["L", "L"],
+    "L2": ["L2"],
     "F": ["F"],
     "F'": ["F_PRIME"],
-    "F2": ["F", "F"],
+    "F2": ["F2"],
     "B": ["B"],
     "B'": ["B_PRIME"],
-    "B2": ["B", "B"],
+    "B2": ["B2"],
 }
 
 
@@ -113,6 +113,12 @@ def invert_moves(moves: list[str]) -> list[str]:
         "F_PRIME": "F",
         "B": "B_PRIME",
         "B_PRIME": "B",
+        "U2": "U2",
+        "D2": "D2",
+        "R2": "R2",
+        "L2": "L2",
+        "F2": "F2",
+        "B2": "B2",
     }
     return [inverse[move] for move in reversed(moves)]
 
