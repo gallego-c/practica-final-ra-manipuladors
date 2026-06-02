@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-solver.py — BFS solver for the robot-constrained 2x2 Rubik's Cube.
+solver.py — IDA* solver for the robot-constrained 2x2 Rubik's Cube.
 
 Available robot actions:
   - rotate_top_cw   : spin top layer CW  (U move, robot holds cube)
@@ -11,13 +11,13 @@ Available robot actions:
   - tilt_y_neg      : tip cube leftward  (L→top, pick+reorient+place)
 
 Note: rotate_top_180 (U2) is NOT included as an atomic action.
-The BFS will find it naturally as two rotate_top_cw/ccw moves.
+IDA* will find it naturally as two rotate_top_cw/ccw moves.
 You can add it to ROBOT_MOVES for efficiency if desired.
 
 State: tuple of 24 integers (one per sticker position), color index 0-5.
 """
 
-from collections import deque
+from collections import Counter, deque
 
 
 # ── Color & Position definitions ──────────────────────────────────────────────
@@ -86,80 +86,74 @@ def invert_perm(perm):
     return tuple(inv)
 
 
-# ── rotate_top_cw  (U move) ───────────────────────────────────────────────────
-ROTATE_TOP_CW_CYCLES = [
-    ('u-ubl', 'u-ubr', 'u-ufr', 'u-ufl'),   # U face
-    ('b-ubl', 'r-ubr', 'f-ufr', 'l-ufl'),   # top belt group 1
-    ('l-ubl', 'b-ubr', 'r-ufr', 'f-ufl'),   # top belt group 2
-]
+# ── Physical face-turn permutations ───────────────────────────────────────────
 
-# ── tilt_x_pos  (tip forward: F→top) ─────────────────────────────────────────
-# Face mapping: U←F, F←D, D←B, B←U  (orientation-corrected)
-# Corners involved:
-#   [f-ufr → u-ufr → b-dbr → d-dfr]  (cycle of 4)
-#   [f-ufl → u-ufl → b-dbl → d-dfl]
-#   [f-dfr → u-ubr → b-ubr → d-dbr]
-#   [f-dfl → u-ubl → b-ubl → d-dbl]
-#   L face CW: [l-ufl → l-ubl → l-dbl → l-dfl]
-#   R face CCW: [r-ufr → r-dfr → r-dbr → r-ubr]
-TILT_X_POS_CYCLES = [
-    ('f-ufr', 'u-ufr', 'b-dbr', 'd-dfr'),
-    ('f-ufl', 'u-ufl', 'b-dbl', 'd-dfl'),
-    ('f-dfr', 'u-ubr', 'b-ubr', 'd-dbr'),
-    ('f-dfl', 'u-ubl', 'b-ubl', 'd-dbl'),
-    ('l-ufl', 'l-ubl', 'l-dbl', 'l-dfl'),   # L face CW from left
-    ('r-ufr', 'r-dfr', 'r-dbr', 'r-ubr'),   # R face CCW from right (same cycle order = CCW)
-]
-
-# ── tilt_y_pos  (tip rightward: R→top) ───────────────────────────────────────
-# Face mapping: U←R, R←D, D←L, L←U
-# Corners (4-cycles derived from Y+ rotation):
-#   [r-ufr → u-ufr → l-dfl → d-dfr]
-#   [r-ubr → u-ubr → l-dbl → d-dbr]
-#   [r-dfr → u-ufl → l-ufl → d-dfl]
-#   [r-dbr → u-ubl → l-ubl → d-dbl]
-#   F face CW: [f-ufl → f-ufr → f-dfr → f-dfl]
-#   B face CCW: [b-ubl → b-ubr → b-dbr → b-dbl]
-TILT_Y_POS_CYCLES = [
-    ('r-ufr', 'u-ufl', 'l-dfl', 'd-dfr'),
-    ('r-dfr', 'u-ufr', 'l-ufl', 'd-dfl'),
-    ('r-ubr', 'u-ubl', 'l-dbl', 'd-dbr'),
-    ('r-dbr', 'u-ubr', 'l-ubl', 'd-dbl'),
-    ('f-ufl', 'f-dfl', 'f-dfr', 'f-ufr'),   # F face CCW from front
-    ('b-ubr', 'b-ubl', 'b-dbl', 'b-dbr'),   # B face CW from back
-]
-
-
-# Build all robot move permutations
-_rtcw = build_perm(ROTATE_TOP_CW_CYCLES)
-_rtccw = invert_perm(_rtcw)
-_txp  = build_perm(TILT_X_POS_CYCLES)
-_txn  = invert_perm(_txp)
-_typ  = build_perm(TILT_Y_POS_CYCLES)
-_tyn  = invert_perm(_typ)
-
-def compose_perms(*perms):
-    """Composes multiple permutations in sequence."""
-    p = list(range(len(perms[0])))
-    for perm in perms:
-        p = [p[perm[i]] for i in range(len(p))]
-    return tuple(p)
-
-# Compose standard Rubik's moves (U, D, R, L, F, B)
-ROBOT_MOVES = {
-    'U':       _rtcw,
-    'U_PRIME': _rtccw,
-    'D':       compose_perms(_txp, _txp, _rtcw, _txp, _txp),
-    'D_PRIME': compose_perms(_txp, _txp, _rtccw, _txp, _txp),
-    'R':       compose_perms(_typ, _rtcw, _tyn),
-    'R_PRIME': compose_perms(_typ, _rtccw, _tyn),
-    'L':       compose_perms(_tyn, _rtcw, _typ),
-    'L_PRIME': compose_perms(_tyn, _rtccw, _typ),
-    'F':       compose_perms(_txp, _rtcw, _txn),
-    'F_PRIME': compose_perms(_txp, _rtccw, _txn),
-    'B':       compose_perms(_txn, _rtcw, _txp),
-    'B_PRIME': compose_perms(_txn, _rtccw, _txp),
+FACE_NORMALS = {
+    'u': (0, 1, 0),
+    'd': (0, -1, 0),
+    'f': (0, 0, 1),
+    'b': (0, 0, -1),
+    'l': (-1, 0, 0),
+    'r': (1, 0, 0),
 }
+
+
+def _corner_coord(corner_name):
+    return (
+        1 if 'r' in corner_name else -1,
+        1 if 'u' in corner_name else -1,
+        1 if 'f' in corner_name else -1,
+    )
+
+
+def _position_geometry(position):
+    face, corner_name = position.split('-', 1)
+    return _corner_coord(corner_name), FACE_NORMALS[face]
+
+
+def _rotate_vec(vec, axis, quarter_turns):
+    x, y, z = vec
+    ax, ay, az = axis
+    for _ in range(quarter_turns % 4):
+        if ax:
+            y, z = -ax * z, ax * y
+        elif ay:
+            x, z = ay * z, -ay * x
+        else:
+            x, y = -az * y, az * x
+    return (x, y, z)
+
+
+_GEOM_TO_POS = {_position_geometry(pos): idx for idx, pos in enumerate(POSITIONS)}
+
+
+def _build_face_turn(face):
+    axis = FACE_NORMALS[face.lower()]
+    perm = list(range(len(POSITIONS)))
+    for src_idx, position in enumerate(POSITIONS):
+        coord, normal = _position_geometry(position)
+        if sum(coord[i] * axis[i] for i in range(3)) != 1:
+            continue
+        dst = (
+            _rotate_vec(coord, axis, -1),
+            _rotate_vec(normal, axis, -1),
+        )
+        perm[_GEOM_TO_POS[dst]] = src_idx
+    return tuple(perm)
+
+
+ROBOT_MOVES = {
+    'U': _build_face_turn('u'),
+    'D': _build_face_turn('d'),
+    'R': _build_face_turn('r'),
+    'L': _build_face_turn('l'),
+    'F': _build_face_turn('f'),
+    'B': _build_face_turn('b'),
+}
+ROBOT_MOVES.update({
+    f'{name}_PRIME': invert_perm(perm)
+    for name, perm in list(ROBOT_MOVES.items())
+})
 
 INVERSE_MOVE = {
     'U':       'U_PRIME',
@@ -203,104 +197,174 @@ def is_solved_monochromatic(state):
 
 # ── IDA* Solver ───────────────────────────────────────────────────────────────
 
+MAX_QTM_DEPTH = 14
+PRUNING_TABLE_DEPTH = 4
+
+
+
+def _build_whole_cube_turn(axis):
+    perm = list(range(len(POSITIONS)))
+    for src_idx, position in enumerate(POSITIONS):
+        coord, normal = _position_geometry(position)
+        dst = (_rotate_vec(coord, axis, -1), _rotate_vec(normal, axis, -1))
+        perm[_GEOM_TO_POS[dst]] = src_idx
+    return tuple(perm)
+
+
+_CUBE_ROT_X = _build_whole_cube_turn((1, 0, 0))
+_CUBE_ROT_Y = _build_whole_cube_turn((0, 1, 0))
+_CUBE_ROT_Z = _build_whole_cube_turn((0, 0, 1))
+
+
 def get_all_solved_states():
-    """Generates all 24 physically reachable monochromatic states of the 2x2 cube."""
-    solved_states = set()
+    """Generate all 24 solved color orientations of the cube."""
+    rotations = [_CUBE_ROT_X, invert_perm(_CUBE_ROT_X), _CUBE_ROT_Y, invert_perm(_CUBE_ROT_Y), _CUBE_ROT_Z, invert_perm(_CUBE_ROT_Z)]
+    solved_states = {SOLVED_STATE}
     queue = deque([SOLVED_STATE])
-    solved_states.add(SOLVED_STATE)
     while queue:
-        curr = queue.popleft()
-        for perm in [_txp, _txn, _typ, _tyn]:
-            ns = apply_move(curr, perm)
-            if ns not in solved_states:
-                solved_states.add(ns)
-                queue.append(ns)
+        state = queue.popleft()
+        for perm in rotations:
+            next_state = apply_move(state, perm)
+            if next_state not in solved_states:
+                solved_states.add(next_state)
+                queue.append(next_state)
     return list(solved_states)
 
-_HEURISTIC_DB = {}
 
-def init_heuristic_db(max_depth=3):
-    """Precompute a small distance database at startup to serve as an admissible heuristic."""
-    global _HEURISTIC_DB
-    if _HEURISTIC_DB:
+_PRUNING_DB = {}
+_REVERSE_NEXT_MOVE = {}
+
+
+def _state_key(state):
+    return bytes(state)
+
+
+def _apply_perm_key(state_key, perm):
+    return bytes(state_key[perm[i]] for i in range(len(perm)))
+
+
+def init_heuristic_db(max_depth=PRUNING_TABLE_DEPTH):
+    """Build a small admissible reverse pruning table for IDA*."""
+    if _PRUNING_DB:
         return
-    solved = get_all_solved_states()
     queue = deque()
-    for s in solved:
-        _HEURISTIC_DB[s] = 0
-        queue.append((s, 0))
+    for state in get_all_solved_states():
+        key = _state_key(state)
+        _PRUNING_DB[key] = 0
+        _REVERSE_NEXT_MOVE[key] = None
+        queue.append((key, 0))
+
     while queue:
-        s, d = queue.popleft()
-        if d >= max_depth:
+        state_key, depth = queue.popleft()
+        if depth >= max_depth:
             continue
         for name, perm in ROBOT_MOVES.items():
-            ns = apply_move(s, perm)
-            if ns not in _HEURISTIC_DB:
-                _HEURISTIC_DB[ns] = d + 1
-                queue.append((ns, d + 1))
+            next_key = _apply_perm_key(state_key, perm)
+            if next_key in _PRUNING_DB:
+                continue
+            _PRUNING_DB[next_key] = depth + 1
+            _REVERSE_NEXT_MOVE[next_key] = INVERSE_MOVE[name]
+            queue.append((next_key, depth + 1))
+
 
 def get_heuristic(state):
-    """Returns an admissible lower bound of moves to solve the state."""
-    return _HEURISTIC_DB.get(state, 4)
+    """Return an admissible lower bound for IDA*."""
+    init_heuristic_db()
+    dist = _PRUNING_DB.get(_state_key(state))
+    if dist is not None:
+        return dist
+    return PRUNING_TABLE_DEPTH + 1
+
+
+def has_valid_color_counts(state):
+    """True when the sticker state contains exactly four stickers of each color."""
+    counts = Counter(state)
+    return len(counts) == len(COLORS) and all(counts[color] == 4 for color in range(len(COLORS)))
+
+
+def is_reachable_state(state):
+    """Fast pre-check before solving. Full reachability is proven by finding a solution."""
+    return has_valid_color_counts(state)
+
+
+def _reverse_solution_from_table(state):
+    init_heuristic_db()
+    key = _state_key(state)
+    if key not in _PRUNING_DB:
+        return None
+
+    suffix = []
+    current = tuple(state)
+    while True:
+        move = _REVERSE_NEXT_MOVE[_state_key(current)]
+        if move is None:
+            return suffix
+        suffix.append(move)
+        current = apply_move(current, ROBOT_MOVES[move])
+
 
 def bfs_solve(init_state):
     """
     IDA* (Iterative Deepening A*) solver for 2x2 Rubik's Cube.
-    Keeps the name 'bfs_solve' for seamless backward compatibility.
+    Keeps the name 'bfs_solve' for backward compatibility with existing callers.
     """
-    init_heuristic_db(max_depth=3)
-    
+    if not is_reachable_state(init_state):
+        return None
     if is_solved_monochromatic(init_state):
         return []
 
-    def search(path, g, bound):
-        state = path[-1]
-        f = g + get_heuristic(state)
-        if f > bound:
-            return f
-        if is_solved_monochromatic(state):
-            return True
-        
-        min_val = float('inf')
-        last_move = path_moves[-1] if path_moves else None
-        
-        for name, perm in ROBOT_MOVES.items():
-            # Prune inverse moves
-            if last_move and INVERSE_MOVE[name] == last_move:
-                continue
-            
-            # Prune redundant identical moves (e.g. U U U is equivalent to U_PRIME)
-            if len(path_moves) >= 2 and path_moves[-1] == name and path_moves[-2] == name:
-                continue
-                
-            ns = apply_move(state, perm)
-            if ns not in path:
-                path.append(ns)
-                path_moves.append(name)
-                
-                t = search(path, g + 1, bound)
-                if t is True:
-                    return True
-                if t < min_val:
-                    min_val = t
-                    
-                path_moves.pop()
-                path.pop()
-        return min_val
+    init_heuristic_db()
+    table_solution = _reverse_solution_from_table(init_state)
+    if table_solution is not None:
+        return table_solution
 
-    bound = get_heuristic(init_state)
     path = [init_state]
     path_moves = []
-    
-    # 2x2 Rubik's Cube max distance is 11 in HTM, 14 in QTM
-    while bound <= 14:
-        t = search(path, 0, bound)
-        if t is True:
+
+    def search(g, bound):
+        state = path[-1]
+        suffix = _reverse_solution_from_table(state)
+        if suffix is not None and g + len(suffix) <= bound:
+            path_moves.extend(suffix)
+            return True
+
+        f_score = g + get_heuristic(state)
+        if f_score > bound:
+            return f_score
+        if is_solved_monochromatic(state):
+            return True
+
+        min_overflow = float('inf')
+        last_move = path_moves[-1] if path_moves else None
+        for name, perm in ROBOT_MOVES.items():
+            if last_move and INVERSE_MOVE[name] == last_move:
+                continue
+            if len(path_moves) >= 2 and path_moves[-1] == name and path_moves[-2] == name:
+                continue
+
+            next_state = apply_move(state, perm)
+            if next_state in path:
+                continue
+
+            path.append(next_state)
+            path_moves.append(name)
+            result = search(g + 1, bound)
+            if result is True:
+                return True
+            if result < min_overflow:
+                min_overflow = result
+            path_moves.pop()
+            path.pop()
+        return min_overflow
+
+    bound = get_heuristic(init_state)
+    while bound <= MAX_QTM_DEPTH:
+        result = search(0, bound)
+        if result is True:
             return path_moves
-        if t == float('inf'):
+        if result == float('inf'):
             break
-        bound = t
-        
+        bound = result
     return None
 
 
@@ -364,7 +428,7 @@ if __name__ == '__main__':
         print("Cube is already solved!")
         sys.exit(0)
 
-    print("Solving with bidirectional BFS...")
+    print("Solving with IDA*...")
     t0 = time.time()
     solution = bfs_solve(init_state)
     t1 = time.time()
