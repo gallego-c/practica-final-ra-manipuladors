@@ -27,7 +27,7 @@ except ImportError as e:
     SOLVER_AVAILABLE = False
     print(f"Warning: robot modules not available. Solving locally is disabled. Error: {e}")
 
-PORT = 5000
+PORT = 8000
 FACE_ORDER = ["U", "F", "R", "B", "L", "D"]
 SOLVER_TIMEOUT_SECONDS = 12
 
@@ -303,4 +303,4 @@ def main():
             print("\nServer terminated by user.")
 
 if __name__ == "__main__":
-    main()
+    main() 
