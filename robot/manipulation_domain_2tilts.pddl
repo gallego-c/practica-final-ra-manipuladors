@@ -1,9 +1,10 @@
 ;;; ============================================================
-;;; DOMAIN: robot-manipulation
+;;; DOMAIN: robot-manipulation (2-Tilts Variant)
 ;;; ============================================================
 ;;; Advanced TAMP domain where the high-level Rubik's cube solver
 ;;; is agnostic, and Fast Downward plans the physical tilts and grasps
 ;;; to bring the correct face of the cube to the top for wrist rotation.
+;;; This version uses only 2 tilt actions (tilt_x_pos and tilt_y_neg).
 ;;; ============================================================
 
 (define (domain robot-manipulation)
@@ -107,48 +108,6 @@
           (when (top-face ?f) (and (back-face ?f) (not (top-face ?f))))
           (when (back-face ?f) (and (bottom-face ?f) (not (back-face ?f))))
           (when (bottom-face ?f) (and (front-face ?f) (not (bottom-face ?f))))
-        )
-      )
-    )
-  )
-
-  ;; -----------------------------------------------------------
-  ;; TILT_X_NEG (-90° around X: Back→Top, Top→Front, Front→Down, Down→Back)
-  ;; -----------------------------------------------------------
-  (:action tilt_x_neg
-    :parameters ()
-    :precondition (holding-y)
-    :effect (and
-      (cube-on-fixture)
-      (not (robot-holding))
-      (not (holding-y))
-      (forall (?f - face)
-        (and
-          (when (back-face ?f) (and (top-face ?f) (not (back-face ?f))))
-          (when (top-face ?f) (and (front-face ?f) (not (top-face ?f))))
-          (when (front-face ?f) (and (bottom-face ?f) (not (front-face ?f))))
-          (when (bottom-face ?f) (and (back-face ?f) (not (bottom-face ?f))))
-        )
-      )
-    )
-  )
-
-  ;; -----------------------------------------------------------
-  ;; TILT_Y_POS (+90° around Y: Right→Top, Top→Left, Left→Down, Down→Right)
-  ;; -----------------------------------------------------------
-  (:action tilt_y_pos
-    :parameters ()
-    :precondition (holding-x)
-    :effect (and
-      (cube-on-fixture)
-      (not (robot-holding))
-      (not (holding-x))
-      (forall (?f - face)
-        (and
-          (when (right-face ?f) (and (top-face ?f) (not (right-face ?f))))
-          (when (top-face ?f) (and (left-face ?f) (not (top-face ?f))))
-          (when (left-face ?f) (and (bottom-face ?f) (not (left-face ?f))))
-          (when (bottom-face ?f) (and (right-face ?f) (not (bottom-face ?f))))
         )
       )
     )
