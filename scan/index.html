@@ -1529,6 +1529,9 @@
 
                             let friendlyStep = step;
                             if (step === "pick") friendlyStep = "Pick up the cube (Vertical Top-Down grasp)";
+                            else if (step === "pick_x") friendlyStep = "Pick up the cube along X axis (Squeeze X-faces)";
+                            else if (step === "pick_y") friendlyStep = "Pick up the cube along Y axis (Squeeze Y-faces)";
+                            else if (step === "change_pick") friendlyStep = "Change grasp: Place on fixture, rotate gripper 90°, and pick again";
                             else if (step === "place") friendlyStep = "Place the cube on the table base fixture";
                             else if (step === "tilt_x_pos") friendlyStep = "Tilt cube Forward (Front face to Top)";
                             else if (step === "tilt_x_neg") friendlyStep = "Tilt cube Backward (Back face to Top)";

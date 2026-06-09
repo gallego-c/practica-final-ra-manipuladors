@@ -16,6 +16,8 @@
 
   (:predicates
     (robot-holding)
+    (holding-x)
+    (holding-y)
     (cube-on-fixture)
     (current-step ?s - step)
     (next-step ?s1 ?s2 - step)
@@ -51,12 +53,21 @@
   )
 
   ;; -----------------------------------------------------------
-  ;; PICK – lift cube off fixture (requires cube on fixture)
+  ;; PICK_X – lift cube off fixture squeezing along X axis
   ;; -----------------------------------------------------------
-  (:action pick
+  (:action pick_x
     :parameters ()
     :precondition (and (cube-on-fixture) (not (robot-holding)))
-    :effect (and (robot-holding) (not (cube-on-fixture)))
+    :effect (and (robot-holding) (holding-x) (not (cube-on-fixture)))
+  )
+
+  ;; -----------------------------------------------------------
+  ;; PICK_Y – lift cube off fixture squeezing along Y axis
+  ;; -----------------------------------------------------------
+  (:action pick_y
+    :parameters ()
+    :precondition (and (cube-on-fixture) (not (robot-holding)))
+    :effect (and (robot-holding) (holding-y) (not (cube-on-fixture)))
   )
 
   ;; -----------------------------------------------------------
@@ -65,7 +76,19 @@
   (:action place
     :parameters ()
     :precondition (robot-holding)
-    :effect (and (cube-on-fixture) (not (robot-holding)))
+    :effect (and (cube-on-fixture) (not (robot-holding)) (not (holding-x)) (not (holding-y)))
+  )
+
+  ;; -----------------------------------------------------------
+  ;; CHANGE_PICK – place on fixture, rotate gripper 90°, and regrasp
+  ;; -----------------------------------------------------------
+  (:action change_pick
+    :parameters ()
+    :precondition (robot-holding)
+    :effect (and
+      (when (holding-x) (and (not (holding-x)) (holding-y)))
+      (when (holding-y) (and (not (holding-y)) (holding-x)))
+    )
   )
 
   ;; -----------------------------------------------------------
@@ -73,8 +96,11 @@
   ;; -----------------------------------------------------------
   (:action tilt_x_pos
     :parameters ()
-    :precondition (and (cube-on-fixture) (not (robot-holding)))
+    :precondition (holding-y)
     :effect (and
+      (cube-on-fixture)
+      (not (robot-holding))
+      (not (holding-y))
       (forall (?f - face)
         (and
           (when (front-face ?f) (and (top-face ?f) (not (front-face ?f))))
@@ -91,8 +117,11 @@
   ;; -----------------------------------------------------------
   (:action tilt_x_neg
     :parameters ()
-    :precondition (and (cube-on-fixture) (not (robot-holding)))
+    :precondition (holding-y)
     :effect (and
+      (cube-on-fixture)
+      (not (robot-holding))
+      (not (holding-y))
       (forall (?f - face)
         (and
           (when (back-face ?f) (and (top-face ?f) (not (back-face ?f))))
@@ -109,8 +138,11 @@
   ;; -----------------------------------------------------------
   (:action tilt_y_pos
     :parameters ()
-    :precondition (and (cube-on-fixture) (not (robot-holding)))
+    :precondition (holding-x)
     :effect (and
+      (cube-on-fixture)
+      (not (robot-holding))
+      (not (holding-x))
       (forall (?f - face)
         (and
           (when (right-face ?f) (and (top-face ?f) (not (right-face ?f))))
@@ -127,8 +159,11 @@
   ;; -----------------------------------------------------------
   (:action tilt_y_neg
     :parameters ()
-    :precondition (and (cube-on-fixture) (not (robot-holding)))
+    :precondition (holding-x)
     :effect (and
+      (cube-on-fixture)
+      (not (robot-holding))
+      (not (holding-x))
       (forall (?f - face)
         (and
           (when (left-face ?f) (and (top-face ?f) (not (left-face ?f))))
@@ -147,13 +182,19 @@
   (:action execute_U
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-U ?s) (next-step ?s ?next) (top-face face_u))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_U_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-U-prime ?s) (next-step ?s ?next) (top-face face_u))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_U2
@@ -165,13 +206,19 @@
   (:action execute_D
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-D ?s) (next-step ?s ?next) (top-face face_d))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_D_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-D-prime ?s) (next-step ?s ?next) (top-face face_d))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_D2
@@ -183,13 +230,19 @@
   (:action execute_R
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-R ?s) (next-step ?s ?next) (top-face face_r))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_R_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-R-prime ?s) (next-step ?s ?next) (top-face face_r))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_R2
@@ -201,13 +254,19 @@
   (:action execute_L
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-L ?s) (next-step ?s ?next) (top-face face_l))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_L_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-L-prime ?s) (next-step ?s ?next) (top-face face_l))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_L2
@@ -219,13 +278,19 @@
   (:action execute_F
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-F ?s) (next-step ?s ?next) (top-face face_f))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_F_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-F-prime ?s) (next-step ?s ?next) (top-face face_f))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_F2
@@ -237,13 +302,19 @@
   (:action execute_B
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-B ?s) (next-step ?s ?next) (top-face face_b))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_B_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (step-type-B-prime ?s) (next-step ?s ?next) (top-face face_b))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next))
+    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
+                 (when (holding-x) (and (not (holding-x)) (holding-y)))
+                 (when (holding-y) (and (not (holding-y)) (holding-x)))
+            )
   )
 
   (:action execute_B2
