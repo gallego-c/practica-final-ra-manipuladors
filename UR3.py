@@ -13,13 +13,15 @@ Cerrar_pinza = 'robot/pinza10UR3.py'  # 10 mm (cerrada)
 
 # ── Envío de trayectoria ──────────────────────────────────────────────────────
 
-def send_joint_path(path, sock, acc=0.3, vel=0.2, delay=1.0):
-    """Envía una lista de configuraciones [j1..j6] en radianes al robot."""
-    for joints in path:
-        config_str = "[" + ", ".join(f"{j:.6f}" for j in joints) + "]"
-        cmd = f"movej({config_str}, a={acc}, v={vel})\n"
-        print(f"  → {config_str}")
-        sock.sendall(cmd.encode())
+def send_joint_path(path, sock, acc=0.5, vel=0.5, delay=1.0):
+    """Envía una trayectoria al robot waypoint a waypoint.
+
+    Cada movej se envía por separado con una pausa entre ellos,
+    igual que en los scripts de referencia del curso.
+    """
+    for joint_config in path:
+        print(joint_config)
+        sock.send(f"movej({joint_config}, a={acc}, v={vel})".encode() + b"\n")
         time.sleep(delay)
 
 # ── Carga de trayectorias ─────────────────────────────────────────────────────
@@ -87,8 +89,11 @@ tilt_y = cargar_trayectoria_csv('confs/tilt_y.csv')
 sock = conectar()
 
 try:
+    # El robot debe estar ya en la conf inicial del CSV (j6 ≈ 45.58°).
+    # Llegar ahí con turn_counterclockwise.py (2× -90°), no con un movej directo
+    # desde j6=226°, que implicaría ~180° y afectaría al cubo.
     print(f"\n--- Ejecutando TILT ({len(tilt_y)} waypoints) ---")
-    send_joint_path(tilt_y, sock, acc=0.3, vel=0.2, delay=1.0)
+    send_joint_path(tilt_y, sock, acc=0.5, vel=0.5, delay=1.0)
     print("\n¡Tilt finalizado con éxito!")
 finally:
     sock.close()
