@@ -13,16 +13,38 @@ Cerrar_pinza = 'robot/pinza10UR3.py'  # 10 mm (cerrada)
 
 # ── Envío de trayectoria ──────────────────────────────────────────────────────
 
-def send_joint_path(path, sock, acc=0.5, vel=0.5, delay=1.0):
-    """Envía una trayectoria al robot waypoint a waypoint.
+def send_joint_path(path, sock, acc=0.5, vel=0.5, blend=0.02, pause_after_first=0.0):
+    """Envía la trayectoria como un único programa URScript con blending.
 
-    Cada movej se envía por separado con una pausa entre ellos,
-    igual que en los scripts de referencia del curso.
+    - Primera posición: movej sin blend → para completo.
+    - Pausa opcional en el robot (sleep en URScript).
+    - Resto de waypoints: movej con radio de blend para movimiento fluido.
     """
-    for joint_config in path:
-        print(joint_config)
-        sock.send(f"movej({joint_config}, a={acc}, v={vel})".encode() + b"\n")
-        time.sleep(delay)
+    if not path:
+        return
+
+    lines = ["def traj():"]
+    for i, joint_config in enumerate(path):
+        if i == 0:
+            lines.append(f"  movej({joint_config}, a={acc}, v={vel})")
+            if pause_after_first > 0:
+                lines.append(f"  sleep({pause_after_first})")
+        elif i == len(path) - 1:
+            lines.append(f"  movej({joint_config}, a={acc}, v={vel})")
+        else:
+            lines.append(f"  movej({joint_config}, a={acc}, v={vel}, r={blend})")
+    lines += ["end", "traj()"]
+    script = "\n".join(lines) + "\n"
+
+    print(f"Enviando trayectoria fluida ({len(path)} waypoints, blend={blend} m)...")
+    if pause_after_first > 0:
+        print(f"  Pausa de {pause_after_first}s tras la primera posición.")
+    sock.sendall(script.encode())
+
+    # Tiempo estimado: llegada inicial + pausa + recorrido con blend
+    wait_s = 5.0 + pause_after_first + len(path) * 0.4
+    print(f"  Esperando ~{wait_s:.0f}s a que termine...")
+    time.sleep(wait_s)
 
 # ── Carga de trayectorias ─────────────────────────────────────────────────────
 
@@ -93,7 +115,7 @@ try:
     # Llegar ahí con turn_counterclockwise.py (2× -90°), no con un movej directo
     # desde j6=226°, que implicaría ~180° y afectaría al cubo.
     print(f"\n--- Ejecutando TILT ({len(tilt_y)} waypoints) ---")
-    send_joint_path(tilt_y, sock, acc=0.5, vel=0.5, delay=1.0)
+    send_joint_path(tilt_y, sock, acc=0.5, vel=0.5, blend=0.02, pause_after_first=3.0)
     print("\n¡Tilt finalizado con éxito!")
 finally:
     sock.close()

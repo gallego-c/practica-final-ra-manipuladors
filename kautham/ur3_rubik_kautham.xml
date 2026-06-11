@@ -25,18 +25,18 @@
 	</Obstacle>
 
 	<!-- Square Fixture (holds the cube) -->
-	<!-- Real dimensions: 5.8 x 5.8 x 12.5 cm. Center Z = 12.5/2 = 6.25 cm   -->
-	<!-- Z bajado 0.07m por offset robot base: 0.0625 - 0.07 = -0.0075         -->
+	<!-- Real dimensions: 5.8 x 5.8 x 15.5 cm. Center Z = 15.5/2 = 7.75 cm   -->
+	<!-- Z bajado 0.07m por offset robot base: 0.0775 - 0.07 = 0.0075          -->
 	<Obstacle obstacle="square_fixture.urdf" scale="1.0">
 		<KauthamName name="square_fixture"/>
-		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="-0.0075" Y="0.15" X="0.107" />
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.0075" Y="0.15" X="0.107" />
 	</Obstacle>
 
 	<!-- 2x2 Rubik's Cube: comentado → adjunto al robot durante Transfer, no es obstáculo -->
 	<!-- Descomentar para planificar Transit (pick/place) donde el cubo sí es obstáculo  -->
 	<!-- <Obstacle obstacle="rubik_cube_2x2.urdf" scale="1.0">
 		<KauthamName name="rubik_cube"/>
-		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.067" Y="0.152" X="0.107" />
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.097" Y="0.152" X="0.107" />
 	</Obstacle> -->
 
 	<!-- Controls: right_ur3_with_gripper.cntr → todos los joints libres (7 DOFs) -->
