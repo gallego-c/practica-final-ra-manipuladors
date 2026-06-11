@@ -4,10 +4,10 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <!-- The fixture is slightly larger than the cube: 7 cm wide and 2 cm tall -->
-        <box size="0.07 0.07 0.02" />
+        <!-- Real dimensions: 5.8 cm wide x 5.8 cm deep x 7.5 cm tall -->
+        <!-- Has a 1.3 cm deep pocket on top where the 5 cm cube rests -->
+        <box size="0.058 0.058 0.075" />
       </geometry>
-      <!-- Metallic aluminum gray color -->
       <material name="aluminum_gray">
         <color rgba="0.65 0.65 0.68 1.0" />
       </material>
@@ -15,7 +15,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <box size="0.07 0.07 0.02" />
+        <box size="0.058 0.058 0.075" />
       </geometry>
     </collision>
   </link>

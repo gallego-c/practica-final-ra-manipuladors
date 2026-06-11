@@ -40,6 +40,55 @@ _REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
 OUTPUT_FILE = os.path.join(_REPO_ROOT, "kautham", "taskfile_rubik_ur3.xml")
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# CONVERSIÓN DE ÁNGULOS (grados) A ESPACIO DE CONTROL KAUTHAM [0, 1]
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Fórmulas de normalización (proporcionadas por el profesor):
+#   Joints 1,2,4,5,6 : q en [-2π, 2π] rad  →  (q + 2π) / 4π
+#   Joint 3 (codo)   : q en [-π,  π]  rad  →  (q +  π) / 2π
+#
+# Equivalente en grados:
+#   Joints 1,2,4,5,6 : [-360°, 360°]  →  (q_deg + 360) / 720
+#   Joint 3 (codo)   : [-180°, 180°]  →  (q_deg + 180) / 360
+_JOINT_LIMITS_DEG = [
+    (-360.0, 360.0),  # j1 shoulder_pan
+    (-360.0, 360.0),  # j2 shoulder_lift
+    (-180.0, 180.0),  # j3 elbow  ← rango distinto: [-π, π]
+    (-360.0, 360.0),  # j4 wrist_1
+    (-360.0, 360.0),  # j5 wrist_2
+    (-360.0, 360.0),  # j6 wrist_3
+]
+
+import math as _math
+
+def deg_to_kautham(joints_deg, gripper=None):
+    """Convierte una configuración de 6 ángulos (en grados) al espacio [0,1] de Kautham.
+
+    Args:
+        joints_deg: lista de 6 ángulos en grados [j1, j2, j3, j4, j5, j6]
+        gripper:    valor normalizado del gripper (0.5=abierto, 0.68=cerrado).
+                    Si es None, no se añade el gripper al resultado.
+
+    Returns:
+        Lista de 6 o 7 valores normalizados en [0,1].
+    """
+    result = []
+    for angle, (lo, hi) in zip(joints_deg, _JOINT_LIMITS_DEG):
+        result.append((angle - lo) / (hi - lo))
+    if gripper is not None:
+        result.append(gripper)
+    return result
+
+def rad_to_kautham(joints_rad, gripper=None):
+    """Convierte una configuración de 6 ángulos (en radianes) al espacio [0,1] de Kautham.
+
+    Usa las mismas fórmulas que deg_to_kautham pero acepta radianes directamente
+    (útil si los valores vienen del robot sin convertir).
+    """
+    joints_deg = [_math.degrees(r) for r in joints_rad]
+    return deg_to_kautham(joints_deg, gripper)
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURACIONES CLAVE DEL ROBOT (espacio de control Kautham, normalizado [0,1])
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -47,32 +96,54 @@ OUTPUT_FILE = os.path.join(_REPO_ROOT, "kautham", "taskfile_rubik_ur3.xml")
 GRIPPER_OPEN   = 0.500
 GRIPPER_CLOSED = 0.680
 
-# Posición Home
+# ── IDLE unificado: j1-j5 son fijos; j6 define el eje de agarre ──────────────
+# Eje X (j6 = 226.39°) — configuración medida con el robot agarrando por el eje X.
+# Eje Y (j6 = 226.39° - 90° = 136.39°) — solo varía j6, el resto de joints no cambian.
+# La pinza real (OnRobot RG2) se controla con open_close.py / pinza10/40UR3.py;
+# los valores GRIPPER_OPEN/CLOSED aquí son solo para la simulación en Kautham.
+_IDLE_BASE_DEG      = [48.42, -60.95,  47.99,  -77.8,  -90.05]  # j1-j5 (fijos)
+_IDLE_LIFT_BASE_DEG = [48.41, -56.6,   30.75,  -64.91, -90.06]  # j1-j5 elevado 30 mm
+
+_J6_X_DEG = 226.39   # j6 para eje X (config medida con el robot real)
+_J6_Y_DEG = 136.39   # j6 para eje Y = _J6_X_DEG - 90°; ajustar si se mide directamente
+
+def _idle(j6_deg, gripper):
+    """Config IDLE con el j6 indicado y el estado de pinza dado."""
+    return deg_to_kautham(_IDLE_BASE_DEG + [j6_deg], gripper)
+
+def _idle_lift(j6_deg, gripper):
+    """Config IDLE elevada 30 mm con el j6 indicado y el estado de pinza dado."""
+    return deg_to_kautham(_IDLE_LIFT_BASE_DEG + [j6_deg], gripper)
+
+IDLE_X_OPEN = _idle(_J6_X_DEG, GRIPPER_OPEN)
+IDLE_X      = _idle(_J6_X_DEG, GRIPPER_CLOSED)
+IDLE_X_LIFT = _idle_lift(_J6_X_DEG, GRIPPER_CLOSED)
+
+IDLE_Y_OPEN = _idle(_J6_Y_DEG, GRIPPER_OPEN)
+IDLE_Y      = _idle(_J6_Y_DEG, GRIPPER_CLOSED)
+IDLE_Y_LIFT = _idle_lift(_J6_Y_DEG, GRIPPER_CLOSED)
+
+# ── TILT X: volcado rotando alrededor del eje X ──────────────────────────────
+TILT_X_LIFT = deg_to_kautham([92.12, -44.61,  90.25, -112.88, -177.36,  109.42], GRIPPER_CLOSED)
+TILT_X      = deg_to_kautham([92.12, -30.61,  90.27, -117.76, -177.38,  109.87], GRIPPER_CLOSED)
+
+# ── TILT Y: volcado rotando alrededor del eje Y ──────────────────────────────
+TILT_Y_LIFT = deg_to_kautham([-20.19, -80.12, 143.27,  -59.15,  -18.08,  176.40], GRIPPER_CLOSED)
+TILT_Y      = deg_to_kautham([-20.22, -68.11, 145.36,  -73.40,  -18.07,  176.57], GRIPPER_CLOSED)
+
+# ── HOME ─────────────────────────────────────────────────────────────────────
+# TODO: reemplazar con la config real medida del robot en reposo
 HOME = [0.500, 0.375, 0.500, 0.375, 0.500, 0.500, GRIPPER_OPEN]
 
-# Posición de Grasp (sobre el cubo)
-GRASP_OPEN = [0.545, 0.380, 0.835, 0.327, 0.375, 0.425, GRIPPER_OPEN]
-GRASP      = [0.545, 0.380, 0.835, 0.327, 0.375, 0.425, GRIPPER_CLOSED]
-
-# Posición elevada (Lift)
-LIFT = [0.545, 0.300, 0.650, 0.280, 0.375, 0.425, GRIPPER_CLOSED]
-
-# Picos de inclinación (Tilt Peak)
-TILT_X_POS_PEAK = [0.545, 0.220, 0.750, 0.180, 0.375, 0.425, GRIPPER_CLOSED]
-TILT_X_NEG_PEAK = [0.545, 0.440, 0.600, 0.430, 0.375, 0.425, GRIPPER_CLOSED]
-TILT_Y_POS_PEAK = [0.620, 0.300, 0.700, 0.280, 0.400, 0.425, GRIPPER_CLOSED]
-TILT_Y_NEG_PEAK = [0.470, 0.300, 0.700, 0.280, 0.350, 0.425, GRIPPER_CLOSED]
-
-# Picos de rotación de muñeca (Rotate Peak)
-ROTATE_CW_PEAK  = [0.545, 0.380, 0.835, 0.327, 0.375, 0.675, GRIPPER_CLOSED]
-ROTATE_CCW_PEAK = [0.545, 0.380, 0.835, 0.327, 0.375, 0.175, GRIPPER_CLOSED]
-
-# Poses auxiliares con pinza abierta para reinicios de giro
-ROTATE_CW_PEAK_OPEN  = [0.545, 0.380, 0.835, 0.327, 0.375, 0.675, GRIPPER_OPEN]
-ROTATE_CCW_PEAK_OPEN = [0.545, 0.380, 0.835, 0.327, 0.375, 0.175, GRIPPER_OPEN]
+# ── Alias de compatibilidad ───────────────────────────────────────────────────
+GRASP_OPEN = IDLE_X_OPEN
+GRASP      = IDLE_X
 
 # Pose inicial del cubo en el simulador (X Y Z WX WY WZ TH)
-CUBE_INITIAL_POSE = "0.0 0.4 0.046 0.0 0.0 0.0 1.0"
+# XY: robot centro (0.294, 0.539) + offset FK (-0.187, -0.399) = (0.107, 0.140)
+#   Centro robot = perimetro + radio UR3 (64 mm): 0.23+0.064=0.294, 0.475+0.064=0.539
+# Z  = fixture_height - pocket_depth + cube_half = 0.075 - 0.013 + 0.025 = 0.087 m
+CUBE_INITIAL_POSE = "0.107 0.140 0.087 0.0 0.0 0.0 1.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GENERADOR TAMP DE TASKFILE
@@ -144,163 +215,209 @@ class RRTTaskfileGenerator(Node):
             c = ET.SubElement(parent_elem, "Conf")
             c.text = tex
 
-    def run(self, solution):
-        self.get_logger().info(f"Generando taskfile RRT para {len(solution)} acciones...")
-        
-        # Estructura raíz XML
+    def run(self, manipulation_plan):
+        """Genera el taskfile RRT a partir del plan de manipulación de Fast Downward.
+
+        Acciones PDDL esperadas (todas en minúsculas, sin parámetros de step):
+          pick_x / pick_y     — coger el cubo desde el eje X o Y
+          place               — soltar el cubo en el fixture
+          change_pick         — cambiar eje de agarre (X↔Y) sin soltar el cubo
+          tilt_x_pos/neg      — volcar el cubo alrededor del eje X (precondición: holding-y)
+          tilt_y_pos/neg      — volcar el cubo alrededor del eje Y (precondición: holding-x)
+          execute_u/r/f/...   — rotar capa superior ±90° (cambia eje X↔Y)
+          execute_u2/r2/...   — rotar capa superior 180° (mantiene eje)
+        """
+        self.get_logger().info(f"Generando taskfile RRT para {len(manipulation_plan)} acciones PDDL...")
+
         root = ET.Element("Task", name="UR3_Rubik_RRT_Solver")
-        
-        # Estado inicial
         init = ET.SubElement(root, "Initialstate")
-        obj = ET.SubElement(init, "Object", object="rubik_cube")
+        obj  = ET.SubElement(init, "Object", object="rubik_cube")
         obj.text = f" {CUBE_INITIAL_POSE} "
 
-        # ── 1. Primer Transit: HOME -> GRASP_OPEN (Acercamiento inicial) ───────────────────
-        transit_elem = ET.SubElement(root, "Transit")
-        path = self.plan_trajectory(HOME, GRASP_OPEN)
-        if not path:
-            self.get_logger().error("Fallo crítico en el tránsito inicial.")
-            return False
-        self.write_path_to_xml(transit_elem, path)
+        # Estado de seguimiento
+        current_grasp = None   # config actual del robot (lista de 7 valores Kautham)
+        current_axis  = None   # 'x' o 'y'
 
-        # Grasp: Cerrar pinza sobre el cubo en simulación
-        kautham.kMoveRobot(self, GRASP_OPEN)
-        kautham.kAttachObject(self, "ur3_right", "robotiq_85_base_link", "rubik_cube")
-        
-        # Guardar la pose de agarre actual
-        current_grasp = list(GRASP)
+        def _transfer_attrib():
+            return {"object": "rubik_cube", "robot": "ur3_right", "link": "robotiq_85_base_link"}
 
-        # ── 2. Resolver y planificar cada acción ─────────────────────────────────────
-        for idx, action in enumerate(solution):
-            self.get_logger().info(f"── PLANIFICANDO PASO {idx+1}/{len(solution)}: {action} ──")
-            
-            if action in ('rotate_top_cw', 'rotate_top_ccw'):
-                # Acción de rotación:
-                # 1. Girar la muñeca con el cubo sujeto (Transfer)
-                peak_closed = list(current_grasp)
-                peak_open = list(current_grasp)
-                
-                if action == 'rotate_top_cw':
-                    peak_closed[5] = ROTATE_CW_PEAK[5]
-                    peak_open[5] = ROTATE_CW_PEAK_OPEN[5]
+        def _plan_or_fail(start, goal):
+            p = self.plan_trajectory(start, goal)
+            if not p:
+                self.get_logger().error(f"RRT falló: {start} → {goal}")
+            return p
+
+        for idx, action in enumerate(manipulation_plan):
+            self.get_logger().info(f"── PASO {idx+1}/{len(manipulation_plan)}: {action} ──")
+
+            # ── pick_x: HOME → IDLE_X_OPEN (Transit), cerrar pinza ──────────────
+            if action == 'pick_x':
+                transit = ET.SubElement(root, "Transit")
+                path = _plan_or_fail(HOME, IDLE_X_OPEN)
+                if not path: return False
+                self.write_path_to_xml(transit, path)
+                kautham.kMoveRobot(self, IDLE_X_OPEN)
+                kautham.kAttachObject(self, "ur3_right", "robotiq_85_base_link", "rubik_cube")
+                current_grasp = list(IDLE_X)
+                current_axis  = 'x'
+
+            # ── pick_y: HOME → IDLE_Y_OPEN (Transit), cerrar pinza ──────────────
+            elif action == 'pick_y':
+                transit = ET.SubElement(root, "Transit")
+                path = _plan_or_fail(HOME, IDLE_Y_OPEN)
+                if not path: return False
+                self.write_path_to_xml(transit, path)
+                kautham.kMoveRobot(self, IDLE_Y_OPEN)
+                kautham.kAttachObject(self, "ur3_right", "robotiq_85_base_link", "rubik_cube")
+                current_grasp = list(IDLE_Y)
+                current_axis  = 'y'
+
+            # ── place: soltar cubo en fixture, volver a HOME ─────────────────────
+            elif action == 'place':
+                kautham.kDetachObject(self, "rubik_cube")
+                current_open = list(current_grasp)
+                current_open[-1] = GRIPPER_OPEN
+                transit = ET.SubElement(root, "Transit")
+                path = _plan_or_fail(current_open, HOME)
+                if not path: return False
+                self.write_path_to_xml(transit, path)
+                current_grasp = None
+                current_axis  = None
+
+            # ── change_pick: cambiar eje de agarre X↔Y sin soltar el cubo ───────
+            # El cubo permanece sujeto; solo cambia j6 (~90°) para pasar de
+            # orientación X a Y o viceversa (Transfer sin detach).
+            elif action == 'change_pick':
+                if current_axis == 'x':
+                    new_idle = IDLE_Y
+                    new_axis = 'y'
                 else:
-                    peak_closed[5] = ROTATE_CCW_PEAK[5]
-                    peak_open[5] = ROTATE_CCW_PEAK_OPEN[5]
+                    new_idle = IDLE_X
+                    new_axis = 'x'
+                transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
+                path = _plan_or_fail(current_grasp, new_idle)
+                if not path: return False
+                self.write_path_to_xml(transfer, path)
+                kautham.kMoveRobot(self, new_idle)
+                current_grasp = list(new_idle)
+                current_axis  = new_axis
 
-                # Transfer de rotación
-                transfer_elem = ET.SubElement(root, "Transfer",
-                                             attrib={
-                                                 "object": "rubik_cube",
-                                                 "robot": "ur3_right",
-                                                 "link": "robotiq_85_base_link"
-                                             })
-                path = self.plan_trajectory(current_grasp, peak_closed)
-                if not path:
-                    return False
-                self.write_path_to_xml(transfer_elem, path)
+            # ── tilt_x_pos/neg: volcar alrededor del eje X ───────────────────────
+            # Precondición PDDL: holding-y → el brazo está en IDLE_Y (idle_lift = IDLE_Y_LIFT)
+            elif action in ('tilt_x_pos', 'tilt_x_neg'):
+                idle_lift  = IDLE_Y_LIFT
+                tilt_lift  = TILT_X_LIFT
+                tilt_place = TILT_X
+                transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
+                for seg_start, seg_end in [
+                    (current_grasp, idle_lift),
+                    (idle_lift,     tilt_lift),
+                    (tilt_lift,     tilt_place),
+                ]:
+                    path = _plan_or_fail(seg_start, seg_end)
+                    if not path: return False
+                    self.write_path_to_xml(transfer, path)
+                kautham.kMoveRobot(self, tilt_place)
+                kautham.kDetachObject(self, "rubik_cube")
+                tilt_open = list(tilt_place); tilt_open[-1] = GRIPPER_OPEN
+                transit = ET.SubElement(root, "Transit")
+                path = _plan_or_fail(tilt_open, HOME)
+                if not path: return False
+                self.write_path_to_xml(transit, path)
+                current_grasp = None
+                current_axis  = None
 
-                # 2. Soltar el cubo para reiniciar la muñeca (Transit)
+            # ── tilt_y_pos/neg: volcar alrededor del eje Y ───────────────────────
+            # Precondición PDDL: holding-x → el brazo está en IDLE_X (idle_lift = IDLE_X_LIFT)
+            elif action in ('tilt_y_pos', 'tilt_y_neg'):
+                idle_lift  = IDLE_X_LIFT
+                tilt_lift  = TILT_Y_LIFT
+                tilt_place = TILT_Y
+                transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
+                for seg_start, seg_end in [
+                    (current_grasp, idle_lift),
+                    (idle_lift,     tilt_lift),
+                    (tilt_lift,     tilt_place),
+                ]:
+                    path = _plan_or_fail(seg_start, seg_end)
+                    if not path: return False
+                    self.write_path_to_xml(transfer, path)
+                kautham.kMoveRobot(self, tilt_place)
+                kautham.kDetachObject(self, "rubik_cube")
+                tilt_open = list(tilt_place); tilt_open[-1] = GRIPPER_OPEN
+                transit = ET.SubElement(root, "Transit")
+                path = _plan_or_fail(tilt_open, HOME)
+                if not path: return False
+                self.write_path_to_xml(transit, path)
+                current_grasp = None
+                current_axis  = None
+
+            # ── execute_*: rotar capa superior mediante j6 ───────────────────────
+            # execute_X      → +90°, cambia eje X↔Y
+            # execute_X_prime→ -90°, cambia eje X↔Y
+            # execute_X2     → +180°, mantiene eje
+            # El peak de j6 se calcula dinámicamente a partir del j6 actual.
+            # Tras la rotación se vuelve al IDLE canónico del nuevo eje (j6 exacto
+            # de _J6_X_DEG o _J6_Y_DEG) para evitar deriva acumulada de j6.
+            elif action.startswith('execute_'):
+                is_180   = action.endswith('2')
+                is_prime = action.endswith('_prime')
+                delta_deg = 180.0 if is_180 else (-90.0 if is_prime else +90.0)
+
+                j6_deg      = current_grasp[5] * 720.0 - 360.0
+                j6_peak_deg = j6_deg + delta_deg
+                if j6_peak_deg >  360.0: j6_peak_deg -= 720.0
+                if j6_peak_deg < -360.0: j6_peak_deg += 720.0
+
+                peak_closed    = list(current_grasp)
+                peak_closed[5] = (j6_peak_deg + 360.0) / 720.0
+                peak_open      = list(peak_closed); peak_open[-1] = GRIPPER_OPEN
+
+                transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
+                path = _plan_or_fail(current_grasp, peak_closed)
+                if not path: return False
+                self.write_path_to_xml(transfer, path)
                 kautham.kMoveRobot(self, peak_closed)
                 kautham.kDetachObject(self, "rubik_cube")
-                
-                # Tránsito de regreso con la pinza abierta para no desarmar el cubo
-                transit_elem = ET.SubElement(root, "Transit")
-                # De peak_open de vuelta a GRASP_OPEN
-                path = self.plan_trajectory(peak_open, GRASP_OPEN)
-                if not path:
-                    return False
-                self.write_path_to_xml(transit_elem, path)
 
-                # Volver a sujetar el cubo
-                kautham.kMoveRobot(self, GRASP_OPEN)
-                kautham.kAttachObject(self, "ur3_right", "robotiq_85_base_link", "rubik_cube")
-                current_grasp = list(GRASP)
-
-            elif action in ('tilt_x_pos', 'tilt_x_neg', 'tilt_y_pos', 'tilt_y_neg'):
-                # Acción de inclinación (Tilt):
-                # 1. Lift: Grasp -> LIFT (Transfer)
-                transfer_elem = ET.SubElement(root, "Transfer",
-                                             attrib={
-                                                 "object": "rubik_cube",
-                                                 "robot": "ur3_right",
-                                                 "link": "robotiq_85_base_link"
-                                             })
-                path = self.plan_trajectory(current_grasp, LIFT)
-                if not path:
-                    return False
-                self.write_path_to_xml(transfer_elem, path)
-
-                # 2. Tilt Peak: LIFT -> TILT_PEAK (Transfer)
-                if action == 'tilt_x_pos':
-                    peak = TILT_X_POS_PEAK
-                elif action == 'tilt_x_neg':
-                    peak = TILT_X_NEG_PEAK
-                elif action == 'tilt_y_pos':
-                    peak = TILT_Y_POS_PEAK
+                # Eje tras la rotación — se usa el j6 canónico para evitar deriva
+                if is_180:
+                    next_axis = current_axis
                 else:
-                    peak = TILT_Y_NEG_PEAK
+                    next_axis = 'y' if current_axis == 'x' else 'x'
 
-                path = self.plan_trajectory(LIFT, peak)
-                if not path:
-                    return False
-                self.write_path_to_xml(transfer_elem, path)
+                next_j6        = _J6_X_DEG if next_axis == 'x' else _J6_Y_DEG
+                next_idle_open = _idle(next_j6, GRIPPER_OPEN)
+                next_idle      = _idle(next_j6, GRIPPER_CLOSED)
 
-                # 3. Lift after tilt: TILT_PEAK -> LIFT (Transfer)
-                path = self.plan_trajectory(peak, LIFT)
-                if not path:
-                    return False
-                self.write_path_to_xml(transfer_elem, path)
+                transit = ET.SubElement(root, "Transit")
+                path = _plan_or_fail(peak_open, next_idle_open)
+                if not path: return False
+                self.write_path_to_xml(transit, path)
+                kautham.kMoveRobot(self, next_idle_open)
+                kautham.kAttachObject(self, "ur3_right", "robotiq_85_base_link", "rubik_cube")
+                current_grasp = list(next_idle)
+                current_axis  = next_axis
 
-                # 4. Place onto fixture: LIFT -> GRASP (Transfer)
-                path = self.plan_trajectory(LIFT, GRASP)
-                if not path:
-                    return False
-                self.write_path_to_xml(transfer_elem, path)
+            else:
+                self.get_logger().warn(f"Acción desconocida ignorada: '{action}'")
 
-                # 5. Let go of the cube (Transit: GRASP -> GRASP_OPEN -> HOME)
-                kautham.kMoveRobot(self, GRASP)
-                kautham.kDetachObject(self, "rubik_cube")
-                
-                transit_elem = ET.SubElement(root, "Transit")
-                path = self.plan_trajectory(GRASP_OPEN, HOME)
-                if not path:
-                    return False
-                self.write_path_to_xml(transit_elem, path)
-
-                # Si queda otra acción, volvemos a coger el cubo
-                if idx + 1 < len(solution):
-                    transit_elem2 = ET.SubElement(root, "Transit")
-                    path = self.plan_trajectory(HOME, GRASP_OPEN)
-                    if not path:
-                        return False
-                    self.write_path_to_xml(transit_elem2, path)
-                    
-                    kautham.kMoveRobot(self, GRASP_OPEN)
-                    kautham.kAttachObject(self, "ur3_right", "robotiq_85_base_link", "rubik_cube")
-                    current_grasp = list(GRASP)
-
-        # ── 3. Tránsito final a HOME si no se ha vuelto ────────────────────────────────
-        # Si la última acción fue un rotate, el robot sigue sujetando el cubo
-        if solution[-1] in ('rotate_top_cw', 'rotate_top_ccw'):
-            kautham.kMoveRobot(self, GRASP)
+        # ── Tránsito final a HOME si el robot sigue sujetando el cubo ────────────
+        if current_grasp is not None:
             kautham.kDetachObject(self, "rubik_cube")
-            transit_elem = ET.SubElement(root, "Transit")
-            path = self.plan_trajectory(GRASP_OPEN, HOME)
+            final_open = list(current_grasp); final_open[-1] = GRIPPER_OPEN
+            transit = ET.SubElement(root, "Transit")
+            path = self.plan_trajectory(final_open, HOME)
             if path:
-                self.write_path_to_xml(transit_elem, path)
+                self.write_path_to_xml(transit, path)
 
-        # Guardar y formatear el XML resultante
-        rough = ET.tostring(root, encoding="unicode")
+        rough    = ET.tostring(root, encoding="unicode")
         reparsed = minidom.parseString(rough)
-        xml_str = reparsed.toprettyxml(indent="\t")
-
+        xml_str  = reparsed.toprettyxml(indent="\t")
         os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             f.write(xml_str)
-            
-        self.get_logger().info(f"✓ ¡Taskfile planificado con RRT guardado con éxito en: {OUTPUT_FILE}!")
-        
-        # Cerrar el problema en Kautham
+        self.get_logger().info(f"✓ Taskfile guardado en: {OUTPUT_FILE}")
         kautham.kCloseProblem(self)
         return True
 
@@ -463,7 +580,7 @@ def main():
     # ── 3. Nivel Geométrico/Cinemático: RRT-Connect con Kautham ───────────────
     print("\n[Nivel 3] Planificando trayectorias geométricas en Kautham...")
     generator = RRTTaskfileGenerator()
-    success = generator.run(solution)
+    success = generator.run(manipulation_plan)
     
     generator.destroy_node()
     rclpy.shutdown()
