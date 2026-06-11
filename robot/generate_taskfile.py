@@ -143,7 +143,7 @@ GRASP      = IDLE_X
 # XY: robot centro (0.294, 0.539) + offset FK (-0.187, -0.399) = (0.107, 0.140)
 #   Centro robot = perimetro + radio UR3 (64 mm): 0.23+0.064=0.294, 0.475+0.064=0.539
 # Z  = fixture_height - pocket_depth + cube_half = 0.075 - 0.013 + 0.025 = 0.087 m
-CUBE_INITIAL_POSE = "0.107 0.148 0.087 0.0 0.0 0.0 1.0"
+CUBE_INITIAL_POSE = "0.107 0.148 0.017 0.0 0.0 0.0 1.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GENERADOR TAMP DE TASKFILE
@@ -247,6 +247,17 @@ class RRTTaskfileGenerator(Node):
                 self.get_logger().error(f"RRT falló: {start} → {goal}")
             return p
 
+        N_INTERP = 20  # waypoints por segmento interpolado
+
+        def _write_interp(parent_elem, start, goal):
+            """Escribe un segmento interpolado linealmente (sin llamar a Kautham)."""
+            for step in range(N_INTERP + 1):
+                alpha = step / N_INTERP
+                conf  = [s + alpha * (g - s) for s, g in zip(start, goal)]
+                ET.SubElement(parent_elem, "Conf").text = (
+                    " " + " ".join(f"{v:.6f}" for v in conf) + " "
+                )
+
         for idx, action in enumerate(manipulation_plan):
             self.get_logger().info(f"── PASO {idx+1}/{len(manipulation_plan)}: {action} ──")
 
@@ -303,7 +314,17 @@ class RRTTaskfileGenerator(Node):
                 current_axis  = new_axis
 
             # ── tilt_x_pos/neg: volcar alrededor del eje X ───────────────────────
-            # Precondición PDDL: holding-y → el brazo está en IDLE_Y (idle_lift = IDLE_Y_LIFT)
+            # Precondición PDDL: holding-y → el brazo está en IDLE_Y
+            #
+            # El Transfer (cubo adjunto) se genera por INTERPOLACIÓN DIRECTA:
+            #   IDLE_Y → IDLE_Y_LIFT → TILT_X_LIFT → TILT_X
+            # Razones:
+            #   1. El cubo adjunto causaría falsa colisión si usásemos RRT con el cubo
+            #      como obstáculo estático.
+            #   2. El movimiento de volcado es suave y sin obstáculos intermedios;
+            #      la interpolación lineal en espacio de joints es suficiente.
+            # El Transit de vuelta (TILT_X_open → HOME) sí usa RRT porque el cubo
+            # ya no está adjunto y el brazo necesita evitar el fixture.
             elif action in ('tilt_x_pos', 'tilt_x_neg'):
                 idle_lift  = IDLE_Y_LIFT
                 tilt_lift  = TILT_X_LIFT
@@ -314,9 +335,7 @@ class RRTTaskfileGenerator(Node):
                     (idle_lift,     tilt_lift),
                     (tilt_lift,     tilt_place),
                 ]:
-                    path = _plan_or_fail(seg_start, seg_end)
-                    if not path: return False
-                    self.write_path_to_xml(transfer, path)
+                    _write_interp(transfer, seg_start, seg_end)
                 kautham.kMoveRobot(self, tilt_place)
                 kautham.kDetachObject(self, "rubik_cube")
                 tilt_open = list(tilt_place); tilt_open[-1] = GRIPPER_OPEN
@@ -328,7 +347,8 @@ class RRTTaskfileGenerator(Node):
                 current_axis  = None
 
             # ── tilt_y_pos/neg: volcar alrededor del eje Y ───────────────────────
-            # Precondición PDDL: holding-x → el brazo está en IDLE_X (idle_lift = IDLE_X_LIFT)
+            # Precondición PDDL: holding-x → el brazo está en IDLE_X
+            # Misma lógica de interpolación que tilt_x.
             elif action in ('tilt_y_pos', 'tilt_y_neg'):
                 idle_lift  = IDLE_X_LIFT
                 tilt_lift  = TILT_Y_LIFT
@@ -339,9 +359,7 @@ class RRTTaskfileGenerator(Node):
                     (idle_lift,     tilt_lift),
                     (tilt_lift,     tilt_place),
                 ]:
-                    path = _plan_or_fail(seg_start, seg_end)
-                    if not path: return False
-                    self.write_path_to_xml(transfer, path)
+                    _write_interp(transfer, seg_start, seg_end)
                 kautham.kMoveRobot(self, tilt_place)
                 kautham.kDetachObject(self, "rubik_cube")
                 tilt_open = list(tilt_place); tilt_open[-1] = GRIPPER_OPEN
