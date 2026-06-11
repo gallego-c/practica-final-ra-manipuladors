@@ -142,8 +142,8 @@ GRASP      = IDLE_X
 # Pose inicial del cubo en el simulador (X Y Z WX WY WZ TH)
 # XY: robot centro (0.294, 0.539) + offset FK (-0.187, -0.399) = (0.107, 0.140)
 #   Centro robot = perimetro + radio UR3 (64 mm): 0.23+0.064=0.294, 0.475+0.064=0.539
-# Z  = fixture_height - pocket_depth + cube_half = 0.075 - 0.013 + 0.025 = 0.087 m
-CUBE_INITIAL_POSE = "0.107 0.148 0.017 0.0 0.0 0.0 1.0"
+# Z  = fixture_height - pocket_depth + cube_half = 0.125 - 0.013 + 0.025 = 0.137 m
+CUBE_INITIAL_POSE = "0.107 0.148 0.067 0.0 0.0 0.0 1.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GENERADOR TAMP DE TASKFILE
