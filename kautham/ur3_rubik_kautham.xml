@@ -28,14 +28,14 @@
 	<!-- XY = robot center (0.294, 0.539) + FK offset (-0.187, -0.399)          -->
 	<Obstacle obstacle="square_fixture.urdf" scale="1.0">
 		<KauthamName name="square_fixture"/>
-		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.0375" Y="0.140" X="0.107" />
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.0375" Y="0.15" X="0.107" />
 	</Obstacle>
 
 	<!-- 2x2 Rubik's Cube (5 x 5 x 5 cm) -->
 	<!-- Sits in 1.3 cm pocket: Z = 7.5 - 1.3 + 2.5 = 8.7 cm from table       -->
 	<Obstacle obstacle="rubik_cube_2x2.urdf" scale="1.0">
 		<KauthamName name="rubik_cube"/>
-		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.087" Y="0.140" X="0.107" />
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.087" Y="0.152" X="0.107" />
 	</Obstacle>
 
 	<!-- Controls config path -->

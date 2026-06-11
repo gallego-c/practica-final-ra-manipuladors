@@ -143,7 +143,7 @@ GRASP      = IDLE_X
 # XY: robot centro (0.294, 0.539) + offset FK (-0.187, -0.399) = (0.107, 0.140)
 #   Centro robot = perimetro + radio UR3 (64 mm): 0.23+0.064=0.294, 0.475+0.064=0.539
 # Z  = fixture_height - pocket_depth + cube_half = 0.075 - 0.013 + 0.025 = 0.087 m
-CUBE_INITIAL_POSE = "0.107 0.140 0.087 0.0 0.0 0.0 1.0"
+CUBE_INITIAL_POSE = "0.107 0.148 0.087 0.0 0.0 0.0 1.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GENERADOR TAMP DE TASKFILE
@@ -357,15 +357,13 @@ class RRTTaskfileGenerator(Node):
             # execute_X_prime→ -90°, cambia eje X↔Y
             # execute_X2     → +180°, mantiene eje
             #
-            # En el robot real: la pinza agarra SOLO la mitad superior del cubo;
-            # el fixture sujeta la mitad inferior. Solo se mueve j6; j1-j5 permanecen
-            # en los valores IDLE. No hay colisión con el fixture porque la mitad
-            # inferior nunca se mueve.
-            #
-            # En Kautham el cubo es un sólido rígido (no dos mitades), lo que causaría
-            # falsa colisión con el fixture si usásemos RRT. Por eso este segmento se
-            # genera por INTERPOLACIÓN DIRECTA de j6 (sin llamar al planificador),
-            # que es exactamente la trayectoria que ejecuta el robot real.
+            # Esta acción NO genera ningún segmento en el taskfile de Kautham.
+            # El robot real la ejecuta mediante turn_clockwise.py / turn_counterclockwise.py
+            # (biblioteca urx, rotación relativa de j6 desde la posición actual).
+            # La pinza solo agarra la mitad superior del cubo; el fixture sujeta la
+            # inferior. El gripper permanece CERRADO antes y después del giro.
+            # Solo actualizamos el estado interno para que el siguiente segmento
+            # Kautham parta de la configuración correcta.
             elif action.startswith('execute_'):
                 is_180   = action.endswith('2')
                 is_prime = action.endswith('_prime')
@@ -376,46 +374,19 @@ class RRTTaskfileGenerator(Node):
                 if j6_peak_deg >  360.0: j6_peak_deg -= 720.0
                 if j6_peak_deg < -360.0: j6_peak_deg += 720.0
 
-                # Interpolar j6 en N_STEPS pasos; j1-j5 y gripper se mantienen fijos
-                N_STEPS = 10
-                transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
-                for step in range(N_STEPS + 1):
-                    alpha    = step / N_STEPS
-                    j6_interp = j6_deg + alpha * delta_deg
-                    if j6_interp >  360.0: j6_interp -= 720.0
-                    if j6_interp < -360.0: j6_interp += 720.0
-                    conf = list(current_grasp)
-                    conf[5]  = (j6_interp + 360.0) / 720.0
-                    tex = " " + " ".join(f"{v:.6f}" for v in conf) + " "
-                    ET.SubElement(transfer, "Conf").text = tex
+                # Actualizar j6 en current_grasp (el resto de joints no cambia)
+                current_grasp    = list(current_grasp)
+                current_grasp[5] = (j6_peak_deg + 360.0) / 720.0
+                kautham.kMoveRobot(self, current_grasp)
 
-                # Actualizar estado de Kautham al peak (sin llamar a RRT)
-                peak_closed    = list(current_grasp)
-                peak_closed[5] = (j6_peak_deg + 360.0) / 720.0
-                kautham.kMoveRobot(self, peak_closed)
-                kautham.kDetachObject(self, "rubik_cube")
+                # Actualizar eje de agarre
+                if not is_180:
+                    current_axis = 'y' if current_axis == 'x' else 'x'
 
-                # Eje tras la rotación — j6 canónico para evitar deriva acumulada
-                if is_180:
-                    next_axis = current_axis
-                else:
-                    next_axis = 'y' if current_axis == 'x' else 'x'
-
-                next_j6        = _J6_X_DEG if next_axis == 'x' else _J6_Y_DEG
-                next_idle_open = _idle(next_j6, GRIPPER_OPEN)
-                next_idle      = _idle(next_j6, GRIPPER_CLOSED)
-
-                # Transit peak_open → next_IDLE_OPEN planificado con RRT
-                # (el cubo ya no está adjunto; el brazo se mueve libremente)
-                peak_open = list(peak_closed); peak_open[-1] = GRIPPER_OPEN
-                transit = ET.SubElement(root, "Transit")
-                path = _plan_or_fail(peak_open, next_idle_open)
-                if not path: return False
-                self.write_path_to_xml(transit, path)
-                kautham.kMoveRobot(self, next_idle_open)
-                kautham.kAttachObject(self, "ur3_right", "robotiq_85_base_link", "rubik_cube")
-                current_grasp = list(next_idle)
-                current_axis  = next_axis
+                self.get_logger().info(
+                    f"  execute ignorado en taskfile — turno gestionado por turn_cw/ccw.py "
+                    f"(nuevo j6≈{j6_peak_deg:.1f}°, eje={current_axis})"
+                )
 
             else:
                 self.get_logger().warn(f"Acción desconocida ignorada: '{action}'")
