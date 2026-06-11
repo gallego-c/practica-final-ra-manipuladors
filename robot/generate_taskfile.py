@@ -124,7 +124,7 @@ IDLE_Y      = _idle(_J6_Y_DEG, GRIPPER_CLOSED)
 IDLE_Y_LIFT = _idle_lift(_J6_Y_DEG, GRIPPER_CLOSED)
 
 # ── TILT X: volcado rotando alrededor del eje X ──────────────────────────────
-TILT_X_LIFT = deg_to_kautham([91.6,  -50.3,   91.97, -123.44, -173.25,  92.78], GRIPPER_CLOSED)
+TILT_X_LIFT = deg_to_kautham([91.6,  -55.82,  88.41, -115.3,  -173.23,  92.54], GRIPPER_CLOSED)
 TILT_X      = deg_to_kautham([92.12, -30.61,  90.27, -117.76, -177.38,  109.87], GRIPPER_CLOSED)
 
 # ── TILT Y: volcado rotando alrededor del eje Y ──────────────────────────────

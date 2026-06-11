@@ -11,7 +11,7 @@
     Cube at IDLE_X_LIFT (lifted 30 mm): 0.117 → 0.047
 
   IDLE_X_LIFT: [48.41,-56.6,30.75,-64.91,-90.06,226.35] deg  (holding-x, lifted)
-  TILT_X_LIFT: [91.6,-50.3,91.97,-123.44,-173.25,92.78] deg
+  TILT_X_LIFT: [91.6,-55.82,88.41,-115.3,-173.23,92.54] deg
 -->
 <Problem name="UR3_TiltY_Transfer">
 
@@ -56,14 +56,14 @@
     <Queries>
       <!-- Transfer: IDLE_X_LIFT → TILT_X_LIFT (j6 libre)                        -->
       <!-- IDLE_X_LIFT [48.41,-56.6,30.75,-64.91,-90.06,226.35] deg            -->
-      <!-- TILT_X_LIFT [91.6,-50.3,91.97,-123.44,-173.25,92.78] deg (margen)  -->
+      <!-- TILT_X_LIFT [91.6,-55.82,88.41,-115.3,-173.23,92.54] deg (margen)   -->
       <Query>
         <RobotControl name="ur3_right_shoulder_pan_joint"  init="0.5672" goal="0.6272"/>
-        <RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4301"/>
-        <RobotControl name="ur3_right_elbow_joint"         init="0.5854" goal="0.7555"/>
-        <RobotControl name="ur3_right_wrist_1_joint"       init="0.4098" goal="0.3286"/>
+        <RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4225"/>
+        <RobotControl name="ur3_right_elbow_joint"         init="0.5854" goal="0.7456"/>
+        <RobotControl name="ur3_right_wrist_1_joint"       init="0.4098" goal="0.3399"/>
         <RobotControl name="ur3_right_wrist_2_joint"       init="0.3749" goal="0.2594"/>
-        <RobotControl name="ur3_right_wrist_3_joint"       init="0.5633" goal="0.6289"/>
+        <RobotControl name="ur3_right_wrist_3_joint"       init="0.5633" goal="0.6285"/>
         <RobotControl name="ur3_right_gripper_joint"       init="0.680"  goal="0.680"/>
       </Query>
     </Queries>
