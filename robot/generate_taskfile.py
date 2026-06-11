@@ -356,9 +356,18 @@ class RRTTaskfileGenerator(Node):
             # execute_X      → +90°, cambia eje X↔Y
             # execute_X_prime→ -90°, cambia eje X↔Y
             # execute_X2     → +180°, mantiene eje
-            # El peak de j6 se calcula dinámicamente a partir del j6 actual.
-            # Tras la rotación se vuelve al IDLE canónico del nuevo eje (j6 exacto
-            # de _J6_X_DEG o _J6_Y_DEG) para evitar deriva acumulada de j6.
+            #
+            # Secuencia en simulación:
+            #   IDLE → IDLE_LIFT   (Transfer: elevar cubo 30 mm fuera del fixture)
+            #   IDLE_LIFT → PEAK_LIFT  (Transfer: girar j6 mientras el cubo está libre)
+            #   abrir pinza, el cubo queda flotando en posición rotada
+            #   Transit PEAK_LIFT_OPEN → next_IDLE_OPEN  (re-agarrar en nuevo eje)
+            #
+            # Por qué levantar: el cubo es un cuerpo rígido en Kautham. Si giramos j6
+            # con el cubo dentro del pocket del fixture (~5 cm) las esquinas del cubo
+            # (diagonal ≈ 7 cm) colisionan con las paredes. En el robot real la pinza
+            # sólo agarra la mitad superior y no hay ese problema, pero en simulación
+            # necesitamos liberar el cubo del pocket antes de rotar.
             elif action.startswith('execute_'):
                 is_180   = action.endswith('2')
                 is_prime = action.endswith('_prime')
@@ -369,18 +378,27 @@ class RRTTaskfileGenerator(Node):
                 if j6_peak_deg >  360.0: j6_peak_deg -= 720.0
                 if j6_peak_deg < -360.0: j6_peak_deg += 720.0
 
-                peak_closed    = list(current_grasp)
-                peak_closed[5] = (j6_peak_deg + 360.0) / 720.0
-                peak_open      = list(peak_closed); peak_open[-1] = GRIPPER_OPEN
+                # IDLE_LIFT para el eje actual (mismos j1-j5 que IDLE_LIFT, mismo j6 actual)
+                idle_lift = IDLE_X_LIFT if current_axis == 'x' else IDLE_Y_LIFT
 
+                # PEAK_LIFT = IDLE_LIFT con j6 rotado al ángulo del peak
+                peak_lift       = list(idle_lift)
+                peak_lift[5]    = (j6_peak_deg + 360.0) / 720.0
+                peak_lift_open  = list(peak_lift); peak_lift_open[-1] = GRIPPER_OPEN
+
+                # Transfer: IDLE → IDLE_LIFT → PEAK_LIFT  (cubo adjunto, libre de colisión)
                 transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
-                path = _plan_or_fail(current_grasp, peak_closed)
-                if not path: return False
-                self.write_path_to_xml(transfer, path)
-                kautham.kMoveRobot(self, peak_closed)
+                for seg_start, seg_end in [
+                    (current_grasp, idle_lift),
+                    (idle_lift,     peak_lift),
+                ]:
+                    path = _plan_or_fail(seg_start, seg_end)
+                    if not path: return False
+                    self.write_path_to_xml(transfer, path)
+                kautham.kMoveRobot(self, peak_lift)
                 kautham.kDetachObject(self, "rubik_cube")
 
-                # Eje tras la rotación — se usa el j6 canónico para evitar deriva
+                # Eje tras la rotación — j6 canónico para evitar deriva acumulada
                 if is_180:
                     next_axis = current_axis
                 else:
@@ -390,8 +408,9 @@ class RRTTaskfileGenerator(Node):
                 next_idle_open = _idle(next_j6, GRIPPER_OPEN)
                 next_idle      = _idle(next_j6, GRIPPER_CLOSED)
 
+                # Transit: PEAK_LIFT_OPEN → next_IDLE_OPEN  (re-agarrar)
                 transit = ET.SubElement(root, "Transit")
-                path = _plan_or_fail(peak_open, next_idle_open)
+                path = _plan_or_fail(peak_lift_open, next_idle_open)
                 if not path: return False
                 self.write_path_to_xml(transit, path)
                 kautham.kMoveRobot(self, next_idle_open)
