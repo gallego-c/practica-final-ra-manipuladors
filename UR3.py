@@ -4,7 +4,7 @@ import csv
 import xml.etree.ElementTree as ET
 
 # ⚠️ ¡ATENCIÓN! Cambia la X por el número real de tu robot (mirar en Teach Pendant -> Acerca de)
-HOST = "10.10.73.234"
+HOST = "10.10.73.239"
 PORT = 30002
 
 # Scripts para abrir y cerrar la pinza
