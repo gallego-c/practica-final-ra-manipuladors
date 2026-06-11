@@ -7,8 +7,8 @@
   Z convention: all objects shifted -0.07 m to match robot base Z=-0.07
     Real Z → Sim Z = Real Z - 0.07
     Table center:   -0.01 → -0.08
-    Fixture center:  0.0525 → -0.0175
-    Cube at IDLE_X_LIFT (lifted 30 mm): 0.117 → 0.047
+    Fixture center:  0.0675 → -0.0025
+    Cube at IDLE_X_LIFT (lifted 30 mm): 0.147 → 0.077
 
   IDLE_X_LIFT: [48.41,-56.6,30.75,-64.91,-90.06,226.35] deg  (holding-x, lifted)
   TILT_X_LIFT: [91.6,-55.82,88.41,-115.3,-173.23,92.54] deg
@@ -27,16 +27,16 @@
     <Home TH="1.570796327" WZ="1.0" WY="0.0" WX="0.0" Z="-0.08" Y="0.0" X="0.0" />
   </Obstacle>
 
-  <!-- Fixture: 15.8x15.8x10.5 cm, center Z = 0.0525-0.07 = -0.0175 -->
+  <!-- Fixture: 15.8x15.8x13.5 cm, center Z = 0.0675-0.07 = -0.0025 -->
   <Obstacle obstacle="square_fixture.urdf" scale="1.0">
     <KauthamName name="square_fixture"/>
-    <Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="-0.0175" Y="0.152" X="0.107" />
+    <Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="-0.0025" Y="0.152" X="0.107" />
   </Obstacle>
 
   <!-- Cubo comentado durante Transfer (attached vía taskfile, no obstáculo estático) -->
   <!-- <Obstacle obstacle="rubik_cube_2x2.urdf" scale="1.0">
     <KauthamName name="rubik_cube"/>
-    <Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.047" Y="0.152" X="0.107" />
+    <Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.077" Y="0.152" X="0.107" />
   </Obstacle> -->
 
   <!-- Todos los joints libres (7 DOFs) — j6 cambia naturalmente durante el tilt -->
