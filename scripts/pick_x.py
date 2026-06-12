@@ -33,7 +33,7 @@ CERRAR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza10UR3.py")   # cierra a
 #   el movej termine ANTES de mandar el script de la pinza: si lo mandasemos
 #   antes, el nuevo programa interrumpiria el movimiento a medias.
 # ---------------------------------------------------------------------------
-ESPERA_MOV   = 8.0   # tiempo de sobra para llegar a la pose de pick
+ESPERA_MOV   = 1.0   # tiempo de sobra para llegar a la pose de pick
 ESPERA_PINZA = 1.0   # tiempo para que el agarre se complete
 
 pick_config = [0.88401, -0.98524, 0.73985, -1.31371, -1.61897, 0.8793]  # [50.65, -56.45, 42.39, -75.27, -92.76, 50.38] deg
