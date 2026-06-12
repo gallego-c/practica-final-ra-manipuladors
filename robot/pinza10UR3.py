@@ -1474,7 +1474,7 @@ def pinza10UR3():
     #   Source: OnRobot, 5.17.1, OnRobot A/S
     #   Type: Agarre RG
     $ 2 "Agarre RG"
-on_return = rg_grip(10.0, 40.0, tool_index = 0, blocking = True, depth_comp = False, popupmsg = True)
+on_return = rg_grip(51.0, 40.0, tool_index = 0, blocking = True, depth_comp = False, popupmsg = True)
 rg_payload_set(mass = 0.0, tool_index = 0, use_guard = True)
     # end: URCap Program Node
   end
