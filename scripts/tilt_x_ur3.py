@@ -167,7 +167,7 @@ def send_trajectory(path, sock, a, v, r, label=""):
 sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
 go_home()
-time.sleep(3.0)
+time.sleep(1.0)
 
 # Conexion por socket al controlador
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -181,19 +181,19 @@ print("Moviendo a Config 1...")
 config_1 = [1.59802, -0.64001, 1.63764, -2.35759, -3.14735, 1.76592]
 prog_1 = f"def step1():\n  movej({config_1}, a={ACC}, v={VEL})\nend\nstep1()\n"
 sock.sendall(prog_1.encode())
-time.sleep(4.0)
+time.sleep(1.0)
 
 print("Moviendo a Config 2...")
 config_2 = [1.59802, -0.5983, 1.62979, -2.40576, -3.14753, 1.75179]
 prog_2 = f"def step2():\n  movej({config_2}, a={ACC}, v={VEL})\nend\nstep2()\n"
 sock.sendall(prog_2.encode())
-time.sleep(4.0)
+time.sleep(1.0)
 
 # Abrir pinza
 print("Abriendo pinza...")
 with open(ABRIR_PINZA, "rb") as f:
     sock.sendall(f.read())
-time.sleep(3.0)
+time.sleep(1.0)
 
 # Vuelta: misma trayectoria invertida -> regresa exactamente a la pose inicial
 send_trajectory(path[::-1], sock, ACC, VEL, BLEND, "Vuelta")
