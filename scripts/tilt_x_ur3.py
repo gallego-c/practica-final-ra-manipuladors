@@ -166,8 +166,6 @@ def send_trajectory(path, sock, a, v, r, label=""):
 # 1. Ir a HOME primero (primera posición de la trayectoria de tilt_x)
 sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
-go_home()
-time.sleep(1.0)
 
 # Conexion por socket al controlador
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
