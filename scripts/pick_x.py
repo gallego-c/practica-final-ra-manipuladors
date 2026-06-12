@@ -48,7 +48,7 @@ def build_program(path, a, v, r):
     a su posicion objetivo para evitar colisiones.
     """
     lines = ["def trayectoria():"]
-    if len(path) > 1:
+    if len(path) > 0:
         target_j6 = path[0][5]
         lines.append("  q_act = get_actual_joint_positions()")
         lines.append(f"  movej([q_act[0], q_act[1], q_act[2], q_act[3], q_act[4], {target_j6}], a={a}, v={v})")
