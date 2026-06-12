@@ -1,12 +1,12 @@
-import socket
-import time
-import sys
+import math
 import os
+import socket
+import sys
+import time
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# pick_x.py -- Mueve el UR3 a una configuracion de "pick" y, al llegar,
-# cierra la pinza (10 mm) usando el script del URCap pinza10UR3.py.
+# pick_y.py -- Igual que pick_x, pero con wrist_3 (j6) rotado -90° para agarrar por el eje Y.
 
 # ---------------------------------------------------------------------------
 # Conexion
@@ -25,27 +25,22 @@ BLEND = 0.0     # un solo punto -> sin blend (para en la meta)
 # Scripts de la pinza (están en la subcarpeta scripts/gripper)
 # ---------------------------------------------------------------------------
 CERRAR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza10UR3.py")   # cierra a 10 mm  (agarrar)
-# ABRIR_PINZA  = os.path.join(SCRIPT_DIR, "gripper", "pinza40UR3.py")   # abre  a 40 mm  (soltar)  <- por si lo necesitas
 
 # ---------------------------------------------------------------------------
 # Esperas (s)
-#   No conocemos la pose inicial, asi que damos un margen generoso para que
-#   el movej termine ANTES de mandar el script de la pinza: si lo mandasemos
-#   antes, el nuevo programa interrumpiria el movimiento a medias.
 # ---------------------------------------------------------------------------
 ESPERA_MOV   = 8.0   # tiempo de sobra para llegar a la pose de pick
-ESPERA_PINZA = 3.0   # tiempo para que el agarre se complete
+ESPERA_PINZA = 1.0   # tiempo para que el agarre se complete
 
-pick_config = [0.88401, -0.98524, 0.73985, -1.31371, -1.61897, -0.6915]  # [50.65, -56.45, 42.39, -75.27, -92.76, -39.62] deg
+# Misma pose que pick_x, con j6 girado -90° (eje Y en lugar de eje X)
+PICK_X_CONFIG = [0.88401, -0.98524, 0.73985, -1.31371, -1.61897, 0.8793]
+pick_config = PICK_X_CONFIG[:5] + [PICK_X_CONFIG[5] - math.pi / 2]
 
 
 def build_program(path, a, v, r):
     """Construye un programa URScript con los movej encadenados.
 
-    El ultimo punto va con r=0 para terminar exactamente en su meta. Con un
-    unico punto, simplemente se hace un movej que para en el objetivo.
-    Antes de empezar el movimiento general, orientamos la pinza (wrist_3)
-    a su posicion objetivo para evitar colisiones.
+    Antes del movimiento general, orienta wrist_3 (j6) para evitar colisiones.
     """
     lines = ["def trayectoria():"]
     if len(path) > 0:
@@ -71,30 +66,27 @@ def cerrar_pinza(sock, script_pinza):
 # ---------------------------------------------------------------------------
 # Programa principal
 # ---------------------------------------------------------------------------
-# Ir a HOME primero
 sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
+
 go_home()
-time.sleep(3.0)
+time.sleep(1.0)
 
 print(f"Conectando al robot en {HOST}:{PORT} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((HOST, PORT))
 print("Conexion establecida.")
 
-# 1. Mover a la configuracion de pick
-print("Moviendo a la pose de pick...")
+print("Moviendo a la pose de pick (eje Y)...")
 program = build_program([pick_config], ACC, VEL, BLEND)
 print(program)
 sock.send(program.encode())
 time.sleep(ESPERA_MOV)
 
-# 2. Cerrar la pinza (agarrar)
 print("Cerrando pinza...")
 cerrar_pinza(sock, CERRAR_PINZA)
 time.sleep(ESPERA_PINZA)
 
-print("Pick finalizado.")
+print("Pick Y finalizado.")
 
-# Cerrar la conexion
 sock.close()
