@@ -144,12 +144,13 @@ def build_program(path, a, v, r):
 
 
 def estimate_duration(path, v):
-    """Estimacion grosera del tiempo total, para mantener viva la conexion."""
+    """Estimacion del tiempo total, con margen para evitar solapamiento."""
     total = 0.0
     for i in range(1, len(path)):
         dq = max(abs(path[i][j] - path[i - 1][j]) for j in range(6))
         total += dq / v
-    return total + 2.0  # margen para rampas de acel./decel.
+    # Cada waypoint en un camino denso tiene una pequeña demora de procesamiento y blend
+    return max(total + 2.0, len(path) * 0.25)
 
 
 def send_trajectory(path, sock, a, v, r, label=""):
