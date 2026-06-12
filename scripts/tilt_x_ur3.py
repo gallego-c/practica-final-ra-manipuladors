@@ -1,5 +1,9 @@
 import socket
 import time
+import sys
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Generado a partir de csv_to_ur3.py -- 97 waypoints, 6 articulaciones del UR3.
 
@@ -156,6 +160,12 @@ def send_trajectory(path, sock, a, v, r, label=""):
     sock.send(program.encode())
     time.sleep(estimate_duration(path, v))
 
+
+# 1. Ir a HOME primero (primera posición de la trayectoria de tilt_x)
+sys.path.insert(0, SCRIPT_DIR)
+from go_home import go_home
+go_home()
+time.sleep(3.0)
 
 # Conexion por socket al controlador
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
