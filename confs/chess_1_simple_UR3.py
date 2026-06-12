@@ -8,8 +8,8 @@ HOST = "10.10.73.23X"
 PORT = 30002
 
 # Scripts para abrir y cerrar la pinza
-Abrir_pinza = 'pinza40UR3.py'
-Cerrar_pinza = 'pinza10UR3.py'
+Abrir_pinza = 'scripts/gripper/pinza40UR3.py'
+Cerrar_pinza = 'scripts/gripper/pinza10UR3.py'
 
 # Función para enviar una trayectoria en espacio de configuraciones a la controladora del robot
 def send_joint_path(path, sock):

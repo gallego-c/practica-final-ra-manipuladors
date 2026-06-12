@@ -6,8 +6,8 @@ HOST = "10.10.73.234"
 PORT = 30002
 
 # Nombres de los scripts de la pinza
-Abrir_pinza = 'pinza40UR3.py'  # 40mm (abierta)
-Cerrar_pinza = 'pinza10UR3.py' # 10mm (cerrada)
+Abrir_pinza = 'scripts/gripper/pinza40UR3.py'  # 40mm (abierta)
+Cerrar_pinza = 'scripts/gripper/pinza10UR3.py' # 10mm (cerrada)
 
 print(f"Conectando al robot en la IP: {HOST} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

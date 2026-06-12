@@ -8,8 +8,8 @@ HOST = "10.10.73.239"
 PORT = 30002
 
 # Scripts para abrir y cerrar la pinza
-Abrir_pinza  = 'robot/pinza40UR3.py'  # 40 mm (abierta)
-Cerrar_pinza = 'robot/pinza10UR3.py'  # 10 mm (cerrada)
+Abrir_pinza  = 'scripts/gripper/pinza40UR3.py'  # 40 mm (abierta)
+Cerrar_pinza = 'scripts/gripper/pinza10UR3.py'  # 10 mm (cerrada)
 
 # ── Envío de trayectoria ──────────────────────────────────────────────────────
 

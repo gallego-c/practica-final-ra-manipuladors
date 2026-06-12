@@ -18,10 +18,10 @@ VEL   = 0.6     # velocidad articular   [rad/s]
 BLEND = 0.0     # un solo punto -> sin blend (para en la meta)
 
 # ---------------------------------------------------------------------------
-# Scripts de la pinza (están en la carpeta robot)
+# Scripts de la pinza (están en la subcarpeta scripts/gripper)
 # ---------------------------------------------------------------------------
-CERRAR_PINZA = "./robot/pinza10UR3.py"   # cierra a 10 mm  (agarrar)
-# ABRIR_PINZA  = "./robot/pinza40UR3.py"   # abre  a 40 mm  (soltar)  <- por si lo necesitas
+CERRAR_PINZA = "./scripts/gripper/pinza10UR3.py"   # cierra a 10 mm  (agarrar)
+# ABRIR_PINZA  = "./scripts/gripper/pinza40UR3.py"   # abre  a 40 mm  (soltar)  <- por si lo necesitas
 
 # ---------------------------------------------------------------------------
 # Esperas (s)
@@ -32,7 +32,7 @@ CERRAR_PINZA = "./robot/pinza10UR3.py"   # cierra a 10 mm  (agarrar)
 ESPERA_MOV   = 8.0   # tiempo de sobra para llegar a la pose de pick
 ESPERA_PINZA = 3.0   # tiempo para que el agarre se complete
 
-pick_config = [0.88418, -0.97896, 0.71052, -1.30463, -1.61897, 0.87912]  # [50.66, -56.09, 40.71, -74.75, -92.76, 50.37] deg
+pick_config = [0.88401, -0.98524, 0.73985, -1.31371, -1.61897, 0.8793]  # [50.65, -56.45, 42.39, -75.27, -92.76, 50.38] deg
 
 
 def build_program(path, a, v, r):
