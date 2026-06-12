@@ -178,7 +178,7 @@ send_trajectory(path, sock, ACC, VEL, BLEND, "Ida")
 
 # Mover a las dos configuraciones intermedias en el extremo
 print("Moviendo a Config 1...")
-config_1 = [-1.59802, -0.64001, 1.63764, -2.35759, -3.14735, 1.76592]
+config_1 = [1.59802, -0.64001, 1.63764, -2.35759, -3.14735, 1.76592]
 prog_1 = f"def step1():\n  movej({config_1}, a={ACC}, v={VEL})\nend\nstep1()\n"
 sock.sendall(prog_1.encode())
 time.sleep(4.0)
