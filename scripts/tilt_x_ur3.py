@@ -4,6 +4,7 @@ import sys
 import os
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ABRIR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza40UR3.py")
 
 # Generado a partir de csv_to_ur3.py -- 97 waypoints, 6 articulaciones del UR3.
 
@@ -175,13 +176,33 @@ sock.connect((HOST, PORT))
 # Ida: de la pose inicial a la final
 send_trajectory(path, sock, ACC, VEL, BLEND, "Ida")
 
-# Pausa breve en el extremo
-time.sleep(PAUSA)
+# Mover a las dos configuraciones intermedias en el extremo
+print("Moviendo a Config 1...")
+config_1 = [-1.59802, -0.64001, 1.63764, -2.35759, -3.14735, 1.76592]
+prog_1 = f"def step1():\n  movej({config_1}, a={ACC}, v={VEL})\nend\nstep1()\n"
+sock.sendall(prog_1.encode())
+time.sleep(4.0)
+
+print("Moviendo a Config 2...")
+config_2 = [1.59802, -0.5983, 1.62979, -2.40576, -3.14753, 1.75179]
+prog_2 = f"def step2():\n  movej({config_2}, a={ACC}, v={VEL})\nend\nstep2()\n"
+sock.sendall(prog_2.encode())
+time.sleep(4.0)
+
+# Abrir pinza
+print("Abriendo pinza...")
+with open(ABRIR_PINZA, "rb") as f:
+    sock.sendall(f.read())
+time.sleep(3.0)
 
 # Vuelta: misma trayectoria invertida -> regresa exactamente a la pose inicial
 send_trajectory(path[::-1], sock, ACC, VEL, BLEND, "Vuelta")
 
-print("Trayectoria (ida y vuelta) finalizada")
+print("Trayectoria finalizada")
 
 # Cerrar la conexion
 sock.close()
+
+# Al final: ir a HOME
+print("Regresando a HOME al finalizar...")
+go_home()
