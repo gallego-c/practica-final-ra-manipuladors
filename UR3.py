@@ -2,14 +2,17 @@ import socket
 import time
 import csv
 import xml.etree.ElementTree as ET
+import os
 
 # ⚠️ ¡ATENCIÓN! Cambia la X por el número real de tu robot (mirar en Teach Pendant -> Acerca de)
 HOST = "10.10.73.239"
 PORT = 30002
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Scripts para abrir y cerrar la pinza
-Abrir_pinza  = 'scripts/gripper/pinza40UR3.py'  # 40 mm (abierta)
-Cerrar_pinza = 'scripts/gripper/pinza10UR3.py'  # 10 mm (cerrada)
+Abrir_pinza  = os.path.join(SCRIPT_DIR, 'scripts', 'gripper', 'pinza40UR3.py')  # 40 mm (abierta)
+Cerrar_pinza = os.path.join(SCRIPT_DIR, 'scripts', 'gripper', 'pinza10UR3.py')  # 10 mm (cerrada)
 
 # ── Envío de trayectoria ──────────────────────────────────────────────────────
 

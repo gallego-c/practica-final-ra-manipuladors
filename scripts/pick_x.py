@@ -1,5 +1,9 @@
 import socket
 import time
+import sys
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # pick_x.py -- Mueve el UR3 a una configuracion de "pick" y, al llegar,
 # cierra la pinza (10 mm) usando el script del URCap pinza10UR3.py.
@@ -20,8 +24,8 @@ BLEND = 0.0     # un solo punto -> sin blend (para en la meta)
 # ---------------------------------------------------------------------------
 # Scripts de la pinza (están en la subcarpeta scripts/gripper)
 # ---------------------------------------------------------------------------
-CERRAR_PINZA = "./scripts/gripper/pinza10UR3.py"   # cierra a 10 mm  (agarrar)
-# ABRIR_PINZA  = "./scripts/gripper/pinza40UR3.py"   # abre  a 40 mm  (soltar)  <- por si lo necesitas
+CERRAR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza10UR3.py")   # cierra a 10 mm  (agarrar)
+# ABRIR_PINZA  = os.path.join(SCRIPT_DIR, "gripper", "pinza40UR3.py")   # abre  a 40 mm  (soltar)  <- por si lo necesitas
 
 # ---------------------------------------------------------------------------
 # Esperas (s)
@@ -68,12 +72,10 @@ def cerrar_pinza(sock, script_pinza):
 # Programa principal
 # ---------------------------------------------------------------------------
 # Ir a HOME primero
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
 go_home()
-time.sleep(3.0)
+time.sleep(1.0)
 
 print(f"Conectando al robot en {HOST}:{PORT} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
