@@ -18,10 +18,10 @@ VEL   = 0.6     # velocidad articular   [rad/s]
 BLEND = 0.0     # un solo punto -> sin blend (para en la meta)
 
 # ---------------------------------------------------------------------------
-# Scripts de la pinza (deben estar en la MISMA carpeta que este pick_x.py)
+# Scripts de la pinza (están en la carpeta robot)
 # ---------------------------------------------------------------------------
-CERRAR_PINZA = "./scripts/pinza10UR3.py"   # cierra a 10 mm  (agarrar)
-# ABRIR_PINZA  = "./scripts/pinza40UR3.py"   # abre  a 40 mm  (soltar)  <- por si lo necesitas
+CERRAR_PINZA = "./robot/pinza10UR3.py"   # cierra a 10 mm  (agarrar)
+# ABRIR_PINZA  = "./robot/pinza40UR3.py"   # abre  a 40 mm  (soltar)  <- por si lo necesitas
 
 # ---------------------------------------------------------------------------
 # Esperas (s)
