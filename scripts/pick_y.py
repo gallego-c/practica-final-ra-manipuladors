@@ -32,10 +32,7 @@ CERRAR_PINZA = "./scripts/pinza10UR3.py"   # cierra a 10 mm  (agarrar)
 ESPERA_MOV   = 8.0   # tiempo de sobra para llegar a la pose de pick
 ESPERA_PINZA = 3.0   # tiempo para que el agarre se complete
 
-# ---------------------------------------------------------------------------
-# Configuracion objetivo de "pick" -- 6 articulaciones en radianes
-# ---------------------------------------------------------------------------
-pick_config = [0.5704, 0.4221, 0.6131, 0.3962, 0.3712, 0.57]
+pick_config = [0.88418, -0.97896, 0.71052, -1.30463, -1.61897, -0.69167]  # [50.66, -56.09, 40.71, -74.75, -92.76, -39.63] deg
 
 
 def build_program(path, a, v, r):
@@ -43,8 +40,14 @@ def build_program(path, a, v, r):
 
     El ultimo punto va con r=0 para terminar exactamente en su meta. Con un
     unico punto, simplemente se hace un movej que para en el objetivo.
+    Antes de empezar el movimiento general, orientamos la pinza (wrist_3)
+    a su posicion objetivo para evitar colisiones.
     """
     lines = ["def trayectoria():"]
+    if len(path) > 0:
+        target_j6 = path[0][5]
+        lines.append("  q_act = get_actual_joint_positions()")
+        lines.append(f"  movej([q_act[0], q_act[1], q_act[2], q_act[3], q_act[4], {target_j6}], a={a}, v={v})")
     n = len(path)
     for i, q in enumerate(path):
         blend = 0.0 if i == n - 1 else r
@@ -64,6 +67,14 @@ def cerrar_pinza(sock, script_pinza):
 # ---------------------------------------------------------------------------
 # Programa principal
 # ---------------------------------------------------------------------------
+# Ir a HOME primero
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from go_home import go_home
+go_home()
+time.sleep(3.0)
+
 print(f"Conectando al robot en {HOST}:{PORT} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((HOST, PORT))
