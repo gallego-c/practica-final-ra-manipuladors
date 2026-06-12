@@ -13,14 +13,18 @@ VEL   = 0.3     # velocidad articular suave   [rad/s]
 # HOME pose: Primera posicion del path tilt_x_ur3 (en radianes)
 home_config = [0.844914, -0.987856, 0.536689, -1.13289, -1.57184, 0.892212]
 
-def go_home():
-    print(f"Conectando al robot en {HOST}:{PORT} para ir a HOME...")
+def go_home(y_axis=False):
+    config = list(home_config)
+    if y_axis:
+        config[5] -= math.pi / 2  # Girar 90 grados la muñeca para pick_y
+        
+    print(f"Conectando al robot en {HOST}:{PORT} para ir a HOME (y_axis={y_axis})...")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((HOST, PORT))
     print("Conexion establecida.")
 
     # Construir programa URScript
-    q_str = "[" + ", ".join(str(x) for x in home_config) + "]"
+    q_str = "[" + ", ".join(str(x) for x in config) + "]"
     program = f"def home():\n  movej({q_str}, a={ACC}, v={VEL})\nend\nhome()\n"
     
     print("Moviendo a la pose HOME de forma suave...")
@@ -37,7 +41,10 @@ def go_home():
     print("Inicializando la pinza para mantener el bus de campo activo...")
     with open(PINZA_SCRIPT, "rb") as f:
         sock.sendall(f.read())
-    time.sleep(1.0)
+    
+    # Dar tiempo suficiente (3.0s) para que los dedos de la pinza se abran por completo
+    # antes de cerrar el socket o iniciar nuevos movimientos.
+    time.sleep(3.0)
     
     sock.close()
     print("Robot en pose HOME y conexion cerrada.")

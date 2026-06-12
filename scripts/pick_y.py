@@ -74,8 +74,8 @@ def cerrar_pinza(sock, script_pinza):
 # Ir a HOME primero
 sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
-go_home()
-time.sleep(1.0)
+go_home(y_axis=True)
+time.sleep(3.0)
 
 print(f"Conectando al robot en {HOST}:{PORT} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
