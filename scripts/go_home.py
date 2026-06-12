@@ -23,9 +23,24 @@ def go_home(y_axis=False):
     sock.connect((HOST, PORT))
     print("Conexion establecida.")
 
-    # Construir programa URScript
-    q_str = "[" + ", ".join(str(x) for x in config) + "]"
-    program = f"def home():\n  movej({q_str}, a={ACC}, v={VEL})\nend\nhome()\n"
+    # Construir programa URScript con preservacion de compensacion de 180 grados en joint 6
+    target_j6 = config[5]
+    program = (
+        "def home():\n"
+        "  q_act = get_actual_joint_positions()\n"
+        f"  diff = q_act[5] - {target_j6}\n"
+        "  diff_norm = (diff + 3.14159265) % 6.2831853 - 3.14159265\n"
+        "  if (diff_norm > 1.570796):\n"
+        "    j6_offset = 3.14159265\n"
+        "  elif (diff_norm < -1.570796):\n"
+        "    j6_offset = -3.14159265\n"
+        "  else:\n"
+        "    j6_offset = 0.0\n"
+        "  end\n"
+        f"  movej([{config[0]}, {config[1]}, {config[2]}, {config[3]}, {config[4]}, {target_j6} + j6_offset], a={ACC}, v={VEL})\n"
+        "end\n"
+        "home()\n"
+    )
     
     print("Moviendo a la pose HOME de forma suave...")
     print(program)
