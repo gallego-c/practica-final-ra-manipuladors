@@ -130,13 +130,13 @@ def build_program(path, a, v, r):
     """Construye UN unico programa URScript con todos los movej encadenados.
 
     Todos los puntos se encolan y se mezclan (blend) sin parar en cada
-    waypoint -> movimiento fluido, sin saltarse configuraciones. El ultimo
-    punto va con r=0 para terminar exactamente en su meta.
+    waypoint -> movimiento fluido, sin saltarse configuraciones. El primer y ultimo
+    punto van con r=0 para terminar y empezar exactamente desde su meta de reposo.
     """
     lines = ["def trayectoria():"]
     n = len(path)
     for i, q in enumerate(path):
-        blend = 0.0 if i == n - 1 else r
+        blend = 0.0 if (i == 0 or i == n - 1) else r
         q_str = "[" + ", ".join(str(x) for x in q) + "]"
         lines.append(f"  movej({q_str}, a={a}, v={v}, r={blend})")
     lines.append("end")
@@ -166,6 +166,8 @@ def send_trajectory(path, sock, a, v, r, label=""):
 # 1. Ir a HOME primero (primera posición de la trayectoria de tilt_x)
 sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
+go_home()
+time.sleep(1.0)
 
 # Conexion por socket al controlador
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

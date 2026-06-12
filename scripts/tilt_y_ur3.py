@@ -189,13 +189,13 @@ def build_program(path, a, v, r):
     """Construye UN unico programa URScript con todos los movej encadenados.
 
     Todos los puntos se encolan y se mezclan (blend) sin parar en cada
-    waypoint -> movimiento fluido, sin saltarse configuraciones. El ultimo
-    punto va con r=0 para terminar exactamente en su meta.
+    waypoint -> movimiento fluido, sin saltarse configuraciones. El primer y ultimo
+    punto van con r=0 para terminar y empezar exactamente desde su meta de reposo.
     """
     lines = ["def trayectoria():"]
     n = len(path)
     for i, q in enumerate(path):
-        blend = 0.0 if i == n - 1 else r
+        blend = 0.0 if (i == 0 or i == n - 1) else r
         q_str = "[" + ", ".join(str(x) for x in q) + "]"
         lines.append(f"  movej({q_str}, a={a}, v={v}, r={blend})")
     lines.append("end")
