@@ -205,15 +205,8 @@ def build_program(path, a, v, r):
     
     # 2. Calculamos la diferencia entre la j6 actual y la j6 del primer punto
     target_j6 = path[0][5]
-    lines.append(f"  diff = q_act[5] - {target_j6}")
-    lines.append("  diff_norm = (diff + 3.14159265) % 6.2831853 - 3.14159265")
-    lines.append("  if (diff_norm > 1.570796):")
-    lines.append("    j6_offset = 3.14159265")
-    lines.append("  elif (diff_norm < -1.570796):")
-    lines.append("    j6_offset = -3.14159265")
-    lines.append("  else:")
-    lines.append("    j6_offset = 0.0")
-    lines.append("  end")
+    lines.append(f"  target_j6 = {target_j6}")
+    lines.append("  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265")
     
     # 3. Sumar j6_offset a joint 6
     n = len(path)
@@ -275,16 +268,9 @@ config_1 = [-0.314683, -1.270248, 2.515198, -1.163610, -0.280125, -3.258362]
 prog_1 = (
     "def step1():\n"
     "  q_act = get_actual_joint_positions()\n"
-    f"  diff = q_act[5] - {config_1[5]}\n"
-    "  diff_norm = (diff + 3.14159265) % 6.2831853 - 3.14159265\n"
-    "  if (diff_norm > 1.570796):\n"
-    "    j6_offset = 3.14159265\n"
-    "  elif (diff_norm < -1.570796):\n"
-    "    j6_offset = -3.14159265\n"
-    "  else:\n"
-    "    j6_offset = 0.0\n"
-    "  end\n"
-    f"  movej([{config_1[0]}, {config_1[1]}, {config_1[2]}, {config_1[3]}, {config_1[4]}, {config_1[5]} + j6_offset], a={ACC}, v={VEL})\n"
+    f"  target_j6 = {config_1[5]}\n"
+    "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
+    f"  movej([{config_1[0]}, {config_1[1]}, {config_1[2]}, {config_1[3]}, {config_1[4]}, target_j6 + j6_offset], a={ACC}, v={VEL})\n"
     "end\n"
     "step1()\n"
 )
@@ -296,16 +282,9 @@ config_2 = [-0.314857, -1.182637, 2.526192, -1.263441, -0.280125, -3.257140]
 prog_2 = (
     "def step2():\n"
     "  q_act = get_actual_joint_positions()\n"
-    f"  diff = q_act[5] - {config_2[5]}\n"
-    "  diff_norm = (diff + 3.14159265) % 6.2831853 - 3.14159265\n"
-    "  if (diff_norm > 1.570796):\n"
-    "    j6_offset = 3.14159265\n"
-    "  elif (diff_norm < -1.570796):\n"
-    "    j6_offset = -3.14159265\n"
-    "  else:\n"
-    "    j6_offset = 0.0\n"
-    "  end\n"
-    f"  movej([{config_2[0]}, {config_2[1]}, {config_2[2]}, {config_2[3]}, {config_2[4]}, {config_2[5]} + j6_offset], a={ACC}, v={VEL})\n"
+    f"  target_j6 = {config_2[5]}\n"
+    "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
+    f"  movej([{config_2[0]}, {config_2[1]}, {config_2[2]}, {config_2[3]}, {config_2[4]}, target_j6 + j6_offset], a={ACC}, v={VEL})\n"
     "end\n"
     "step2()\n"
 )

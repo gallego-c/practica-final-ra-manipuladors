@@ -51,11 +51,13 @@ def build_program(path, a, v, r):
     if len(path) > 0:
         target_j6 = path[0][5]
         lines.append("  q_act = get_actual_joint_positions()")
-        lines.append(f"  movej([q_act[0], q_act[1], q_act[2], q_act[3], q_act[4], {target_j6}], a={a}, v={v})")
+        lines.append(f"  target_j6 = {target_j6}")
+        lines.append("  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265")
+        lines.append("  movej([q_act[0], q_act[1], q_act[2], q_act[3], q_act[4], target_j6 + j6_offset], a={a}, v={v})")
     n = len(path)
     for i, q in enumerate(path):
         blend = 0.0 if i == n - 1 else r
-        q_str = "[" + ", ".join(str(x) for x in q) + "]"
+        q_str = f"[{q[0]}, {q[1]}, {q[2]}, {q[3]}, {q[4]}, {q[5]} + j6_offset]"
         lines.append(f"  movej({q_str}, a={a}, v={v}, r={blend})")
     lines.append("end")
     lines.append("trayectoria()")
