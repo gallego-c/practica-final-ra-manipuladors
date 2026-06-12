@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<Problem name="UR3_Rubik_Solver">
+
+	<!-- Robot: UR3 with Robotiq 85 Gripper -->
+	<!-- Platform: 61 cm (Y) x 36.5 cm (X). Robot at upper-right corner.        -->
+	<!--   Measurements are to the robot base PERIMETER (not center):            -->
+	<!--   23 cm from short edge + 64 mm radius → center X = 0.294 m            -->
+	<!--   47.5 cm from long end + 64 mm radius → center Y = 0.539 m            -->
+	<!--   UR3 base diameter = 128 mm → radius = 64 mm                          -->
+	<!-- TH=π: UR3 URDF +Y extends in world -Y, pointing toward cube (lower-left). -->
+	<!-- FK offset (-0.187, -0.399) from center places fixture at (0.1055, 0.1385).-->
+	<!-- Z: 0.0 because long gripper is now kinematics-modeled in the robot URDF. -->
+	<Robot robot="ur3_robotiq_85_gripper_long.urdf" scale="1.0">
+		<KauthamName name="ur3_right"/>
+		<Home TH="3.14159265" WZ="1.0" WY="0.0" WX="0.0" Z="0.0" Y="0.539" X="0.294" />
+		<ViewLink name="robotiq_85_base_link"/>
+	</Robot>
+
+	<!-- Table base obstacle -->
+	<!-- Z=-0.01 = Real chessboard table base height (restored from Z=-0.08)    -->
+	<Obstacle obstacle="./obstacles/chess/flat_chessboard/flat_chessboard.urdf" scale="1.0">
+		<KauthamName name="table_base"/>
+		<Home TH="1.570796327" WZ="1.0" WY="0.0" WX="0.0" Z="-0.01" Y="0.0" X="0.0" />
+	</Obstacle>
+
+	<!-- Square Fixture (holds the cube) -->
+	<!-- Real dimensions: 5.8 x 7.8 x 16.5 cm. Center Z = 16.5/2 = 8.25 cm    -->
+	<!-- Z restored to real Z height (0.0825 m) from shifted Z=0.0125           -->
+	<Obstacle obstacle="square_fixture_new.urdf" scale="1.0">
+		<KauthamName name="square_fixture"/>
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.0825" Y="0.15" X="0.107" />
+	</Obstacle>
+
+	<!-- 2x2 Rubik's Cube: commented → attached to robot during Transfer, not a static obstacle -->
+	<!-- Descomentar para planificar Transit (pick/place) donde el cubo sí es obstáculo  -->
+	<!-- Z restored to real Z height (0.177 m) from shifted Z=0.107              -->
+	<!-- <Obstacle obstacle="rubik_cube_new.urdf" scale="1.0">
+		<KauthamName name="rubik_cube"/>
+		<Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.177" Y="0.152" X="0.107" />
+	</Obstacle> -->
+
+	<!-- Controls: right_ur3_with_gripper.cntr → todos los joints libres (7 DOFs) -->
+	<Controls robot="./controls/right_ur3_with_gripper.cntr"/>
+
+	<Planner>
+		<Parameters>
+			<Name>omplRRTConnect</Name>
+			<Parameter name="_Cspace Drawn">0</Parameter>
+			<Parameter name="_Incremental (0/1)">0</Parameter>
+			<Parameter name="_Max Planning Time">10</Parameter>
+			<Parameter name="_Path Drawn (0/1)">1</Parameter>
+			<Parameter name="_Simplify Solution">2</Parameter>
+			<Parameter name="_Speed Factor">5</Parameter>
+			<Parameter name="Range">0.05</Parameter>
+		</Parameters>
+		<Queries>
+			<!-- Query de referencia: HOME → IDLE_X                                     -->
+			<!-- init = HOME (todos joints al centro)                                   -->
+			<!-- goal = IDLE_X: [48.42,-60.95,47.99,-77.8,-90.05,226.39] deg           -->
+			<!--   j1=0.5673 j2=0.4153 j3=0.6333 j4=0.3919 j5=0.3749 j6=0.8144       -->
+			<!-- Configs útiles para tests:                                             -->
+			<!--   IDLE_X      j1=0.5673 j2=0.4153 j3=0.6333 j4=0.3919 j5=0.3749 j6=0.8144 g=0.680 -->
+			<!--   IDLE_X_LIFT j1=0.5672 j2=0.4214 j3=0.5854 j4=0.4098 j5=0.3749 j6=0.8144 g=0.680 -->
+			<!--   IDLE_Y      j1=0.5673 j2=0.4153 j3=0.6333 j4=0.3919 j5=0.3749 j6=0.6894 g=0.680 -->
+			<!--   IDLE_Y_LIFT j1=0.5672 j2=0.4214 j3=0.5854 j4=0.4098 j5=0.3749 j6=0.6894 g=0.680 -->
+			<!--   TILT_X_LIFT j1=0.6279 j2=0.4380 j3=0.7507 j4=0.3432 j5=0.2537 j6=0.6520 g=0.680 -->
+			<!--   TILT_X      j1=0.6279 j2=0.4575 j3=0.7507 j4=0.3364 j5=0.2536 j6=0.6526 g=0.680 -->
+			<!--   TILT_Y_LIFT j1=0.4697 j2=0.3873 j3=0.8960 j4=0.4233 j5=0.4693 j6=0.7728 g=0.680 -->
+			<!--   TILT_Y      j1=0.4694 j2=0.4027 j3=0.9038 j4=0.3972 j5=0.4693 j6=0.7731 g=0.680 -->
+			<!-- TEST Transfer: IDLE_X_LIFT → TILT_Y_LIFT (tilt_y, holding-x)               -->
+			<!-- init = IDLE_X_LIFT: [48.41,-56.6,30.75,-64.91,-90.06,226.35]             -->
+			<!-- goal = TILT_Y_LIFT: [-20.19,-80.12,143.27,-59.15,-18.08,176.40]          -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" 	init="0.5672" goal="0.4719"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" 	init="0.4214" goal="0.3888"/>
+				<RobotControl name="ur3_right_elbow_joint" 			init="0.5854" goal="0.8980"/>
+				<RobotControl name="ur3_right_wrist_1_joint" 		init="0.4098" goal="0.4178"/>
+				<RobotControl name="ur3_right_wrist_2_joint" 		init="0.3749" goal="0.4749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" 		init="0.8144" goal="0.7450"/>
+				<RobotControl name="ur3_right_gripper_joint" 		init="0.680"  goal="0.680"/>
+			</Query>
+		</Queries>
+	</Planner>
+
+</Problem>

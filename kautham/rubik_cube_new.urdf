@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot name="rubik_cube_2x2">
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <!-- A standard 2x2 Rubik's cube has a side length of 5.0 cm (0.05 m) -->
+        <box size="0.05 0.05 0.05" />
+      </geometry>
+      <!-- Matte black/dark gray body texture -->
+      <material name="matte_black">
+        <color rgba="0.12 0.12 0.12 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <!-- Slightly smaller collision size (4.8 cm) to provide 1mm padding margin -->
+        <box size="0.048 0.048 0.048" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

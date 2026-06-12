@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!--
+  ur3_tilt_y_transfer_real.xml
+  Kautham scene for planning the tilt Transfer with real Z heights:
+    IDLE_X_LIFT → TILT_X_LIFT  (cube attached to gripper, static for collision check)
+-->
+<Problem name="UR3_TiltY_Transfer">
+
+  <Robot robot="ur3_robotiq_85_gripper_long.urdf" scale="1.0">
+    <KauthamName name="ur3_right"/>
+    <Home TH="3.14159265" WZ="1.0" WY="0.0" WX="0.0" Z="0.0" Y="0.539" X="0.294" />
+    <ViewLink name="robotiq_85_base_link"/>
+  </Robot>
+
+  <!-- Table -->
+  <Obstacle obstacle="./obstacles/chess/flat_chessboard/flat_chessboard.urdf" scale="1.0">
+    <KauthamName name="table_base"/>
+    <Home TH="1.570796327" WZ="1.0" WY="0.0" WX="0.0" Z="-0.01" Y="0.0" X="0.0" />
+  </Obstacle>
+
+  <!-- Fixture: 5.8x7.8x16.5 cm, center Z = 0.0825 -->
+  <Obstacle obstacle="square_fixture_new.urdf" scale="1.0">
+    <KauthamName name="square_fixture"/>
+    <Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.0825" Y="0.152" X="0.107" />
+  </Obstacle>
+
+  <!-- Cube commented out: attached to gripper during Transfer, not a static obstacle -->
+  <!-- <Obstacle obstacle="rubik_cube_new.urdf" scale="1.0">
+    <KauthamName name="rubik_cube"/>
+    <Home TH="0.0" WZ="1.0" WY="0.0" WX="0.0" Z="0.117" Y="0.152" X="0.107" />
+  </Obstacle> -->
+
+  <!-- Todos los joints libres (7 DOFs) — j6 cambia naturalmente durante el tilt -->
+  <Controls robot="./controls/right_ur3_with_gripper.cntr"/>
+
+  <Planner>
+    <Parameters>
+      <Name>omplRRTConnect</Name>
+      <Parameter name="_Cspace Drawn">0</Parameter>
+      <Parameter name="_Incremental (0/1)">0</Parameter>
+      <Parameter name="_Max Planning Time">30</Parameter>
+      <Parameter name="_Path Drawn (0/1)">1</Parameter>
+      <Parameter name="_Simplify Solution">2</Parameter>
+      <Parameter name="_Speed Factor">5</Parameter>
+      <Parameter name="Range">0.05</Parameter>
+    </Parameters>
+    <Queries>
+      <!-- Transfer: IDLE_X_LIFT → TILT_X_LIFT (j6 libre, cambia 226°→109°) -->
+      <!-- IDLE_X_LIFT [48.41,-56.6,30.75,-64.91,-90.06,226.35] deg        -->
+      <!-- TILT_X_LIFT [92.12,-44.61,90.25,-112.88,-177.36,109.42] deg     -->
+      <Query>
+        <RobotControl name="ur3_right_shoulder_pan_joint"  init="0.5672" goal="0.6279"/>
+        <RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4380"/>
+        <RobotControl name="ur3_right_elbow_joint"         init="0.5854" goal="0.7507"/>
+        <RobotControl name="ur3_right_wrist_1_joint"       init="0.4098" goal="0.3432"/>
+        <RobotControl name="ur3_right_wrist_2_joint"       init="0.3749" goal="0.2537"/>
+        <RobotControl name="ur3_right_wrist_3_joint"       init="0.5633" goal="0.6520"/>
+        <RobotControl name="ur3_right_gripper_joint"       init="0.680"  goal="0.680"/>
+      </Query>
+    </Queries>
+  </Planner>
+
+</Problem>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot name="square_fixture">
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <!-- Real dimensions: 5.8 cm (X) x 7.8 cm (Y) x 16.5 cm tall -->
+        <box size="0.058 0.078 0.165" />
+      </geometry>
+      <material name="aluminum_gray">
+        <color rgba="0.65 0.65 0.68 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <!-- Shifted down by 0.0065m to make top surface match the bottom of the pocket -->
+      <!-- Height reduced to 15.2 cm (16.5 - 1.3) to prevent collision with the cube in the pocket -->
+      <origin xyz="0 0 -0.0065" rpy="0 0 0" />
+      <geometry>
+        <box size="0.058 0.078 0.152" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

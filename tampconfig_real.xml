@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+  tampconfig_real.xml  —  ktmpb TAMP configuration for the UR3 + Robotiq 85
+  2x2 Rubik's cube scenario using the kinematics-corrected real scene.
+-->
+<Config>
+
+    <Problemfiles>
+        <kautham    name="ur3_rubik_kautham_real.xml" />
+        <pddldomain name="ff-domains/manipulation_domain.pddl" />
+        <pddlproblem name="ff-domains/manipulation_problem.pddl" />
+    </Problemfiles>
+
+    <States>
+        <Initial>
+            <!-- Cube pose: X Y Z  vx vy vz theta  (axis-angle, like Kautham problem files) -->
+            <!-- Z restored to real coordinates (0.046 + 0.07 = 0.116 m) -->
+            <Object name="RUBIK" kthname="rubik_cube"> 0.0 0.4 0.116 0.0 0.0 1.0 0.0 </Object>
+            <!-- UR3 home configuration (normalized controls) -->
+            <Robot name="UR3A" controlfile="controls/right_ur3_with_gripper.cntr">
+                0.500 0.375 0.500 0.375 0.500 0.500 0.500
+            </Robot>
+        </Initial>
+    </States>
+
+    <Actions>
+
+        <!-- ================= STANDARD pick / place ================= -->
+        <Pick robot="UR3A" object="RUBIK" region="FIXTURE">
+            <Rob> ur3_right </Rob>
+            <Obj> rubik_cube </Obj>
+            <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <HomeControls> 0.500 0.375 0.500 0.375 0.500 0.500 0.500 </HomeControls>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+        </Pick>
+
+        <Place robot="UR3A" object="RUBIK" region="FIXTURE">
+            <Rob> ur3_right </Rob>
+            <Obj> rubik_cube </Obj>
+            <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <HomeControls> 0.500 0.375 0.500 0.375 0.500 0.500 0.500 </HomeControls>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+        </Place>
+
+        <!-- ================= CUSTOM: whole-cube tilts ================= -->
+        <Tilt robot="UR3A" object="RUBIK" axis="x" sign="pos">
+            <Rob> ur3_right </Rob>
+            <Obj> rubik_cube </Obj>
+            <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+            <LiftControls> 0.545 0.300 0.650 0.280 0.375 0.425 0.680 </LiftControls>
+            <PeakControls> 0.545 0.220 0.750 0.180 0.375 0.425 0.680 </PeakControls>
+        </Tilt>
+        <Tilt robot="UR3A" object="RUBIK" axis="x" sign="neg">
+            <Rob> ur3_right </Rob> <Obj> rubik_cube </Obj> <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+            <LiftControls> 0.545 0.300 0.650 0.280 0.375 0.425 0.680 </LiftControls>
+            <PeakControls> 0.545 0.440 0.600 0.430 0.375 0.425 0.680 </PeakControls>
+        </Tilt>
+        <Tilt robot="UR3A" object="RUBIK" axis="y" sign="pos">
+            <Rob> ur3_right </Rob> <Obj> rubik_cube </Obj> <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+            <LiftControls> 0.545 0.300 0.650 0.280 0.375 0.425 0.680 </LiftControls>
+            <PeakControls> 0.620 0.300 0.700 0.280 0.400 0.425 0.680 </PeakControls>
+        </Tilt>
+        <Tilt robot="UR3A" object="RUBIK" axis="y" sign="neg">
+            <Rob> ur3_right </Rob> <Obj> rubik_cube </Obj> <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+            <LiftControls> 0.545 0.300 0.650 0.280 0.375 0.425 0.680 </LiftControls>
+            <PeakControls> 0.470 0.300 0.700 0.280 0.350 0.425 0.680 </PeakControls>
+        </Tilt>
+
+        <!-- ================= CUSTOM: top-layer wrist turn ================= -->
+        <Rotate robot="UR3A" object="RUBIK" dir="cw">
+            <Rob> ur3_right </Rob> <Obj> rubik_cube </Obj> <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+            <PeakControls> 0.545 0.380 0.835 0.327 0.375 0.675 0.680 </PeakControls>
+        </Rotate>
+        <Rotate robot="UR3A" object="RUBIK" dir="ccw">
+            <Rob> ur3_right </Rob> <Obj> rubik_cube </Obj> <Link> robotiq_85_base_link </Link>
+            <Cont>controls/right_ur3_with_gripper.cntr</Cont>
+            <GraspControls grasp="1"> 0.545 0.380 0.835 0.327 0.375 0.425 0.680 </GraspControls>
+            <PeakControls> 0.545 0.380 0.835 0.327 0.375 0.175 0.680 </PeakControls>
+        </Rotate>
+
+    </Actions>
+</Config>

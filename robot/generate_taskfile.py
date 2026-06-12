@@ -143,7 +143,7 @@ GRASP      = IDLE_X
 # XY: robot centro (0.294, 0.539) + offset FK (-0.187, -0.399) = (0.107, 0.140)
 #   Centro robot = perimetro + radio UR3 (64 mm): 0.23+0.064=0.294, 0.475+0.064=0.539
 # Z  = fixture_height - pocket_depth + cube_half = 0.165 - 0.013 + 0.025 = 0.177 m
-CUBE_INITIAL_POSE = "0.107 0.148 0.107 0.0 0.0 0.0 1.0"
+CUBE_INITIAL_POSE = "0.107 0.148 0.177 0.0 0.0 0.0 1.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GENERADOR TAMP DE TASKFILE
@@ -153,8 +153,8 @@ class RRTTaskfileGenerator(Node):
     def __init__(self):
         super().__init__("rrt_taskfile_generator")
         
-        # 1. Abrir escena del problema en Kautham
-        kautham_problem = os.path.join(_REPO_ROOT, "kautham", "ur3_rubik_kautham.xml")
+        # 1. Abrir escena del problema en Kautham (usando el modelo real de pinza larga y sin offset de base)
+        kautham_problem = os.path.join(_REPO_ROOT, "kautham", "ur3_rubik_kautham_real.xml")
         model_folders = [
             "/usr/share/kautham/demos/models/",
             "/home/barrendeiro/robotica/cub/kautham/",
