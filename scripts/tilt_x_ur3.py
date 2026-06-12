@@ -193,7 +193,7 @@ time.sleep(1.0)
 print("Abriendo pinza...")
 with open(ABRIR_PINZA, "rb") as f:
     sock.sendall(f.read())
-time.sleep(1.0)
+time.sleep(3.0)
 
 # Vuelta: misma trayectoria invertida -> regresa exactamente a la pose inicial
 send_trajectory(path[::-1], sock, ACC, VEL, BLEND, "Vuelta")

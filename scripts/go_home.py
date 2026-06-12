@@ -34,18 +34,6 @@ def go_home(y_axis=False):
     # Esperar lo suficiente para que el movimiento termine por completo
     time.sleep(8.0)
     
-    # IMPORTANTE: Enviar el script de la pinza para inicializar y mantener el bus de campo activo
-    import os
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    PINZA_SCRIPT = os.path.join(SCRIPT_DIR, "gripper", "pinza40UR3.py")
-    print("Inicializando la pinza para mantener el bus de campo activo...")
-    with open(PINZA_SCRIPT, "rb") as f:
-        sock.sendall(f.read())
-    
-    # Dar tiempo suficiente (3.0s) para que los dedos de la pinza se abran por completo
-    # antes de cerrar el socket o iniciar nuevos movimientos.
-    time.sleep(3.0)
-    
     sock.close()
     print("Robot en pose HOME y conexion cerrada.")
 
