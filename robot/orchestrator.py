@@ -44,11 +44,14 @@ def generate_execution_script(manipulation_plan, output_file=None):
         output_file = os.path.join(robot_dir, 'execute_plan.py')
         
     # Construir la lista de tuplas (acción_pddl, nombre_modulo)
-    steps = []
+    steps = [('place', 'place')]
     for action in manipulation_plan:
         module_name = get_script_for_action(action)
         if module_name is None:
             print(f"[Orchestrator] Warning: Acción PDDL '{action}' no tiene script asignado. Saltando.")
+            continue
+        # Si el plan ya empieza por place, no lo duplicamos
+        if len(steps) == 1 and module_name == 'place':
             continue
         steps.append((action, module_name))
         

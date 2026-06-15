@@ -16,6 +16,7 @@ if SCRIPTS_PATH not in sys.path:
 
 # Lista secuencial de acciones generada del plan PDDL
 PLAN_ACTIONS = [
+    ('place', 'place'),
     ('pick_y', 'pick_y'),
     ('tilt_y', 'tilt_y_ur3'),
     ('pick_x', 'pick_x'),
