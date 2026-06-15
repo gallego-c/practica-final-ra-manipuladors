@@ -329,7 +329,7 @@ def pinza10UR3():
   exit_critical
   end 
   def on_set_rtde_watchdog(updateHz=ON_INIT_WATCHDOG_HZ):
-  local effect="stop"
+  local effect="ignore"
   if(updateHz<1):
   effect="ignore"
   end 
