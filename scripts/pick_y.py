@@ -62,10 +62,37 @@ def build_program(path, a, v, r):
     return "\n".join(lines) + "\n"
 
 
-def cerrar_pinza(sock, script_pinza):
-    """Envia el contenido completo del script del URCap de la pinza."""
-    with open(script_pinza, "rb") as f:
-        sock.sendall(f.read())
+def mover_y_cerrar_pinza(sock, script_pinza, pick_config, a, v):
+    """Combina el movimiento y la activacion de la pinza en un unico URScript."""
+    with open(script_pinza, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Buscar el bucle principal 'while (True):' al final del script
+    idx = content.rfind("while (True):")
+    if idx == -1:
+        raise ValueError("No se pudo encontrar 'while (True):' en el script de la pinza.")
+
+    # Obtener el inicio de linea para mantener la indentacion
+    line_start = content.rfind("\n", 0, idx) + 1
+    indent = content[line_start:idx]
+
+    target_j6 = pick_config[5]
+    pick_config_str = "[" + ", ".join(str(x) for x in pick_config) + "]"
+
+    movement_lines = [
+        "# --- Movimiento a pose de pick (evitando colision en j6) ---",
+        "q_act = get_actual_joint_positions()",
+        f"movej([q_act[0], q_act[1], q_act[2], q_act[3], q_act[4], {target_j6}], a={a}, v={v})",
+        f"movej({pick_config_str}, a={a}, v={v})",
+        "# -----------------------------------------------------------",
+        "while (True):"
+    ]
+    
+    movement_code = "\n".join(indent + line for line in movement_lines)
+    combined = content[:line_start] + movement_code + content[idx + len("while (True):"):]
+    
+    print("Enviando script combinado (movimiento + pinza)...")
+    sock.sendall(combined.encode("utf-8"))
 
 
 # ---------------------------------------------------------------------------
@@ -82,19 +109,15 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((HOST, PORT))
 print("Conexion establecida.")
 
-# 1. Mover a la configuracion de pick
-print("Moviendo a la pose de pick...")
-program = build_program([pick_config], ACC, VEL, BLEND)
-print(program)
-sock.send(program.encode())
-time.sleep(ESPERA_MOV)
+# Ejecutar movimiento y pinza en un solo programa
+mover_y_cerrar_pinza(sock, CERRAR_PINZA, pick_config, ACC, VEL)
 
-# 2. Cerrar la pinza (agarrar)
-print("Cerrando pinza...")
-cerrar_pinza(sock, CERRAR_PINZA)
-time.sleep(ESPERA_PINZA)
+# Esperar a que terminen ambas acciones (movimiento + cerrado)
+print("Esperando a que finalice el movimiento y agarre...")
+time.sleep(ESPERA_MOV + ESPERA_PINZA)
 
 print("Pick finalizado.")
 
 # Cerrar la conexion
 sock.close()
+
