@@ -100,7 +100,7 @@ def pinza10UR3():
   on_dataProcess_thrd=0
   ON_DEVICE_ID_MISSING=0
   ON_INIT_WATCHDOG_HZ=5
-  ON_INIT_TIMEOUT=500
+  ON_INIT_TIMEOUT=3000
   on_robot_TCP_offset=ON_ZEROFRAME
   on_tcp_offset_actual=ON_ZEROFRAME
   on_cog_actual=ON_ZEROFRAME
