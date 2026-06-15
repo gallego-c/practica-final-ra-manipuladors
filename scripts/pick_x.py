@@ -77,14 +77,15 @@ def mover_y_cerrar_pinza(sock, script_pinza, pick_config, a, v):
     indent = content[line_start:idx]
 
     target_j6 = pick_config[5]
-    pick_config_str = "[" + ", ".join(str(x) for x in pick_config) + "]"
 
     movement_lines = [
-        "# --- Movimiento a pose de pick (evitando colision en j6) ---",
+        "# --- Movimiento a pose de pick (evitando colision y giros inecesarios en j6) ---",
         "q_act = get_actual_joint_positions()",
-        f"movej([q_act[0], q_act[1], q_act[2], q_act[3], q_act[4], {target_j6}], a={a}, v={v})",
-        f"movej({pick_config_str}, a={a}, v={v})",
-        "# -----------------------------------------------------------",
+        f"target_j6 = {target_j6}",
+        "j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265",
+        f"movej([q_act[0], q_act[1], q_act[2], q_act[3], q_act[4], target_j6 + j6_offset], a={a}, v={v})",
+        f"movej([{pick_config[0]}, {pick_config[1]}, {pick_config[2]}, {pick_config[3]}, {pick_config[4]}, target_j6 + j6_offset], a={a}, v={v})",
+        "# --------------------------------------------------------------------------------",
         "while (True):"
     ]
     
