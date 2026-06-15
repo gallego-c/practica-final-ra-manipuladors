@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 execute_plan.py - Script de ejecución autogenerado para el robot UR3.
-Generado el: 2026-06-15 12:36:58
+Generado el: 2026-06-15 13:29:57
 """
 import sys
 import os
@@ -17,17 +17,20 @@ if SCRIPTS_PATH not in sys.path:
 # Lista secuencial de acciones generada del plan PDDL
 PLAN_ACTIONS = [
     ('place', 'place'),
+    ('pick_x', 'pick_x'),
+    ('tilt_x', 'tilt_x_ur3'),
+    ('pick_x', 'pick_x'),
+    ('execute_l2', 'turn_180'),
+    ('tilt_x', 'tilt_x_ur3'),
+    ('pick_x', 'pick_x'),
+    ('tilt_x', 'tilt_x_ur3'),
     ('pick_y', 'pick_y'),
     ('tilt_y', 'tilt_y_ur3'),
-    ('pick_x', 'pick_x'),
-    ('tilt_x', 'tilt_x_ur3'),
-    ('pick_x', 'pick_x'),
-    ('tilt_x', 'tilt_x_ur3'),
-    ('pick_x', 'pick_x'),
-    ('execute_b', 'turn_clockwise'),
+    ('pick_y', 'pick_y'),
+    ('execute_f2', 'turn_180'),
     ('tilt_y', 'tilt_y_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_d', 'turn_clockwise'),
+    ('execute_l_prime', 'turn_counterclockwise'),
     ('tilt_y', 'tilt_y_ur3')
 ]
 

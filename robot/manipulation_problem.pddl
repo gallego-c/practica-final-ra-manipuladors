@@ -23,9 +23,9 @@
     (current-step step1)
 
     (next-step step1 step2)
-    (step-type-B step1)
+    (step-type-L step1)
     (next-step step2 step3)
-    (step-type-D step2)
+    (step-type-B step2)
   )
   (:goal (and
     (step-completed step1)
