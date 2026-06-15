@@ -12,6 +12,8 @@ ACTION_MAPPING = {
     'pick_y': 'pick_y',
     'place': 'place',
     'change_pick': 'turn_90_regrasp',
+    'tilt_x': 'tilt_x_ur3',
+    'tilt_y': 'tilt_y_ur3',
     'tilt_x_pos': 'tilt_x_ur3',
     'tilt_x_neg': 'tilt_x_ur3',
     'tilt_y_pos': 'tilt_y_ur3',

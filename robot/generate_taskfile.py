@@ -325,7 +325,7 @@ class RRTTaskfileGenerator(Node):
             #      la interpolación lineal en espacio de joints es suficiente.
             # El Transit de vuelta (TILT_X_open → HOME) sí usa RRT porque el cubo
             # ya no está adjunto y el brazo necesita evitar el fixture.
-            elif action in ('tilt_x_pos', 'tilt_x_neg'):
+            elif action in ('tilt_x_pos', 'tilt_x_neg', 'tilt_x'):
                 idle_lift  = IDLE_Y_LIFT
                 tilt_lift  = TILT_X_LIFT
                 tilt_place = TILT_X
@@ -349,7 +349,7 @@ class RRTTaskfileGenerator(Node):
             # ── tilt_y_pos/neg: volcar alrededor del eje Y ───────────────────────
             # Precondición PDDL: holding-x → el brazo está en IDLE_X
             # Misma lógica de interpolación que tilt_x.
-            elif action in ('tilt_y_pos', 'tilt_y_neg'):
+            elif action in ('tilt_y_pos', 'tilt_y_neg', 'tilt_y'):
                 idle_lift  = IDLE_X_LIFT
                 tilt_lift  = TILT_Y_LIFT
                 tilt_place = TILT_Y

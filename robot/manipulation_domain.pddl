@@ -92,72 +92,9 @@
   )
 
   ;; -----------------------------------------------------------
-  ;; TILT_X_POS (+90° around X: Front→Top, Down→Front, Back→Down, Top→Back)
+  ;; TILT_X (Left→Top, Top→Right, Right→Bottom, Bottom→Left)
   ;; -----------------------------------------------------------
-  (:action tilt_x_pos
-    :parameters ()
-    :precondition (holding-y)
-    :effect (and
-      (cube-on-fixture)
-      (not (robot-holding))
-      (not (holding-y))
-      (forall (?f - face)
-        (and
-          (when (front-face ?f) (and (top-face ?f) (not (front-face ?f))))
-          (when (top-face ?f) (and (back-face ?f) (not (top-face ?f))))
-          (when (back-face ?f) (and (bottom-face ?f) (not (back-face ?f))))
-          (when (bottom-face ?f) (and (front-face ?f) (not (bottom-face ?f))))
-        )
-      )
-    )
-  )
-
-  ;; -----------------------------------------------------------
-  ;; TILT_X_NEG (-90° around X: Back→Top, Top→Front, Front→Down, Down→Back)
-  ;; -----------------------------------------------------------
-  (:action tilt_x_neg
-    :parameters ()
-    :precondition (holding-y)
-    :effect (and
-      (cube-on-fixture)
-      (not (robot-holding))
-      (not (holding-y))
-      (forall (?f - face)
-        (and
-          (when (back-face ?f) (and (top-face ?f) (not (back-face ?f))))
-          (when (top-face ?f) (and (front-face ?f) (not (top-face ?f))))
-          (when (front-face ?f) (and (bottom-face ?f) (not (front-face ?f))))
-          (when (bottom-face ?f) (and (back-face ?f) (not (bottom-face ?f))))
-        )
-      )
-    )
-  )
-
-  ;; -----------------------------------------------------------
-  ;; TILT_Y_POS (+90° around Y: Right→Top, Top→Left, Left→Down, Down→Right)
-  ;; -----------------------------------------------------------
-  (:action tilt_y_pos
-    :parameters ()
-    :precondition (holding-x)
-    :effect (and
-      (cube-on-fixture)
-      (not (robot-holding))
-      (not (holding-x))
-      (forall (?f - face)
-        (and
-          (when (right-face ?f) (and (top-face ?f) (not (right-face ?f))))
-          (when (top-face ?f) (and (left-face ?f) (not (top-face ?f))))
-          (when (left-face ?f) (and (bottom-face ?f) (not (left-face ?f))))
-          (when (bottom-face ?f) (and (right-face ?f) (not (bottom-face ?f))))
-        )
-      )
-    )
-  )
-
-  ;; -----------------------------------------------------------
-  ;; TILT_Y_NEG (-90° around Y: Left→Top, Top→Right, Right→Down, Down→Left)
-  ;; -----------------------------------------------------------
-  (:action tilt_y_neg
+  (:action tilt_x
     :parameters ()
     :precondition (holding-x)
     :effect (and
@@ -170,6 +107,27 @@
           (when (top-face ?f) (and (right-face ?f) (not (top-face ?f))))
           (when (right-face ?f) (and (bottom-face ?f) (not (right-face ?f))))
           (when (bottom-face ?f) (and (left-face ?f) (not (bottom-face ?f))))
+        )
+      )
+    )
+  )
+
+  ;; -----------------------------------------------------------
+  ;; TILT_Y (Front→Top, Top→Back, Back→Bottom, Bottom→Front)
+  ;; -----------------------------------------------------------
+  (:action tilt_y
+    :parameters ()
+    :precondition (holding-y)
+    :effect (and
+      (cube-on-fixture)
+      (not (robot-holding))
+      (not (holding-y))
+      (forall (?f - face)
+        (and
+          (when (front-face ?f) (and (top-face ?f) (not (front-face ?f))))
+          (when (top-face ?f) (and (back-face ?f) (not (top-face ?f))))
+          (when (back-face ?f) (and (bottom-face ?f) (not (back-face ?f))))
+          (when (bottom-face ?f) (and (front-face ?f) (not (bottom-face ?f))))
         )
       )
     )
