@@ -13,6 +13,9 @@ print("Conexion establecida.")
 
 program = (
     "def turn():\n"
+    "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
+    "  set_tool_voltage(24)\n"
+    "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
     "  q = get_actual_joint_positions()\n"
     "  q[5] = q[5] + 1.670796  # pi/2 + 0.1\n"
     "  movej(q, a=0.5, v=0.2)\n"

@@ -27,6 +27,9 @@ def go_home(y_axis=False):
     target_j6 = config[5]
     program = (
         "def home():\n"
+        "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
+        "  set_tool_voltage(24)\n"
+        "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
         "  q_act = get_actual_joint_positions()\n"
         f"  target_j6 = {target_j6}\n"
         "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"

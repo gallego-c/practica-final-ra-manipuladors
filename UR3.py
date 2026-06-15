@@ -26,7 +26,12 @@ def send_joint_path(path, sock, acc=0.5, vel=0.5, blend=0.02, pause_after_first=
     if not path:
         return
 
-    lines = ["def traj():"]
+    lines = [
+        "def traj():",
+        "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")",
+        "  set_tool_voltage(24)",
+        "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)",
+    ]
     for i, joint_config in enumerate(path):
         if i == 0:
             lines.append(f"  movej({joint_config}, a={acc}, v={vel})")

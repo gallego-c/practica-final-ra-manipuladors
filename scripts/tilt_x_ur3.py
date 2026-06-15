@@ -133,7 +133,12 @@ def build_program(path, a, v, r):
     waypoint -> movimiento fluido, sin saltarse configuraciones. El primer y ultimo
     punto van con r=0 para terminar y empezar exactamente desde su meta de reposo.
     """
-    lines = ["def trayectoria():"]
+    lines = [
+        "def trayectoria():",
+        "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")",
+        "  set_tool_voltage(24)",
+        "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)",
+    ]
     
     # 1. Obtenemos la posicion actual del robot al iniciar
     lines.append("  q_act = get_actual_joint_positions()")
@@ -192,6 +197,9 @@ print("Moviendo a Config 1...")
 config_1 = [1.59802, -0.64001, 1.63764, -2.35759, -3.14735, 1.76592]
 prog_1 = (
     "def step1():\n"
+    "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
+    "  set_tool_voltage(24)\n"
+    "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
     "  q_act = get_actual_joint_positions()\n"
     f"  target_j6 = {config_1[5]}\n"
     "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
@@ -206,6 +214,9 @@ print("Moviendo a Config 2...")
 config_2 = [1.59802, -0.5983, 1.62979, -2.40576, -3.14753, 1.75179]
 prog_2 = (
     "def step2():\n"
+    "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
+    "  set_tool_voltage(24)\n"
+    "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
     "  q_act = get_actual_joint_positions()\n"
     f"  target_j6 = {config_2[5]}\n"
     "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
