@@ -86,7 +86,7 @@ end
         
     sock.sendall(program.encode("utf-8"))
     
-    wait_time = 10.0 if open_gripper else 8.0
+    wait_time = 5.5 if open_gripper else 4.0
     time.sleep(wait_time)
     
     sock.close()

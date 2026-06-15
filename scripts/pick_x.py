@@ -33,8 +33,8 @@ CERRAR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza10UR3.py")   # cierra a
 #   el movej termine ANTES de mandar el script de la pinza: si lo mandasemos
 #   antes, el nuevo programa interrumpiria el movimiento a medias.
 # ---------------------------------------------------------------------------
-ESPERA_MOV   = 3.0   # tiempo de sobra para llegar a la pose de pick
-ESPERA_PINZA = 2.0   # tiempo para que el agarre se complete
+ESPERA_MOV   = 2.2   # tiempo de sobra para llegar a la pose de pick
+ESPERA_PINZA = 1.2   # tiempo para que el agarre se complete
 
 pick_config = [0.84736, -1.03219, 0.81856, -1.35700, -1.57080, 0.84300]  # [48.55, -59.14, 46.90, -77.75, -90.00, 48.30] deg
 
@@ -103,7 +103,7 @@ def mover_y_cerrar_pinza(sock, script_pinza, pick_config, a, v):
 sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
 go_home(open_gripper=True)
-time.sleep(3.0)
+time.sleep(0.1)
 
 print(f"Conectando al robot en {HOST}:{PORT} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
