@@ -194,38 +194,32 @@ send_trajectory(path, sock, ACC, VEL, BLEND, "Ida")
 
 # Mover a las dos configuraciones intermedias en el extremo (con joint 6 alineado dinámicamente)
 print("Moviendo a Config 1...")
-config_1 = [1.5980234631260082, -0.6506587451434861, 1.2349949787111876, -0.9976302004399588, -3.105289805148311, 5.844409533228212]
+config_1 = [1.5980234631260082, -0.6506587451434861, 1.2349949787111876, -0.9976302004399588, -3.105289805148311, 2.70281688]
 prog_1 = (
     "def step1():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
     "  set_tool_voltage(24)\n"
     "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
-    "  q_act = get_actual_joint_positions()\n"
-    f"  target_j6 = {config_1[5]}\n"
-    "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
-    f"  movej([{config_1[0]}, {config_1[1]}, {config_1[2]}, {config_1[3]}, {config_1[4]}, target_j6 + j6_offset], a={ACC}, v={VEL})\n"
+    f"  movej({config_1}, a={ACC}, v={VEL})\n"
     "end\n"
     "step1()\n"
 )
 sock.sendall(prog_1.encode())
-time.sleep(1.0)
+time.sleep(3.0)
 
 print("Moviendo a Config 2...")
-config_2 = [1.5980234631260082, -0.6126105674500097, 1.2383111042899768, -1.033583983031042, -3.105289805148311, 5.8498200539093945]
+config_2 = [1.5980234631260082, -0.6126105674500097, 1.2383111042899768, -1.033583983031042, -3.105289805148311, 2.7082270]
 prog_2 = (
     "def step2():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
     "  set_tool_voltage(24)\n"
     "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
-    "  q_act = get_actual_joint_positions()\n"
-    f"  target_j6 = {config_2[5]}\n"
-    "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
-    f"  movej([{config_2[0]}, {config_2[1]}, {config_2[2]}, {config_2[3]}, {config_2[4]}, target_j6 + j6_offset], a={ACC}, v={VEL})\n"
+    f"  movej({config_2}, a={ACC}, v={VEL})\n"
     "end\n"
     "step2()\n"
 )
 sock.sendall(prog_2.encode())
-time.sleep(1.0)
+time.sleep(2.0)
 
 # Abrir pinza
 print("Abriendo pinza...")
