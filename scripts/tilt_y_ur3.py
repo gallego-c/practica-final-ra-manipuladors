@@ -269,7 +269,7 @@ send_trajectory(path, sock, ACC, VEL, BLEND, "Ida")
 
 # Mover a las dos configuraciones intermedias en el extremo (con joint 6 alineado dinámicamente)
 print("Moviendo a Config 1...")
-config_1 = [-0.314683, -1.270248, 2.515198, -1.163610, -0.280125, -3.258362]
+config_1 = [-0.33161, -1.26414, 2.49600, -1.16012, -0.30351, 6.20342]
 prog_1 = (
     "def step1():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
@@ -286,7 +286,7 @@ sock.sendall(prog_1.encode())
 time.sleep(1.0)
 
 print("Moviendo a Config 2...")
-config_2 = [-0.314857, -1.182637, 2.526192, -1.263441, -0.280125, -3.257140]
+config_2 = [-0.33196, -1.16378, 2.50821, -1.27409, -0.30351, 6.20481]
 prog_2 = (
     "def step2():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
