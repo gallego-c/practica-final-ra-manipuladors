@@ -19,9 +19,12 @@ workspace_root = Path(__file__).resolve().parent.parent
 if str(workspace_root) not in sys.path:
     sys.path.insert(0, str(workspace_root))
 
+import subprocess
+
 try:
     from robot.solver import COLOR_IDX, bfs_solve, print_cube
     from robot.generate_taskfile import generate_manipulation_problem, run_fast_downward
+    from robot import orchestrator
     SOLVER_AVAILABLE = True
 except ImportError as e:
     SOLVER_AVAILABLE = False
@@ -221,6 +224,14 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
                     
                     if manipulation_plan is not None:
                         print(f"PDDL Plan found: {len(manipulation_plan)} physical moves in {solve_seconds:.3f}s total.")
+                        
+                        # Generar automáticamente el orquestrador en Python
+                        try:
+                            orchestrator.generate_execution_script(manipulation_plan)
+                            print("[Web Solver] Script de ejecución generado correctamente.")
+                        except Exception as ex:
+                            print(f"[Web Solver] Error al generar el script de orquestración: {ex}")
+                            
                         self.send_json_response({
                             "status": "success",
                             "solution": manipulation_plan,
@@ -254,6 +265,58 @@ class ScannerHTTPHandler(http.server.BaseHTTPRequestHandler):
 
             except Exception as e:
                 self.send_json_response({"status": "error", "message": f"Server error: {str(e)}"})
+        elif self.path == "/execute":
+            print("\n" + "="*60)
+            print("  [Web Server] Solicitud de ejecución del plan recibida")
+            print("="*60)
+            
+            script_path = workspace_root / "robot" / "execute_plan.py"
+            if not script_path.exists():
+                self.send_json_response({"status": "error", "message": "No se encontró ningún plan guardado. Primero resuelve el cubo."})
+                return
+                
+            try:
+                print(f"[Web Server] Ejecutando: {script_path}")
+                t0 = time.perf_counter()
+                
+                # Ejecutar el plan en un subproceso de forma síncrona
+                result = subprocess.run(
+                    [sys.executable, str(script_path)],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    timeout=300  # 5 minutos de tiempo límite
+                )
+                
+                duration = time.perf_counter() - t0
+                print(f"[Web Server] Ejecución finalizada en {duration:.2f}s con código {result.returncode}")
+                
+                if result.returncode == 0:
+                    self.send_json_response({
+                        "status": "success",
+                        "log": result.stdout,
+                        "duration": round(duration, 2)
+                    })
+                else:
+                    self.send_json_response({
+                        "status": "error",
+                        "message": f"La ejecución del plan falló (código {result.returncode})",
+                        "log": result.stdout
+                    })
+            except subprocess.TimeoutExpired as te:
+                stdout_captured = te.stdout or ""
+                if isinstance(stdout_captured, bytes):
+                    stdout_captured = stdout_captured.decode('utf-8', errors='ignore')
+                self.send_json_response({
+                    "status": "error",
+                    "message": "Tiempo de espera agotado (límite de 5 minutos excedido).",
+                    "log": stdout_captured + "\n\n[Timeout Error]"
+                })
+            except Exception as e:
+                self.send_json_response({
+                    "status": "error",
+                    "message": f"Error del servidor al ejecutar el plan: {str(e)}"
+                })
         elif self.path == "/calibrate-log":
             content_length = int(self.headers["Content-Length"])
             post_data = self.rfile.read(content_length)

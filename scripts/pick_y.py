@@ -36,7 +36,7 @@ CERRAR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza10UR3.py")   # cierra a
 ESPERA_MOV   = 4.5   # tiempo de sobra para llegar a la pose de pick
 ESPERA_PINZA = 2.0   # tiempo para que el agarre se complete
 
-pick_config = [0.88401, -0.98524, 0.73985, -1.31371, -1.61897, 2.4501]  # [50.65, -56.45, 42.39, -75.27, -92.76, 140.38] deg
+pick_config = [0.84736, -1.03219, 0.81856, -1.35700, -1.57080, 2.41379]  # [48.55, -59.14, 46.90, -77.75, -90.00, 138.30] deg
 
 
 def build_program(path, a, v, r):

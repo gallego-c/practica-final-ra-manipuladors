@@ -76,6 +76,10 @@ def main():
                 f.write(f"{act}\n")
         print("\n" + "=" * 70)
         print(f"✓ Fichero de plan de alto nivel exportado a: {plan_output_path}")
+        
+        # Generar automáticamente el orquestrador ejecutable en Python
+        import orchestrator
+        orchestrator.generate_execution_script(manipulation_plan)
     else:
         print("❌ ERROR: Fast Downward falló en la planificación física.")
         sys.exit(1)

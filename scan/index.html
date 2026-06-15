@@ -848,6 +848,43 @@
             top: 50%;
             transform: translateY(-50%) rotate(-90deg);
         }
+
+        /* Spinner & Execution Styles */
+        @keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes dash {
+            0% {
+                stroke-dasharray: 1, 150;
+                stroke-dashoffset: 0;
+            }
+            50% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -35;
+            }
+            100% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -124;
+            }
+        }
+        .spinner {
+            animation: rotate 2s linear infinite;
+        }
+        .spinner circle {
+            stroke: currentColor;
+            stroke-linecap: round;
+            animation: dash 1.5s ease-in-out infinite;
+        }
+        #btn-execute:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 6px 20px rgba(104, 7, 249, 0.45);
+        }
+        #btn-execute:active {
+            transform: translateY(1px);
+        }
     </style>
 </head>
 
@@ -1560,6 +1597,27 @@
                             container.appendChild(div);
                         });
 
+                        // Append the Execute button and Log area
+                        const runContainer = document.createElement("div");
+                        runContainer.style.marginTop = "20px";
+                        runContainer.style.borderTop = "1px solid rgba(255,255,255,0.1)";
+                        runContainer.style.paddingTop = "20px";
+                        runContainer.innerHTML = `
+                            <button class="btn-primary" id="btn-execute" onclick="executePlan()" style="width: 100%; background: linear-gradient(135deg, #e056fd 0%, #6807f9 100%); border: none; font-weight: 600; letter-spacing: 0.5px; height: 42px; font-family: 'Inter', sans-serif; font-size: 0.9rem; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(104, 7, 249, 0.3);">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                Execute Plan on Robot
+                            </button>
+                            <div id="execution-log-container" style="display: none; margin-top: 15px;">
+                                <strong style="display: block; color: #ffffff; margin-bottom: 6px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;">
+                                    Robot Execution Log
+                                </strong>
+                                <pre id="execution-log" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 12px; max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; color: #a5b1c2; white-space: pre-wrap; margin: 0; line-height: 1.4; text-align: left;"></pre>
+                            </div>
+                        `;
+                        container.appendChild(runContainer);
+
                         update3DCube();
 
                         document.getElementById("solution-box").style.display = "block";
@@ -1573,6 +1631,72 @@
                     document.getElementById("btn-solve").innerText = "Solve Cube (PDDL)";
                     alert("Connection error with solver: " + err);
                 });
+        }
+
+        function executePlan() {
+            const btn = document.getElementById("btn-execute");
+            const logContainer = document.getElementById("execution-log-container");
+            const logPre = document.getElementById("execution-log");
+            
+            if (!confirm("¿Seguro que deseas iniciar la ejecución física en el robot? Asegúrate de que el espacio esté libre de colisiones.")) {
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+            btn.innerHTML = `
+                <svg class="spinner" width="16" height="16" viewBox="0 0 50 50" style="margin-right: 8px; vertical-align: middle;">
+                    <circle class="path" cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5"></circle>
+                </svg>
+                Executing plan on UR3...
+            `;
+            
+            logContainer.style.display = "block";
+            logPre.innerText = "Conectando con el servidor del robot...\nEjecutando secuencia de acciones en el UR3...\n(Por favor espera, esto puede tomar entre 1 y 2 minutos dependiendo de la longitud del plan)\n";
+            logPre.style.borderColor = "rgba(255, 255, 255, 0.1)";
+            logPre.scrollTop = logPre.scrollHeight;
+            
+            fetch("/execute", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.innerHTML = `
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    Execute Plan on Robot
+                `;
+                
+                if (data.status === "success") {
+                    logPre.innerText += `\n[ÉXITO] ¡Plan completado con éxito en ${data.duration}s!\n\n`;
+                    logPre.innerText += data.log;
+                    logPre.style.borderColor = "rgba(46, 170, 220, 0.4)";
+                } else {
+                    logPre.innerText += `\n[ERROR] ${data.message}\n\n`;
+                    if (data.log) {
+                        logPre.innerText += data.log;
+                    }
+                    logPre.style.borderColor = "rgba(255, 94, 58, 0.4)";
+                }
+                logPre.scrollTop = logPre.scrollHeight;
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.innerHTML = `
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    Execute Plan on Robot
+                `;
+                logPre.innerText += `\n[ERROR DE CONEXIÓN] No se pudo conectar con el servidor: ${err}\n`;
+                logPre.style.borderColor = "rgba(255, 94, 58, 0.4)";
+                logPre.scrollTop = logPre.scrollHeight;
+            });
         }
 
         function getDominantColorName(colorsList) {
