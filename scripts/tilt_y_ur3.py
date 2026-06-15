@@ -249,7 +249,7 @@ sys.path.insert(0, SCRIPT_DIR)
 from go_home import go_home
 print("Yendo a HOME primero (con alineacion Y)...")
 go_home(y_axis=True)
-time.sleep(0.5)
+time.sleep(1.0)
 
 # Asegurar continuidad en joint 6 (unwrap) partiendo del HOME para evitar giros de 360 grados
 print("Asegurando continuidad en joint 6...")
@@ -283,7 +283,7 @@ prog_1 = (
     "step1()\n"
 )
 sock.sendall(prog_1.encode())
-time.sleep(0.5)
+time.sleep(1.0)
 
 print("Moviendo a Config 2...")
 config_2 = [-0.33196, -1.16378, 2.50821, -1.27409, -0.30351, 6.20481]
@@ -300,13 +300,13 @@ prog_2 = (
     "step2()\n"
 )
 sock.sendall(prog_2.encode())
-time.sleep(0.5)
+time.sleep(1.0)
 
 # Abrir pinza
 print("Abriendo pinza...")
 with open(ABRIR_PINZA, "rb") as f:
     sock.sendall(f.read())
-time.sleep(0.5)
+time.sleep(3.0)
 
 # Vuelta: misma trayectoria invertida -> regresa exactamente a la pose inicial
 send_trajectory(path[::-1], sock, ACC, VEL, BLEND, "Vuelta")
