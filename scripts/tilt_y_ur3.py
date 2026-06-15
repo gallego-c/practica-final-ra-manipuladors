@@ -232,7 +232,7 @@ def estimate_duration(path, v):
         dq = max(abs(path[i][j] - path[i - 1][j]) for j in range(6))
         total += dq / v
     # Cada waypoint en un camino denso tiene una pequeña demora de procesamiento y blend
-    return max(total + 2.0, len(path) * 0.08)
+    return max(total + 2.0, len(path) * 0.2)
 
 
 def send_trajectory(path, sock, a, v, r, label=""):
