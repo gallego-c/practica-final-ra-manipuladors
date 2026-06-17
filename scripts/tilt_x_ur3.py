@@ -186,6 +186,15 @@ from go_home import go_home
 go_home()
 time.sleep(1.0)
 
+# Asegurar continuidad en joint 6 (unwrap) partiendo del HOME para evitar giros de 360 grados
+print("Asegurando continuidad en joint 6...")
+current_j6 = 0.892212  # j6 de go_home()
+for q in path:
+    diff = q[5] - current_j6
+    diff_normalized = (diff + math.pi) % (2 * math.pi) - math.pi
+    q[5] = current_j6 + diff_normalized
+    current_j6 = q[5]
+
 # Conexion por socket al controlador
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((HOST, PORT))
@@ -195,14 +204,7 @@ send_trajectory(path, sock, ACC, VEL, BLEND, "Ida")
 
 # Mover a las dos configuraciones intermedias en el extremo (con joint 6 alineado dinámicamente)
 print("Moviendo a Config 1...")
-config_1 = [
-    math.radians(92.12),
-    math.radians(-44.61),
-    math.radians(90.25),
-    math.radians(-112.88),
-    math.radians(-177.36),
-    math.radians(109.42)
-]
+config_1 = [1.59436, -0.38397, 0.69935, -0.17733, -3.07143, 3.28436]
 prog_1 = (
     "def step1():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
@@ -219,14 +221,7 @@ sock.sendall(prog_1.encode())
 time.sleep(1.0)
 
 print("Moviendo a Config 2...")
-config_2 = [
-    math.radians(92.12),
-    math.radians(-39.30),
-    math.radians(90.27),
-    math.radians(-117.76),
-    math.radians(-117.38),
-    math.radians(109.87)
-]
+config_2 = [1.59453, -0.46269, 0.91194, -0.52953, -3.07196, 3.06602]
 prog_2 = (
     "def step2():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
