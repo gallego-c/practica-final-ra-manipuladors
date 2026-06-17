@@ -196,12 +196,12 @@ send_trajectory(path, sock, ACC, VEL, BLEND, "Ida")
 # Mover a las dos configuraciones intermedias en el extremo (con joint 6 alineado dinámicamente)
 print("Moviendo a Config 1...")
 config_1 = [
-    math.radians(91.35),
-    math.radians(-22.00),
-    math.radians(40.07),
-    math.radians(-10.16),
-    math.radians(-175.98),
-    math.radians(188.18)
+    math.radians(92.12),
+    math.radians(-44.61),
+    math.radians(90.25),
+    math.radians(-112.88),
+    math.radians(-177.36),
+    math.radians(109.42)
 ]
 prog_1 = (
     "def step1():\n"
@@ -220,12 +220,12 @@ time.sleep(1.0)
 
 print("Moviendo a Config 2...")
 config_2 = [
-    math.radians(91.36),
-    math.radians(-26.51),
-    math.radians(52.25),
-    math.radians(-30.34),
-    math.radians(-176.01),
-    math.radians(188.18)  # Se usa el mismo ángulo de joint 6 (188.18) de la config_1 para evitar que el elemento terminal rote al bajar el cubo
+    math.radians(92.12),
+    math.radians(-39.30),
+    math.radians(90.27),
+    math.radians(-117.76),
+    math.radians(-117.38),
+    math.radians(109.87)
 ]
 prog_2 = (
     "def step2():\n"
