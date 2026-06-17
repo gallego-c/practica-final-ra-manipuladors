@@ -2,6 +2,7 @@ import socket
 import time
 import sys
 import os
+import math
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ABRIR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza40UR3.py")
@@ -194,32 +195,52 @@ send_trajectory(path, sock, ACC, VEL, BLEND, "Ida")
 
 # Mover a las dos configuraciones intermedias en el extremo (con joint 6 alineado dinámicamente)
 print("Moviendo a Config 1...")
-config_1 = [1.5980234631260082, -0.6506587451434861, 1.2349949787111876, -0.9976302004399588, -3.105289805148311, 2.70281688]
+config_1 = [
+    math.radians(91.35),
+    math.radians(-22.00),
+    math.radians(40.07),
+    math.radians(-10.16),
+    math.radians(-175.98),
+    math.radians(188.18)
+]
 prog_1 = (
     "def step1():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
     "  set_tool_voltage(24)\n"
     "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
-    f"  movej({config_1}, a={ACC}, v={VEL})\n"
+    "  q_act = get_actual_joint_positions()\n"
+    f"  target_j6 = {config_1[5]}\n"
+    "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
+    f"  movej([{config_1[0]}, {config_1[1]}, {config_1[2]}, {config_1[3]}, {config_1[4]}, target_j6 + j6_offset], a={ACC}, v={VEL})\n"
     "end\n"
     "step1()\n"
 )
 sock.sendall(prog_1.encode())
-time.sleep(3.0)
+time.sleep(1.0)
 
 print("Moviendo a Config 2...")
-config_2 = [1.5980234631260082, -0.6126105674500097, 1.2383111042899768, -1.033583983031042, -3.105289805148311, 2.7082270]
+config_2 = [
+    math.radians(91.36),
+    math.radians(-26.51),
+    math.radians(52.25),
+    math.radians(-30.34),
+    math.radians(-176.01),
+    math.radians(188.18)  # Se usa el mismo ángulo de joint 6 (188.18) de la config_1 para evitar que el elemento terminal rote al bajar el cubo
+]
 prog_2 = (
     "def step2():\n"
     "  rtde_set_watchdog(\"input_int_register_24\", 0, \"ignore\")\n"
     "  set_tool_voltage(24)\n"
     "  set_tool_communication(True, 1000000, 2, 1, 1.5, 3.5)\n"
-    f"  movej({config_2}, a={ACC}, v={VEL})\n"
+    "  q_act = get_actual_joint_positions()\n"
+    f"  target_j6 = {config_2[5]}\n"
+    "  j6_offset = floor((q_act[5] - target_j6) / 3.14159265 + 0.5) * 3.14159265\n"
+    f"  movej([{config_2[0]}, {config_2[1]}, {config_2[2]}, {config_2[3]}, {config_2[4]}, target_j6 + j6_offset], a={ACC}, v={VEL})\n"
     "end\n"
     "step2()\n"
 )
 sock.sendall(prog_2.encode())
-time.sleep(2.0)
+time.sleep(1.0)
 
 # Abrir pinza
 print("Abriendo pinza...")
