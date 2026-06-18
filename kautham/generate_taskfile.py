@@ -341,7 +341,7 @@ def generate_manipulation_problem(solution, filename=PROBLEM_FILE):
     lines.append("  (:goal (and")
     for i in range(len(solution)):
         lines.append(f"    (step-completed step{i+1})")
-    lines += ["    (cube-on-fixture)", "    (not (robot-holding))", "  ))", ")"]
+    lines += ["  ))", ")"]
     with open(filename, "w") as f:
         f.write("\n".join(lines))
     print(f"✓ Problema PDDL escrito en {filename}")

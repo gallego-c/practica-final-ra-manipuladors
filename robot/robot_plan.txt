@@ -1,8 +1,8 @@
-pick_x
-tilt_x
-pick_x
-execute_l
+pick_y
+execute_u2
 tilt_y
 pick_x
-execute_f_prime
+execute_f
 tilt_y
+pick_x
+execute_d2

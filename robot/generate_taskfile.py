@@ -480,8 +480,6 @@ def generate_manipulation_problem(solution, filename="/home/barrendeiro/robotica
     lines.append("  (:goal (and")
     for i in range(len(solution)):
         lines.append(f"    (step-completed step{i+1})")
-    lines.append("    (cube-on-fixture)")
-    lines.append("    (not (robot-holding))")
     lines.append("  ))")
     lines.append(")")
     
