@@ -10,8 +10,7 @@ if SCRIPT_DIR not in sys.path:
 from go_home import go_home
 
 def main():
-    print("[Action place] Iniciando: abrir pinza e ir a HOME...")
-    go_home(open_gripper=True)
+    print("[Action place] Iniciando: abrir pinza e ir a HOME (manejado por orchestrator)...")
     print("[Action place] Completado con éxito.")
 
 if __name__ == "__main__":
