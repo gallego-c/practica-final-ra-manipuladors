@@ -32,7 +32,7 @@ program = (
 
 print("Enviando comando de giro...")
 sock.sendall(program.encode())
-time.sleep(6.4)  # Margen doble
+time.sleep(9.6)  # Margen extra
 sock.close()
 print("Conexion cerrada.")
 

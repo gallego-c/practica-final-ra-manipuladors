@@ -32,6 +32,6 @@ program = (
 
 print("Enviando comando de giro de 180 grados...")
 sock.sendall(program.encode())
-time.sleep(8.4)  # Margen doble
+time.sleep(12.6)  # Margen extra
 sock.close()
 print("Conexion cerrada.")

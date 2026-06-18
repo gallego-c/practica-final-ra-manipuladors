@@ -50,7 +50,7 @@ print("Enviando script secuencial (abrir + girar 90 + cerrar)...")
 sock.sendall(program.encode("utf-8"))
 
 # Esperar a que terminen las acciones secuenciales
-time.sleep(10.0) # Margen doble
+time.sleep(15.0) # Margen extra
 
 sock.close()
 print("Accion finalizada y conexion cerrada.")
