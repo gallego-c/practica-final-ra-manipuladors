@@ -99,12 +99,6 @@ def mover_y_cerrar_pinza(sock, script_pinza, pick_config, a, v):
 # ---------------------------------------------------------------------------
 # Programa principal
 # ---------------------------------------------------------------------------
-# Ir a HOME abriendo la pinza primero
-sys.path.insert(0, SCRIPT_DIR)
-from go_home import go_home
-go_home(open_gripper=True)
-time.sleep(0.1)
-
 print(f"Conectando al robot en {HOST}:{PORT} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((HOST, PORT))

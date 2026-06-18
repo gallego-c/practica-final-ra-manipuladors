@@ -94,11 +94,20 @@ def run_action(action_name, module_name):
         raise e
 
 def main():
+    from go_home import go_home
     print(f"Iniciando ejecución del plan ({len(PLAN_ACTIONS)} pasos)...")
+    
+    print("\\nLlevando el robot a la posición HOME antes de iniciar...")
+    go_home(open_gripper=True)
+    
     t_start = time.time()
     for i, (action, module) in enumerate(PLAN_ACTIONS):
         print(f"\\n[Paso {i+1}/{len(PLAN_ACTIONS)}]")
         run_action(action, module)
+        
+    print("\\nLlevando el robot a la posición HOME tras finalizar...")
+    go_home()
+        
     print(f"\\n✓ ¡Plan completado con éxito en {time.time() - t_start:.2f}s!")
 
 if __name__ == "__main__":
