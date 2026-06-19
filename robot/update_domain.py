@@ -1,143 +1,16 @@
-;;; ============================================================
-;;; DOMAIN: robot-manipulation
-;;; ============================================================
-;;; Advanced TAMP domain where the high-level Rubik's cube solver
-;;; is agnostic, and Fast Downward plans the physical tilts and grasps
-;;; to bring the correct face of the cube to the top for wrist rotation.
-;;; ============================================================
+#!/usr/bin/env python3
+import os
+import re
 
-(define (domain robot-manipulation)
-  (:requirements :strips :typing :conditional-effects)
-  (:types step face)
-  
-  (:constants
-    face_u face_d face_f face_b face_l face_r - face
-  )
+domain_path = "/home/barrendeiro/robotica/cub/robot/manipulation_domain.pddl"
 
-  (:predicates
-    (robot-holding)
-    (holding-x)
-    (holding-y)
-    (cube-on-fixture)
-    (current-step ?s - step)
-    (next-step ?s1 ?s2 - step)
-    (step-completed ?s - step)
-    
-    ;; 3D Orientation of the cube in the fixture
-    (top-face ?f - face)
-    (bottom-face ?f - face)
-    (front-face ?f - face)
-    (back-face ?f - face)
-    (left-face ?f - face)
-    (right-face ?f - face)
-    
-    ;; Types of standard Rubik moves for each step
-    (step-type-U ?s - step)
-    (step-type-U-prime ?s - step)
-    (step-type-U2 ?s - step)
-    (step-type-D ?s - step)
-    (step-type-D-prime ?s - step)
-    (step-type-D2 ?s - step)
-    (step-type-R ?s - step)
-    (step-type-R-prime ?s - step)
-    (step-type-R2 ?s - step)
-    (step-type-L ?s - step)
-    (step-type-L-prime ?s - step)
-    (step-type-L2 ?s - step)
-    (step-type-F ?s - step)
-    (step-type-F-prime ?s - step)
-    (step-type-F2 ?s - step)
-    (step-type-B ?s - step)
-    (step-type-B-prime ?s - step)
-    (step-type-B2 ?s - step)
-  )
+with open(domain_path, 'r') as f:
+    content = f.read()
 
-  ;; -----------------------------------------------------------
-  ;; PICK_X – lift cube off fixture squeezing along X axis
-  ;; -----------------------------------------------------------
-  (:action pick_x
-    :parameters ()
-    :precondition (and (cube-on-fixture) (not (robot-holding)))
-    :effect (and (robot-holding) (holding-x) (not (cube-on-fixture)))
-  )
-
-  ;; -----------------------------------------------------------
-  ;; PICK_Y – lift cube off fixture squeezing along Y axis
-  ;; -----------------------------------------------------------
-  (:action pick_y
-    :parameters ()
-    :precondition (and (cube-on-fixture) (not (robot-holding)))
-    :effect (and (robot-holding) (holding-y) (not (cube-on-fixture)))
-  )
-
-  ;; -----------------------------------------------------------
-  ;; PLACE – set cube back on fixture (requires holding cube)
-  ;; -----------------------------------------------------------
-  (:action place
-    :parameters ()
-    :precondition (robot-holding)
-    :effect (and (cube-on-fixture) (not (robot-holding)) (not (holding-x)) (not (holding-y)))
-  )
-
-  ;; -----------------------------------------------------------
-  ;; CHANGE_PICK – place on fixture, rotate gripper 90°, and regrasp
-  ;; -----------------------------------------------------------
-  (:action change_pick
-    :parameters ()
-    :precondition (robot-holding)
-    :effect (and
-      (when (holding-x) (and (not (holding-x)) (holding-y)))
-      (when (holding-y) (and (not (holding-y)) (holding-x)))
-    )
-  )
-
-  ;; -----------------------------------------------------------
-  ;; TILT_X (Left→Top, Top→Right, Right→Bottom, Bottom→Left)
-  ;; -----------------------------------------------------------
-  (:action tilt_x
-    :parameters ()
-    :precondition (holding-x)
-    :effect (and
-      (cube-on-fixture)
-      (not (robot-holding))
-      (not (holding-x))
-      (forall (?f - face)
-        (and
-          (when (left-face ?f) (and (top-face ?f) (not (left-face ?f))))
-          (when (top-face ?f) (and (right-face ?f) (not (top-face ?f))))
-          (when (right-face ?f) (and (bottom-face ?f) (not (right-face ?f))))
-          (when (bottom-face ?f) (and (left-face ?f) (not (bottom-face ?f))))
-        )
-      )
-    )
-  )
-
-  ;; -----------------------------------------------------------
-  ;; TILT_Y (Front→Top, Top→Back, Back→Bottom, Bottom→Front)
-  ;; -----------------------------------------------------------
-  (:action tilt_y
-    :parameters ()
-    :precondition (holding-y)
-    :effect (and
-      (cube-on-fixture)
-      (not (robot-holding))
-      (not (holding-y))
-      (forall (?f - face)
-        (and
-          (when (front-face ?f) (and (top-face ?f) (not (front-face ?f))))
-          (when (top-face ?f) (and (back-face ?f) (not (top-face ?f))))
-          (when (back-face ?f) (and (bottom-face ?f) (not (back-face ?f))))
-          (when (bottom-face ?f) (and (front-face ?f) (not (bottom-face ?f))))
-        )
-      )
-    )
-  )
-
-  ;; ===========================================================
-  ;; ROBOT OPERATIONS CORRESPONDING TO STANDARD CUBE MOVEMENTS
-  ;; ===========================================================
-
-  (:action execute_U
+# Define the action replacements
+replacements = {
+    # execute_U
+    r'\(:action execute_U\s+.*?execute_U_prime': """(:action execute_U
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_u) (or (step-type-U ?s) (step-type-D ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -154,7 +27,10 @@
             )
   )
 
-  (:action execute_U_prime
+  (:action execute_U_prime""",
+
+    # execute_U_prime
+    r'\(:action execute_U_prime\s+.*?execute_U2': """(:action execute_U_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_u) (or (step-type-U-prime ?s) (step-type-D-prime ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -171,22 +47,10 @@
             )
   )
 
-  (:action execute_U2
-    :parameters (?s - step ?next - step)
-    :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_u) (or (step-type-U2 ?s) (step-type-D2 ?s)))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
-                 (forall (?f - face)
-                   (and
-                     (when (and (step-type-D2 ?s) (front-face ?f)) (and (back-face ?f) (not (front-face ?f))))
-                     (when (and (step-type-D2 ?s) (back-face ?f)) (and (front-face ?f) (not (back-face ?f))))
-                     (when (and (step-type-D2 ?s) (left-face ?f)) (and (right-face ?f) (not (left-face ?f))))
-                     (when (and (step-type-D2 ?s) (right-face ?f)) (and (left-face ?f) (not (right-face ?f))))
-                   )
-                 )
-            )
-  )
+  (:action execute_U2""",
 
-  (:action execute_D
+    # execute_D
+    r'\(:action execute_D\s+.*?execute_D_prime': """(:action execute_D
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_d) (or (step-type-D ?s) (step-type-U ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -203,7 +67,10 @@
             )
   )
 
-  (:action execute_D_prime
+  (:action execute_D_prime""",
+
+    # execute_D_prime
+    r'\(:action execute_D_prime\s+.*?execute_D2': """(:action execute_D_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_d) (or (step-type-D-prime ?s) (step-type-U-prime ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -220,22 +87,10 @@
             )
   )
 
-  (:action execute_D2
-    :parameters (?s - step ?next - step)
-    :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_d) (or (step-type-D2 ?s) (step-type-U2 ?s)))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
-                 (forall (?f - face)
-                   (and
-                     (when (and (step-type-U2 ?s) (front-face ?f)) (and (back-face ?f) (not (front-face ?f))))
-                     (when (and (step-type-U2 ?s) (back-face ?f)) (and (front-face ?f) (not (back-face ?f))))
-                     (when (and (step-type-U2 ?s) (left-face ?f)) (and (right-face ?f) (not (left-face ?f))))
-                     (when (and (step-type-U2 ?s) (right-face ?f)) (and (left-face ?f) (not (right-face ?f))))
-                   )
-                 )
-            )
-  )
+  (:action execute_D2""",
 
-  (:action execute_R
+    # execute_R
+    r'\(:action execute_R\s+.*?execute_R_prime': """(:action execute_R
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_r) (or (step-type-R ?s) (step-type-L ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -252,7 +107,10 @@
             )
   )
 
-  (:action execute_R_prime
+  (:action execute_R_prime""",
+
+    # execute_R_prime
+    r'\(:action execute_R_prime\s+.*?execute_R2': """(:action execute_R_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_r) (or (step-type-R-prime ?s) (step-type-L-prime ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -269,22 +127,10 @@
             )
   )
 
-  (:action execute_R2
-    :parameters (?s - step ?next - step)
-    :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_r) (or (step-type-R2 ?s) (step-type-L2 ?s)))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
-                 (forall (?f - face)
-                   (and
-                     (when (and (step-type-L2 ?s) (front-face ?f)) (and (back-face ?f) (not (front-face ?f))))
-                     (when (and (step-type-L2 ?s) (back-face ?f)) (and (front-face ?f) (not (back-face ?f))))
-                     (when (and (step-type-L2 ?s) (left-face ?f)) (and (right-face ?f) (not (left-face ?f))))
-                     (when (and (step-type-L2 ?s) (right-face ?f)) (and (left-face ?f) (not (right-face ?f))))
-                   )
-                 )
-            )
-  )
+  (:action execute_R2""",
 
-  (:action execute_L
+    # execute_L
+    r'\(:action execute_L\s+.*?execute_L_prime': """(:action execute_L
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_l) (or (step-type-L ?s) (step-type-R ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -301,7 +147,10 @@
             )
   )
 
-  (:action execute_L_prime
+  (:action execute_L_prime""",
+
+    # execute_L_prime
+    r'\(:action execute_L_prime\s+.*?execute_L2': """(:action execute_L_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_l) (or (step-type-L-prime ?s) (step-type-R-prime ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -318,22 +167,10 @@
             )
   )
 
-  (:action execute_L2
-    :parameters (?s - step ?next - step)
-    :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_l) (or (step-type-L2 ?s) (step-type-R2 ?s)))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
-                 (forall (?f - face)
-                   (and
-                     (when (and (step-type-R2 ?s) (front-face ?f)) (and (back-face ?f) (not (front-face ?f))))
-                     (when (and (step-type-R2 ?s) (back-face ?f)) (and (front-face ?f) (not (back-face ?f))))
-                     (when (and (step-type-R2 ?s) (left-face ?f)) (and (right-face ?f) (not (left-face ?f))))
-                     (when (and (step-type-R2 ?s) (right-face ?f)) (and (left-face ?f) (not (right-face ?f))))
-                   )
-                 )
-            )
-  )
+  (:action execute_L2""",
 
-  (:action execute_F
+    # execute_F
+    r'\(:action execute_F\s+.*?execute_F_prime': """(:action execute_F
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_f) (or (step-type-F ?s) (step-type-B ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -350,7 +187,10 @@
             )
   )
 
-  (:action execute_F_prime
+  (:action execute_F_prime""",
+
+    # execute_F_prime
+    r'\(:action execute_F_prime\s+.*?execute_F2': """(:action execute_F_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_f) (or (step-type-F-prime ?s) (step-type-B-prime ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -367,22 +207,10 @@
             )
   )
 
-  (:action execute_F2
-    :parameters (?s - step ?next - step)
-    :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_f) (or (step-type-F2 ?s) (step-type-B2 ?s)))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
-                 (forall (?f - face)
-                   (and
-                     (when (and (step-type-B2 ?s) (front-face ?f)) (and (back-face ?f) (not (front-face ?f))))
-                     (when (and (step-type-B2 ?s) (back-face ?f)) (and (front-face ?f) (not (back-face ?f))))
-                     (when (and (step-type-B2 ?s) (left-face ?f)) (and (right-face ?f) (not (left-face ?f))))
-                     (when (and (step-type-B2 ?s) (right-face ?f)) (and (left-face ?f) (not (right-face ?f))))
-                   )
-                 )
-            )
-  )
+  (:action execute_F2""",
 
-  (:action execute_B
+    # execute_B
+    r'\(:action execute_B\s+.*?execute_B_prime': """(:action execute_B
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_b) (or (step-type-B ?s) (step-type-F ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -399,7 +227,10 @@
             )
   )
 
-  (:action execute_B_prime
+  (:action execute_B_prime""",
+
+    # execute_B_prime
+    r'\(:action execute_B_prime\s+.*?execute_B2': """(:action execute_B_prime
     :parameters (?s - step ?next - step)
     :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_b) (or (step-type-B-prime ?s) (step-type-F-prime ?s)))
     :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
@@ -416,18 +247,16 @@
             )
   )
 
-  (:action execute_B2
-    :parameters (?s - step ?next - step)
-    :precondition (and (current-step ?s) (robot-holding) (next-step ?s ?next) (top-face face_b) (or (step-type-B2 ?s) (step-type-F2 ?s)))
-    :effect (and (step-completed ?s) (not (current-step ?s)) (current-step ?next)
-                 (forall (?f - face)
-                   (and
-                     (when (and (step-type-F2 ?s) (front-face ?f)) (and (back-face ?f) (not (front-face ?f))))
-                     (when (and (step-type-F2 ?s) (back-face ?f)) (and (front-face ?f) (not (back-face ?f))))
-                     (when (and (step-type-F2 ?s) (left-face ?f)) (and (right-face ?f) (not (left-face ?f))))
-                     (when (and (step-type-F2 ?s) (right-face ?f)) (and (left-face ?f) (not (right-face ?f))))
-                   )
-                 )
-            )
-  )
-)
+  (:action execute_B2""",
+}
+
+# Apply replacements
+for pattern, replacement in replacements.items():
+    content, count = re.subn(pattern, replacement, content, flags=re.DOTALL)
+    print(f"Replaced {pattern}: {count} occurrences")
+
+# Write back
+with open(domain_path, 'w') as f:
+    f.write(content)
+
+print("Domain file successfully updated!")

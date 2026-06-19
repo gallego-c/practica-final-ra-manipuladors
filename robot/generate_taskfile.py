@@ -24,16 +24,25 @@ sys.path.insert(0, _SCRIPT_DIR)
 from solver import scramble, bfs_solve, ROBOT_MOVES, SOLVED_STATE
 
 # ── Importar rclpy y la interfaz ROS 2 de Kautham ─────────────────────────────
-import rclpy
-from rclpy.node import Node
-from kautham_ros_interfaces.srv import OpenProblem
+try:
+    import rclpy
+    from rclpy.node import Node
+    from kautham_ros_interfaces.srv import OpenProblem
 
-# Añadir el path local del módulo kautham_ros
-_KAUTHAM_ROS_PATH = "/home/barrendeiro/robotica/ws_tamp/src/task_and_motion_planning2/kautham_ros/kautham_ros/kautham_ros"
-if _KAUTHAM_ROS_PATH not in sys.path:
-    sys.path.append(_KAUTHAM_ROS_PATH)
+    # Añadir el path local del módulo kautham_ros
+    _KAUTHAM_ROS_PATH = "/home/barrendeiro/robotica/ws_tamp/src/task_and_motion_planning2/kautham_ros/kautham_ros/kautham_ros"
+    if _KAUTHAM_ROS_PATH not in sys.path:
+        sys.path.append(_KAUTHAM_ROS_PATH)
 
-import kautham_ros_interface_python as kautham
+    import kautham_ros_interface_python as kautham
+    ROS_AVAILABLE = True
+except ImportError:
+    class Node:
+        def __init__(self, *args, **kwargs):
+            pass
+    rclpy = None
+    kautham = None
+    ROS_AVAILABLE = False
 
 # ── Ruta de salida ────────────────────────────────────────────────────────────
 _REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
@@ -314,10 +323,10 @@ class RRTTaskfileGenerator(Node):
                 current_axis  = new_axis
 
             # ── tilt_x_pos/neg: volcar alrededor del eje X ───────────────────────
-            # Precondición PDDL: holding-y → el brazo está en IDLE_Y
+            # Precondición PDDL: holding-x → el brazo está en IDLE_X
             #
             # El Transfer (cubo adjunto) se genera por INTERPOLACIÓN DIRECTA:
-            #   IDLE_Y → IDLE_Y_LIFT → TILT_X_LIFT → TILT_X
+            #   IDLE_X → IDLE_X_LIFT → TILT_X_LIFT → TILT_X
             # Razones:
             #   1. El cubo adjunto causaría falsa colisión si usásemos RRT con el cubo
             #      como obstáculo estático.
@@ -326,7 +335,7 @@ class RRTTaskfileGenerator(Node):
             # El Transit de vuelta (TILT_X_open → HOME) sí usa RRT porque el cubo
             # ya no está adjunto y el brazo necesita evitar el fixture.
             elif action in ('tilt_x_pos', 'tilt_x_neg', 'tilt_x'):
-                idle_lift  = IDLE_Y_LIFT
+                idle_lift  = IDLE_X_LIFT
                 tilt_lift  = TILT_X_LIFT
                 tilt_place = TILT_X
                 transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
@@ -347,10 +356,10 @@ class RRTTaskfileGenerator(Node):
                 current_axis  = None
 
             # ── tilt_y_pos/neg: volcar alrededor del eje Y ───────────────────────
-            # Precondición PDDL: holding-x → el brazo está en IDLE_X
+            # Precondición PDDL: holding-y → el brazo está en IDLE_Y
             # Misma lógica de interpolación que tilt_x.
             elif action in ('tilt_y_pos', 'tilt_y_neg', 'tilt_y'):
-                idle_lift  = IDLE_X_LIFT
+                idle_lift  = IDLE_Y_LIFT
                 tilt_lift  = TILT_Y_LIFT
                 tilt_place = TILT_Y
                 transfer = ET.SubElement(root, "Transfer", attrib=_transfer_attrib())
