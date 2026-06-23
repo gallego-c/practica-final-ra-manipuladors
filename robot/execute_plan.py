@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 execute_plan.py - Script de ejecución autogenerado para el robot UR3.
-Generado el: 2026-06-22 14:48:07
+Generado el: 2026-06-23 11:46:22
 """
 import sys
 import os
@@ -19,29 +19,29 @@ PLAN_ACTIONS = [
     ('place', 'place'),
     ('pick_y', 'pick_y'),
     ('tilt_y', 'tilt_y_ur3'),
-    ('pick_y', 'pick_y'),
-    ('execute_f2', 'turn_180'),
+    ('pick_x', 'pick_x'),
+    ('execute_f', 'turn_clockwise'),
     ('tilt_y', 'tilt_y_ur3'),
     ('pick_y', 'pick_y'),
-    ('execute_d2', 'turn_180'),
-    ('tilt_y', 'tilt_y_ur3'),
-    ('pick_y', 'pick_y'),
-    ('execute_f_prime', 'turn_counterclockwise'),
+    ('execute_r', 'turn_clockwise'),
     ('tilt_x', 'tilt_x_ur3'),
     ('pick_y', 'pick_y'),
-    ('execute_r_prime', 'turn_counterclockwise'),
+    ('execute_b', 'turn_clockwise'),
     ('tilt_x', 'tilt_x_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_d_prime', 'turn_counterclockwise'),
+    ('execute_l_prime', 'turn_counterclockwise'),
     ('tilt_y', 'tilt_y_ur3'),
+    ('pick_y', 'pick_y'),
+    ('execute_u_prime', 'turn_counterclockwise'),
+    ('tilt_x', 'tilt_x_ur3'),
     ('pick_y', 'pick_y'),
     ('execute_l', 'turn_clockwise'),
     ('tilt_x', 'tilt_x_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_f2', 'turn_180'),
-    ('tilt_x', 'tilt_x_ur3'),
+    ('execute_d', 'turn_clockwise'),
+    ('tilt_y', 'tilt_y_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_r_prime', 'turn_counterclockwise'),
+    ('execute_f_prime', 'turn_counterclockwise'),
     ('place', 'place')
 ]
 
