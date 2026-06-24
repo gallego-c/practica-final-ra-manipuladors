@@ -9,7 +9,7 @@ Uso:
     python3 robot/generate_taskfile.py
     python3 robot/generate_taskfile.py tilt_x_pos rotate_top_cw tilt_y_pos rotate_top_ccw
 
-El fichero de salida se escribe en: kautham/taskfile_rubik_ur3.xml
+    El fichero de salida se escribe en: simulation/rubik_ur3_taskfile.xml
 """
 
 import sys
@@ -46,7 +46,7 @@ except ImportError:
 
 # Ruta de salida
 _REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
-OUTPUT_FILE = os.path.join(_REPO_ROOT, "kautham", "taskfile_rubik_ur3.xml")
+OUTPUT_FILE = os.path.join(_REPO_ROOT, "simulation", "rubik_ur3_taskfile.xml")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONVERSIÓN DE ÁNGULOS (grados) A ESPACIO DE CONTROL KAUTHAM [0, 1]
