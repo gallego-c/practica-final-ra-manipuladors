@@ -1,0 +1,327 @@
+<?xml version="1.0"?>
+<!-- Trayectoria completa del cubo (UR3, 7 controls) en 30 tramos. -->
+<!-- Colocar este fichero DENTRO de la carpeta del demo chess_ur3_robotiq (junto a sus subcarpetas robots/ y controls/). -->
+<Problem name="rubik_ur3_full_trajectory">
+
+	<Robot robot="./robots/robot_instances/UR_robotiq_85_gripper/ur3_robotiq_85_gripper.urdf.xacro" scale="1.0">
+		<KauthamName name="ur3_right"/>
+		<Home TH="1.570796327" WZ="1.0" WY="0.0" WX="0.0" Z="0.0" Y="0.0" X="0.37" />
+		<ViewLink name="robotiq_85_base_link"/>
+	</Robot>
+
+	<Controls robot="./controls/right_ur3_with_gripper.cntr"/>
+
+	<Planner>
+		<Parameters>
+			<Name>omplRRTConnect</Name>
+			<Parameter name="_Max Planning Time">10</Parameter>
+			<Parameter name="_Path Drawn (0/1)">1</Parameter>
+			<Parameter name="_Simplify Solution">2</Parameter>
+			<Parameter name="_Speed Factor">1</Parameter>
+			<Parameter name="Range">0.5</Parameter>
+		</Parameters>
+		<Queries>
+			<!-- Query 1: place:ini -> pick_y:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5710" goal="0.5734"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 2: pick_y:ini -> pick_y:ext -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5734" goal="0.6921"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 3: pick_y:ext -> pick_y:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6921" goal="0.6921"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 4: pick_y:fin -> tilt_y_ur3:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4182"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5629"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3938"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6921" goal="0.6925"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 5: tilt_y_ur3:ini -> tilt_y_ur3:ext -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.4736"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4182" goal="0.3994"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5629" goal="0.6986"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3938" goal="0.4077"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.4758"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6925" goal="0.4937"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 6: tilt_y_ur3:ext -> tilt_y_ur3:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.4736" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.3994" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.6986" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4077" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.4758" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.4937" goal="0.6960"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 7: tilt_y_ur3:fin -> pick_y:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6960" goal="0.6940"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 8: pick_y:ini -> pick_y:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6940" goal="0.6921"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 9: pick_y:fin -> turn_counterclockwise:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6921" goal="0.5631"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 10: turn_counterclockwise:fin -> tilt_x_ur3:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4182"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5629"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3938"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5631" goal="0.5639"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 11: tilt_x_ur3:ini -> tilt_x_ur3:ext -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.6272"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4182" goal="0.4524"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5629" goal="0.6297"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3938" goal="0.3086"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.2495"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5639" goal="0.6394"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 12: tilt_x_ur3:ext -> tilt_x_ur3:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.6272" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4524" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.6297" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3086" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.2495" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6394" goal="0.5710"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 13: tilt_x_ur3:fin -> pick_x:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5710" goal="0.5690"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 14: pick_x:ini -> pick_x:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5690" goal="0.5671"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 15: pick_x:fin -> turn_clockwise:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5671" goal="0.6961"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 16: turn_clockwise:fin -> tilt_y_ur3:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4182"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5629"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3938"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6961" goal="0.6961"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 17: tilt_y_ur3:ini -> tilt_y_ur3:ext -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.4736"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4182" goal="0.3994"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5629" goal="0.6986"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3938" goal="0.4077"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.4758"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6961" goal="0.4937"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 18: tilt_y_ur3:ext -> tilt_y_ur3:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.4736" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.3994" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.6986" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4077" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.4758" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.4937" goal="0.6960"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 19: tilt_y_ur3:fin -> pick_x:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6960" goal="0.6984"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 20: pick_x:ini -> pick_x:ext -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6984" goal="0.8171"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 21: pick_x:ext -> pick_x:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.8171" goal="0.8171"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 22: pick_x:fin -> turn_180:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.8171" goal="0.5750"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 23: turn_180:fin -> tilt_x_ur3:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4182"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5629"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3938"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5750" goal="0.5746"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 24: tilt_x_ur3:ini -> tilt_x_ur3:ext -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.6272"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4182" goal="0.4524"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5629" goal="0.6297"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3938" goal="0.3086"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.2495"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5746" goal="0.6394"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 25: tilt_x_ur3:ext -> tilt_x_ur3:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.6272" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4524" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.6297" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3086" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.2495" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6394" goal="0.5710"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 26: tilt_x_ur3:fin -> pick_x:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5710" goal="0.5690"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 27: pick_x:ini -> pick_x:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5672" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5427" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.4098" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3749" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5690" goal="0.5671"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 28: pick_x:fin -> turn_clockwise:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5651"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3920"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.5671" goal="0.6961"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 29: turn_clockwise:fin -> place:ini -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5674"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4179"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5651" goal="0.5647"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3920" goal="0.3923"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3750"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6961" goal="0.6984"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+			<!-- Query 30: place:ini -> place:fin -->
+			<Query>
+				<RobotControl name="ur3_right_shoulder_pan_joint" init="0.5674" goal="0.5672"/>
+				<RobotControl name="ur3_right_shoulder_lift_joint" init="0.4179" goal="0.4214"/>
+				<RobotControl name="ur3_right_elbow_joint" init="0.5647" goal="0.5427"/>
+				<RobotControl name="ur3_right_wrist_1_joint" init="0.3923" goal="0.4098"/>
+				<RobotControl name="ur3_right_wrist_2_joint" init="0.3750" goal="0.3749"/>
+				<RobotControl name="ur3_right_wrist_3_joint" init="0.6984" goal="0.8210"/>
+				<RobotControl name="ur3_right_gripper_joint" init="0.5000" goal="0.5000"/>
+			</Query>
+		</Queries>
+	</Planner>
+
+</Problem>
