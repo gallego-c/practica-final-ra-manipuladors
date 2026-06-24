@@ -20,5 +20,3 @@
 # - fast-downward (PDDL task planner, usually located at /usr/bin/fast-downward)
 # - ROS 2 (e.g. ROS 2 Foxy or Humble, for kautham_ros connectivity)
 # - Kautham (robotic motion planning simulator, requires kautham-gui)
-opencv-python
-numpy
