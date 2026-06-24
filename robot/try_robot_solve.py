@@ -44,10 +44,10 @@ def main():
     t1_bfs = time.time()
     
     if solution is None:
-        print("❌ Error: No se encontró solución para el cubo.")
+        print("Error: No se encontró solución para el cubo.")
         sys.exit(1)
         
-    print(f"\n✓ [Nivel 1] Solución BFS del Cubo ({len(solution)} movimientos abstractos) [{t1_bfs - t0_bfs:.4f}s]:")
+    print(f"\n[Nivel 1] Solución BFS del Cubo ({len(solution)} movimientos abstractos) [{t1_bfs - t0_bfs:.4f}s]:")
     for i, action in enumerate(solution):
         print(f"  Movimiento {i+1:2d}: {action}")
 
@@ -65,7 +65,7 @@ def main():
 
     print("\n" + "=" * 70)
     if manipulation_plan is not None:
-        print(f"✓ ¡ÉXITO! PLAN DE MANIPULACIÓN ROBÓTICA SIMBÓLICA [{t1_fd - t0_fd:.4f}s]:")
+        print(f"Plan de manipulación robótica simbólica [{t1_fd - t0_fd:.4f}s]:")
         for i, act in enumerate(manipulation_plan):
             print(f"  Acción física {i+1:2d}: {act}")
             
@@ -75,9 +75,13 @@ def main():
             for act in manipulation_plan:
                 f.write(f"{act}\n")
         print("\n" + "=" * 70)
-        print(f"✓ Fichero de plan de alto nivel exportado a: {plan_output_path}")
+        print(f"Fichero de plan de alto nivel exportado a: {plan_output_path}")
+        
+        # Generar automáticamente el orquestrador ejecutable en Python
+        import orchestrator
+        orchestrator.generate_execution_script(manipulation_plan)
     else:
-        print("❌ ERROR: Fast Downward falló en la planificación física.")
+        print("Error: Fast Downward falló en la planificación física.")
         sys.exit(1)
     print("=" * 70)
 

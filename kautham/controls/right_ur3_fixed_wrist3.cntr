@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Controls file where wrist_3 (j6) is FIXED during planning.             -->
+<!-- Use this for tilt segments: the planner only moves j1-j5 + gripper.    -->
+<!-- Set the wrist_3 Offset to the desired fixed value before planning:      -->
+<!--   IDLE_Y  j6 = 0.6894   (eje Y, j6 = 136.39°)                         -->
+<!--   IDLE_X  j6 = 0.8144   (eje X, j6 = 226.39°)                         -->
+
+<ControlSet>
+
+	<!-- Offset para joints con <Control>: mantener 0.5 (neutro).               -->
+	<!-- Offset para wrist_3 (sin Control): fija j6 en IDLE_Y = 136.39°        -->
+	<Offset>
+
+		<DOF robot="ur3_right" name="shoulder_pan_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="shoulder_lift_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="elbow_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="wrist_1_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="wrist_2_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="wrist_3_joint" value="0.8144"/>
+		<!-- 0.8144 = IDLE_X j6 = 226.35°  |  usar 0.6894 para IDLE_Y j6 = 136.39° -->
+
+		<DOF robot="ur3_right" name="robotiq_85_left_knuckle_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="robotiq_85_right_knuckle_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="robotiq_85_left_inner_knuckle_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="robotiq_85_right_inner_knuckle_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="robotiq_85_left_finger_tip_joint" value="0.5"/>
+		<DOF robot="ur3_right" name="robotiq_85_right_finger_tip_joint" value="0.5"/>
+
+	</Offset>
+
+
+	<Control name="ur3_right_shoulder_pan_joint" eigValue="1.0">
+		<DOF robot="ur3_right" name="shoulder_pan_joint" value="1.0"/>
+	</Control>
+	<Control name="ur3_right_shoulder_lift_joint" eigValue="1.0">
+		<DOF robot="ur3_right" name="shoulder_lift_joint" value="1.0"/>
+	</Control> 
+	<Control name="ur3_right_elbow_joint" eigValue="1.0">
+		<DOF robot="ur3_right" name="elbow_joint" value="1.0"/>
+	</Control> 
+	<Control name="ur3_right_wrist_1_joint" eigValue="1.0">
+		<DOF robot="ur3_right" name="wrist_1_joint" value="1.0"/>
+	</Control>
+	<Control name="ur3_right_wrist_2_joint" eigValue="1.0">
+		<DOF robot="ur3_right" name="wrist_2_joint" value="1.0"/>
+	</Control>
+	<!-- wrist_3 / j6 omitted → fixed at Offset value above -->
+	<Control name="ur3_right_gripper_joint" eigValue="1.0">
+		<DOF robot="ur3_right" name="robotiq_85_left_knuckle_joint" value="0.24"/>
+		<DOF robot="ur3_right" name="robotiq_85_right_knuckle_joint" value="0.12"/>
+		<DOF robot="ur3_right" name="robotiq_85_left_inner_knuckle_joint" value="0.12"/>
+		<DOF robot="ur3_right" name="robotiq_85_right_inner_knuckle_joint" value="0.12"/>
+		<DOF robot="ur3_right" name="robotiq_85_left_finger_tip_joint" value="-0.12"/>
+		<DOF robot="ur3_right" name="robotiq_85_right_finger_tip_joint" value="-0.12"/>
+	</Control>
+
+</ControlSet>

@@ -1,18 +1,2 @@
-# Python caches
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Operating system files
-.DS_Store
-Thumbs.db
-
-# User-specific / Local configurations
-.vscode/
-.idea/
-*.swp
-*~
-
-# Temporary calibration exports
-scan/calibrate_logs/
+venv
+__pycache__

@@ -12,7 +12,7 @@ State: tuple of 24 integers (one per sticker position), color index 0-5.
 from collections import Counter, deque
 
 
-# ── Color & Position definitions ──────────────────────────────────────────────
+# Color & Position definitions
 
 COLORS = ['white', 'yellow', 'red', 'orange', 'blue', 'green']
 COLOR_ABBR = {c: c[0].upper() for c in COLORS}  # W Y R O B G
@@ -36,7 +36,7 @@ POS_IDX = {p: i for i, p in enumerate(POSITIONS)}
 COLOR_IDX = {c: i for i, c in enumerate(COLORS)}
 
 
-# ── Solved state (color index per position) ────────────────────────────────────
+# Solved state (color index per position)
 
 SOLVED_STATE = (
     # u-ufr, u-ufl, u-ubr, u-ubl  →  white (0)
@@ -54,7 +54,7 @@ SOLVED_STATE = (
 )
 
 
-# ── Move permutations ─────────────────────────────────────────────────────────
+# Move permutations
 # Each move is a list of 4-cycles: (p0, p1, p2, p3) means p0→p1→p2→p3→p0
 # i.e., state[p1] ← state[p0], state[p2] ← state[p1], etc.
 
@@ -74,7 +74,7 @@ def compose_perms(*perms):
     return tuple(p)
 
 
-# ── Physical face-turn permutations ───────────────────────────────────────────
+# Physical face-turn permutations
 
 FACE_NORMALS = {
     'u': (0, 1, 0),
@@ -170,7 +170,7 @@ INVERSE_MOVE = {
 }
 
 
-# ── State manipulation ─────────────────────────────────────────────────────────
+# State manipulation
 
 def apply_move(state, perm):
     """Apply a permutation to a state tuple."""
@@ -194,7 +194,7 @@ def is_solved_monochromatic(state):
     return True
 
 
-# ── Bidirectional BFS solver with fixed DBL corner ────────────────────────────
+# Bidirectional BFS solver with fixed DBL corner
 
 CORNERS = [
     ('u-ufr', 'f-ufr', 'r-ufr'),
@@ -531,7 +531,7 @@ def bfs_solve(init_state):
 
     return None
 
-# ── Pretty printer ────────────────────────────────────────────────────────────
+# Pretty printer
 
 def print_cube(state):
     """Pretty-print the 2x2 cube in cross layout."""
@@ -554,7 +554,7 @@ def print_cube(state):
     print("Layout: [L][F][R][B], U=top, D=bottom")
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# Main
 
 if __name__ == '__main__':
     import sys
@@ -600,7 +600,7 @@ if __name__ == '__main__':
         print("No solution found (this should not happen for a valid 2x2 state).")
         sys.exit(1)
 
-    print(f"\n✓ OPTIMAL SOLUTION  ({len(solution)} standard Rubik moves)  [{t1-t0:.3f}s]")
+    print(f"\nOPTIMAL SOLUTION  ({len(solution)} standard Rubik moves)  [{t1-t0:.3f}s]")
     print()
     for i, action in enumerate(solution):
         print(f"  Step {i+1:2d}: {action}")
@@ -610,7 +610,7 @@ if __name__ == '__main__':
     for action in solution:
         state = apply_move(state, ROBOT_MOVES[action])
     assert is_solved_monochromatic(state), "BUG: Solution verification failed!"
-    print("\n✓ Verification passed — cube is solved.")
+    print("\nVerification passed — cube is solved.")
     print()
     print("── Solved Cube ──")
     print_cube(state)

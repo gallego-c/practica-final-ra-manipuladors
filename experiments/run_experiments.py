@@ -12,7 +12,7 @@ import random
 import csv
 import subprocess
 
-# ── Ajustar paths de imports ──────────────────────────────────────────────────
+# Ajustar paths de imports
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
 sys.path.insert(0, os.path.join(_REPO_ROOT, "robot"))
@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(_REPO_ROOT, "robot"))
 from solver import scramble, bfs_solve, ROBOT_MOVES, SOLVED_STATE
 from generate_taskfile import generate_manipulation_problem, run_fast_downward
 
-# ── Configuración de Salida ───────────────────────────────────────────────────
+# Configuración de Salida
 CSV_OUTPUT_PATH = os.path.join(_SCRIPT_DIR, "results.csv")
 
 # Lista de movimientos posibles
@@ -68,7 +68,7 @@ def main():
         scramble_seq = generate_random_scramble(depth)
         scramble_str = " ".join(scramble_seq)
         
-        # ── 1. Nivel de Tarea Abstracta (Python BFS) ──────────────────────────
+        # 1. Nivel de Tarea Abstracta (Python BFS)
         init_state = scramble(scramble_seq)
         
         t0_bfs = time.time()
@@ -78,7 +78,7 @@ def main():
         bfs_time = t1_bfs - t0_bfs
         num_bfs_moves = len(bfs_solution) if bfs_solution is not None else 0
         
-        # ── 2. Nivel Simbólico de Manipulación (PDDL + Fast Downward) ─────────
+        # 2. Nivel Simbólico de Manipulación (PDDL + Fast Downward)
         fd_time = 0.0
         num_fd_moves = 0
         fd_status = "FAILED"
@@ -116,7 +116,7 @@ def main():
         
         print(f"Exp {idx+1:2d}/20 | Prof: {depth} | BFS Movs: {num_bfs_moves} ({bfs_time:.3f}s) | FD Movs: {num_fd_moves} ({fd_time:.3f}s)")
 
-    # ── Escribir a CSV ────────────────────────────────────────────────────────
+    # Escribir a CSV
     headers = [
         "ID", "Profundidad Scramble", "Secuencia Mezcla", 
         "BFS Tiempo (s)", "BFS Movs Cubo", 
@@ -129,11 +129,11 @@ def main():
         writer.writerows(results)
         
     print("\n" + "=" * 70)
-    print(f"✓ ¡Experimentos completados con éxito!")
-    print(f"✓ Fichero CSV guardado en: {CSV_OUTPUT_PATH}")
+    print(f"Experimentos completados con éxito!")
+    print(f"Fichero CSV guardado en: {CSV_OUTPUT_PATH}")
     print("=" * 70)
     
-    # ── Mostrar resumen en consola ────────────────────────────────────────────
+    # Mostrar resumen en consola
     print("\nResumen Promedios:")
     total_bfs_time = sum(float(r["BFS Tiempo (s)"]) for r in results)
     total_fd_time = sum(float(r["Downward Tiempo (s)"]) for r in results)
