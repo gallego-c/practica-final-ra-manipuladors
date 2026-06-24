@@ -351,7 +351,7 @@ def main():
     print("  UR3 ROBOT - 2x2 CUBE SCANNER WEB SERVER")
     print("-"*60)
     print(f"  Starting local server on port {PORT}...")
-    print("  WSL2 will automatically forward port 5000 to Windows.")
+    print(f"  WSL2 will automatically forward port {PORT} to Windows.")
     print("\n  Open your Windows web browser and go to:")
     print(f"  http://localhost:{PORT}")
     print("-"*60 + "\n")

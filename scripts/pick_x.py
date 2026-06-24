@@ -8,31 +8,22 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # pick_x.py -- Mueve el UR3 a una configuracion de "pick" y, al llegar,
 # cierra la pinza (10 mm) usando el script del URCap pinza10UR3.py.
 
-# ---------------------------------------------------------------------------
 # Conexion
-# ---------------------------------------------------------------------------
 HOST = "10.10.73.239"   # IP del controlador del UR  (ajustala a tu robot)
 PORT = 30002            # Secondary client interface
 
-# ---------------------------------------------------------------------------
 # Parametros de movimiento
-# ---------------------------------------------------------------------------
 ACC   = 0.8     # aceleracion articular [rad/s^2]
 VEL   = 0.6     # velocidad articular   [rad/s]
 BLEND = 0.0     # un solo punto -> sin blend (para en la meta)
 
-# ---------------------------------------------------------------------------
 # Scripts de la pinza (están en la subcarpeta scripts/gripper)
-# ---------------------------------------------------------------------------
 CERRAR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza10UR3.py")   # cierra a 10 mm  (agarrar)
-# ABRIR_PINZA  = os.path.join(SCRIPT_DIR, "gripper", "pinza40UR3.py")   # abre  a 40 mm  (soltar)  <- por si lo necesitas
 
-# ---------------------------------------------------------------------------
 # Esperas (s)
 #   No conocemos la pose inicial, asi que damos un margen generoso para que
 #   el movej termine ANTES de mandar el script de la pinza: si lo mandasemos
 #   antes, el nuevo programa interrumpiria el movimiento a medias.
-# ---------------------------------------------------------------------------
 ESPERA_MOV   = 6.5   # tiempo de sobra para llegar a la pose de pick (incluyendo boot de la pinza ~2.5s)
 ESPERA_PINZA = 2.5   # tiempo para que el agarre se complete
 
@@ -96,9 +87,7 @@ def mover_y_cerrar_pinza(sock, script_pinza, pick_config, a, v):
     sock.sendall(combined.encode("utf-8"))
 
 
-# ---------------------------------------------------------------------------
 # Programa principal
-# ---------------------------------------------------------------------------
 print(f"Conectando al robot en {HOST}:{PORT} ...")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((HOST, PORT))

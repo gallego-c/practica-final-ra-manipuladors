@@ -13,7 +13,7 @@
 #   - csv
 #   - json
 #
-# No external pip packages are strictly required to run the web scanner, BFS solver, or IDA* solver.
+# No external pip packages are strictly required to run the web scanner or BFS solver.
 #
 # System-level dependencies (must be installed via system package manager or built from source):
 # - python3 (>= 3.8)

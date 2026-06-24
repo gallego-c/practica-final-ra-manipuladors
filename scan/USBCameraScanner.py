@@ -63,9 +63,7 @@ WHITE_S_MAX = 70      # below this saturation (and bright) -> white
 WHITE_V_MIN = 140
 
 
-# ===========================================================================
 # Colour classification
-# ===========================================================================
 def _hue_dist(h1, h2):
     d = abs(int(h1) - int(h2)) % 180
     return min(d, 180 - d)
@@ -119,11 +117,9 @@ def facelet_regions(frame_w, frame_h):
     return centres, half, box
 
 
-# ===========================================================================
 # 6 faces x 4 facelets  ->  24-sticker solver state
 # (Identical mapping to 2x2scaner.build_solver_state. If you later extract a
 #  shared module, both files should import it instead of duplicating.)
-# ===========================================================================
 def build_solver_state(face_data):
     c = {
         "W": COLOR_IDX["white"], "Y": COLOR_IDX["yellow"], "R": COLOR_IDX["red"],
@@ -155,9 +151,7 @@ def validate_state(face_data):
     return (len(bad) == 0), counts, bad
 
 
-# ===========================================================================
 # Calibration  (capture one reference HSV per colour)
-# ===========================================================================
 def load_centroids():
     if CALIB_FILE.exists():
         try:
@@ -203,9 +197,7 @@ def run_calibration(cap):
     return centroids
 
 
-# ===========================================================================
 # Scan the 6 faces
-# ===========================================================================
 def read_face(cap, centroids):
     """Sample the 4 facelets of the currently-shown face."""
     ok, frame = cap.read()
@@ -279,9 +271,7 @@ def read_face_from_frame(frame, centroids):
     return out
 
 
-# ===========================================================================
 # Solve hand-off  (same path as 2x2scaner.py)
-# ===========================================================================
 def solve(face_data):
     ok, counts, bad = validate_state(face_data)
     print("\n[solve] colour counts:", counts)
@@ -331,9 +321,7 @@ def solve(face_data):
     return True
 
 
-# ===========================================================================
 # Self-test (no camera): feed a known scramble through the solve hand-off.
-# ===========================================================================
 def selftest():
     from robot.solver import scramble
     # Build face_data that decodes to a known scrambled state by reusing the

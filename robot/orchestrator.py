@@ -4,9 +4,7 @@ import sys
 import time
 import subprocess
 
-# ---------------------------------------------------------------------------
 # Mapeo de Acciones PDDL -> Nombres de Módulos Python en 'scripts/'
-# ---------------------------------------------------------------------------
 ACTION_MAPPING = {
     'pick_x': 'pick_x',
     'pick_y': 'pick_y',
@@ -92,9 +90,9 @@ def run_action(action_name, module_name):
             importlib.reload(sys.modules[module_name])
         else:
             importlib.import_module(module_name)
-        print(f"✓ {action_name} finalizado con éxito en {time.time() - t0:.2f}s.")
+        print(f"[OK] {action_name} finalizado con éxito en {time.time() - t0:.2f}s.")
     except Exception as e:
-        print(f"❌ Error al ejecutar {action_name}: {e}")
+        print(f"[ERROR] al ejecutar {action_name}: {e}")
         raise e
 
 def main():
@@ -105,7 +103,7 @@ def main():
         print(f"\\n[Paso {i+1}/{len(PLAN_ACTIONS)}]")
         run_action(action, module)
         
-    print(f"\\n✓ ¡Plan completado con éxito en {time.time() - t_start:.2f}s!")
+    print(f"\\n[OK] Plan completado con éxito en {time.time() - t_start:.2f}s!")
 
 if __name__ == "__main__":
     main()

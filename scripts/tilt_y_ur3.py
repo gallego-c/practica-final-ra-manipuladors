@@ -9,23 +9,17 @@ ABRIR_PINZA = os.path.join(SCRIPT_DIR, "gripper", "pinza40UR3.py")
 
 # Generado a partir de csv_to_ur3.py -- 161 waypoints, 6 articulaciones del UR3.
 
-# ---------------------------------------------------------------------------
 # Conexion
-# ---------------------------------------------------------------------------
 HOST = "10.10.73.239"   # IP del controlador del UR
 PORT = 30002            # Secondary client interface
 
-# ---------------------------------------------------------------------------
 # Parametros de movimiento
-# ---------------------------------------------------------------------------
 ACC   = 0.8     # aceleracion articular [rad/s^2]
 VEL   = 0.6     # velocidad articular   [rad/s]
 BLEND = 0.002   # radio de blend [m] -- compromiso fluidez/fidelidad
 PAUSA = 1.0     # pausa en el extremo antes de volver [s]
 
-# ---------------------------------------------------------------------------
 # Trayectoria -- configuraciones articulares (en radianes)
-# ---------------------------------------------------------------------------
 path = [
     [0.879646, -0.879646, 0.351858, -1.06814, -1.6085, 5.57947],
     [0.859104, -0.889679, 0.353513, -1.04907, -1.61765, 5.57989],

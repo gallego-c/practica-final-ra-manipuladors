@@ -18,12 +18,12 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import time
 
-# ── Importar el solver para acceder a las funciones BFS ───────────────────────
+# Importar el solver para acceder a las funciones BFS
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _SCRIPT_DIR)
 from solver import scramble, bfs_solve, ROBOT_MOVES, SOLVED_STATE
 
-# ── Importar rclpy y la interfaz ROS 2 de Kautham ─────────────────────────────
+# Importar rclpy y la interfaz ROS 2 de Kautham
 try:
     import rclpy
     from rclpy.node import Node
@@ -44,7 +44,7 @@ except ImportError:
     kautham = None
     ROS_AVAILABLE = False
 
-# ── Ruta de salida ────────────────────────────────────────────────────────────
+# Ruta de salida
 _REPO_ROOT = os.path.dirname(_SCRIPT_DIR)
 OUTPUT_FILE = os.path.join(_REPO_ROOT, "kautham", "taskfile_rubik_ur3.xml")
 
@@ -105,7 +105,7 @@ def rad_to_kautham(joints_rad, gripper=None):
 GRIPPER_OPEN   = 0.500
 GRIPPER_CLOSED = 0.680
 
-# ── IDLE unificado: j1-j5 son fijos; j6 define el eje de agarre ──────────────
+# IDLE unificado: j1-j5 son fijos; j6 define el eje de agarre
 # Eje X (j6 = 226.39°) — configuración medida con el robot agarrando por el eje X.
 # Eje Y (j6 = 226.39° - 90° = 136.39°) — solo varía j6, el resto de joints no cambian.
 # La pinza real (OnRobot RG2) se controla con open_close.py / pinza10/40UR3.py;
@@ -132,19 +132,19 @@ IDLE_Y_OPEN = _idle(_J6_Y_DEG, GRIPPER_OPEN)
 IDLE_Y      = _idle(_J6_Y_DEG, GRIPPER_CLOSED)
 IDLE_Y_LIFT = _idle_lift(_J6_Y_DEG, GRIPPER_CLOSED)
 
-# ── TILT X: volcado rotando alrededor del eje X ──────────────────────────────
+# TILT X: volcado rotando alrededor del eje X
 TILT_X_LIFT = deg_to_kautham([91.6,  -55.82,  88.41, -115.3,  -173.23,  92.54], GRIPPER_CLOSED)
 TILT_X      = deg_to_kautham([92.12, -30.61,  90.27, -117.76, -177.38,  109.87], GRIPPER_CLOSED)
 
-# ── TILT Y: volcado rotando alrededor del eje Y ──────────────────────────────
+# TILT Y: volcado rotando alrededor del eje Y
 TILT_Y_LIFT = deg_to_kautham([-20.19, -80.12, 143.27,  -59.15,  -18.08,  176.40], GRIPPER_CLOSED)
 TILT_Y      = deg_to_kautham([-20.22, -68.11, 145.36,  -73.40,  -18.07,  176.57], GRIPPER_CLOSED)
 
-# ── HOME ─────────────────────────────────────────────────────────────────────
+# HOME
 # TODO: reemplazar con la config real medida del robot en reposo
 HOME = [0.500, 0.375, 0.500, 0.375, 0.500, 0.500, GRIPPER_OPEN]
 
-# ── Alias de compatibilidad ───────────────────────────────────────────────────
+# Alias de compatibilidad
 GRASP_OPEN = IDLE_X_OPEN
 GRASP      = IDLE_X
 
@@ -268,9 +268,9 @@ class RRTTaskfileGenerator(Node):
                 )
 
         for idx, action in enumerate(manipulation_plan):
-            self.get_logger().info(f"── PASO {idx+1}/{len(manipulation_plan)}: {action} ──")
+            self.get_logger().info(f"PASO {idx+1}/{len(manipulation_plan)}: {action}")
 
-            # ── pick_x: HOME → IDLE_X_OPEN (Transit), cerrar pinza ──────────────
+            # pick_x: HOME -> IDLE_X_OPEN (Transit), cerrar pinza
             if action == 'pick_x':
                 transit = ET.SubElement(root, "Transit")
                 path = _plan_or_fail(HOME, IDLE_X_OPEN)
@@ -281,7 +281,7 @@ class RRTTaskfileGenerator(Node):
                 current_grasp = list(IDLE_X)
                 current_axis  = 'x'
 
-            # ── pick_y: HOME → IDLE_Y_OPEN (Transit), cerrar pinza ──────────────
+            # pick_y: HOME -> IDLE_Y_OPEN (Transit), cerrar pinza
             elif action == 'pick_y':
                 transit = ET.SubElement(root, "Transit")
                 path = _plan_or_fail(HOME, IDLE_Y_OPEN)
@@ -292,7 +292,7 @@ class RRTTaskfileGenerator(Node):
                 current_grasp = list(IDLE_Y)
                 current_axis  = 'y'
 
-            # ── place: soltar cubo en fixture, volver a HOME ─────────────────────
+            # place: soltar cubo en fixture, volver a HOME
             elif action == 'place':
                 kautham.kDetachObject(self, "rubik_cube")
                 current_open = list(current_grasp)
@@ -304,7 +304,7 @@ class RRTTaskfileGenerator(Node):
                 current_grasp = None
                 current_axis  = None
 
-            # ── change_pick: cambiar eje de agarre X↔Y sin soltar el cubo ───────
+            # change_pick: cambiar eje de agarre X<->Y sin soltar el cubo
             # El cubo permanece sujeto; solo cambia j6 (~90°) para pasar de
             # orientación X a Y o viceversa (Transfer sin detach).
             elif action == 'change_pick':
@@ -322,7 +322,7 @@ class RRTTaskfileGenerator(Node):
                 current_grasp = list(new_idle)
                 current_axis  = new_axis
 
-            # ── tilt_x_pos/neg: volcar alrededor del eje X ───────────────────────
+            # tilt_x_pos/neg: volcar alrededor del eje X
             # Precondición PDDL: holding-x → el brazo está en IDLE_X
             #
             # El Transfer (cubo adjunto) se genera por INTERPOLACIÓN DIRECTA:
@@ -355,7 +355,7 @@ class RRTTaskfileGenerator(Node):
                 current_grasp = None
                 current_axis  = None
 
-            # ── tilt_y_pos/neg: volcar alrededor del eje Y ───────────────────────
+            # tilt_y_pos/neg: volcar alrededor del eje Y
             # Precondición PDDL: holding-y → el brazo está en IDLE_Y
             # Misma lógica de interpolación que tilt_x.
             elif action in ('tilt_y_pos', 'tilt_y_neg', 'tilt_y'):
@@ -379,7 +379,7 @@ class RRTTaskfileGenerator(Node):
                 current_grasp = None
                 current_axis  = None
 
-            # ── execute_*: rotar capa superior mediante j6 ───────────────────────
+            # execute_*: rotar capa superior mediante j6
             # execute_X      → +90°, cambia eje X↔Y
             # execute_X_prime→ -90°, cambia eje X↔Y
             # execute_X2     → +180°, mantiene eje
@@ -418,7 +418,7 @@ class RRTTaskfileGenerator(Node):
             else:
                 self.get_logger().warn(f"Acción desconocida ignorada: '{action}'")
 
-        # ── Tránsito final a HOME si el robot sigue sujetando el cubo ────────────
+        # Tránsito final a HOME si el robot sigue sujetando el cubo
         if current_grasp is not None:
             kautham.kDetachObject(self, "rubik_cube")
             final_open = list(current_grasp); final_open[-1] = GRIPPER_OPEN
@@ -433,16 +433,16 @@ class RRTTaskfileGenerator(Node):
         os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             f.write(xml_str)
-        self.get_logger().info(f"✓ Taskfile guardado en: {OUTPUT_FILE}")
+        self.get_logger().info(f"Taskfile guardado en: {OUTPUT_FILE}")
         kautham.kCloseProblem(self)
         return True
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 # MAIN
-# ═══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
-# ── Generador PDDL y Planificador Fast Downward ───────────────────────────────
+# Generador PDDL y Planificador Fast Downward
 
 def generate_manipulation_problem(solution, filename="/home/barrendeiro/robotica/cub/robot/manipulation_problem.pddl"):
     """Genera el problema PDDL simplificado de manipulación para la secuencia de solución."""
@@ -494,7 +494,7 @@ def generate_manipulation_problem(solution, filename="/home/barrendeiro/robotica
     
     with open(filename, 'w') as f:
         f.write("\n".join(lines))
-    print(f"✓ PDDL manipulation problem written to {filename}")
+    print(f"PDDL manipulation problem written to {filename}")
 
 
 def run_fast_downward(domain_path="/home/barrendeiro/robotica/cub/robot/manipulation_domain.pddl", 
@@ -541,7 +541,7 @@ def run_fast_downward(domain_path="/home/barrendeiro/robotica/cub/robot/manipula
 def main():
     rclpy.init()
 
-    # ── Obtener scramble desde args o usar el por defecto ─────────────────────
+    # Obtener scramble desde args o usar el por defecto
     if len(sys.argv) > 1:
         scramble_seq = sys.argv[1:]
     else:
@@ -560,7 +560,7 @@ def main():
     for i, m in enumerate(scramble_seq):
         print(f"  {i+1}. {m}")
 
-    # ── 1. Nivel de Tarea Abstracta: Resolver con BFS ─────────────────────────
+    # 1. Nivel de Tarea Abstracta: Resolver con BFS
     init_state = scramble(scramble_seq)
 
     if init_state == SOLVED_STATE:
@@ -574,11 +574,11 @@ def main():
         print("ERROR: No se encontró solución.")
         sys.exit(1)
 
-    print(f"\n✓ SOLUCIÓN DEL CUBO ({len(solution)} movimientos abstractos):")
+    print(f"\nSOLUCIÓN DEL CUBO ({len(solution)} movimientos abstractos):")
     for i, action in enumerate(solution):
         print(f"  Movimiento {i+1:2d}: {action}")
 
-    # ── 2. Nivel Simbólico de Manipulación: Fast Downward ─────────────────────
+    # 2. Nivel Simbólico de Manipulación: Fast Downward
     print("\n[Nivel 2] Planificando tareas físicas con Fast Downward...")
     generate_manipulation_problem(solution)
     manipulation_plan = run_fast_downward()
@@ -587,11 +587,11 @@ def main():
         print("ERROR: Fast Downward falló en la planificación física.")
         sys.exit(1)
         
-    print(f"\n✓ PLAN DE MANIPULACIÓN ROBÓTICA SIMBÓLICA (Fast Downward):")
+    print(f"\nPLAN DE MANIPULACIÓN ROBÓTICA SIMBÓLICA (Fast Downward):")
     for i, act in enumerate(manipulation_plan):
         print(f"  Acción {i+1:2d}: {act}")
 
-    # ── 3. Nivel Geométrico/Cinemático: RRT-Connect con Kautham ───────────────
+    # 3. Nivel Geométrico/Cinemático: RRT-Connect con Kautham
     print("\n[Nivel 3] Planificando trayectorias geométricas en Kautham...")
     generator = RRTTaskfileGenerator()
     success = generator.run(manipulation_plan)
@@ -600,9 +600,9 @@ def main():
     rclpy.shutdown()
 
     if success:
-        print("\n✓ Proceso finalizado con éxito.")
+        print("\nProceso finalizado con éxito.")
     else:
-        print("\n❌ Hubo un error durante la planificación RRT.")
+        print("\nHubo un error durante la planificación RRT.")
         sys.exit(1)
 
 

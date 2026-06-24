@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 execute_plan.py - Script de ejecución autogenerado para el robot UR3.
-Generado el: 2026-06-23 14:04:41
+Generado el: 2026-06-25 00:56:15
 """
 import sys
 import os
@@ -17,29 +17,16 @@ if SCRIPTS_PATH not in sys.path:
 # Lista secuencial de acciones generada del plan PDDL
 PLAN_ACTIONS = [
     ('place', 'place'),
-    ('pick_y', 'pick_y'),
-    ('execute_u_prime', 'turn_counterclockwise'),
-    ('tilt_x', 'tilt_x_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_l', 'turn_clockwise'),
-    ('tilt_y', 'tilt_y_ur3'),
-    ('pick_x', 'pick_x'),
-    ('execute_u_prime', 'turn_counterclockwise'),
-    ('tilt_y', 'tilt_y_ur3'),
-    ('pick_x', 'pick_x'),
-    ('execute_r', 'turn_clockwise'),
-    ('tilt_y', 'tilt_y_ur3'),
-    ('pick_y', 'pick_y'),
-    ('execute_d', 'turn_clockwise'),
     ('tilt_x', 'tilt_x_ur3'),
     ('pick_y', 'pick_y'),
     ('execute_l_prime', 'turn_counterclockwise'),
     ('tilt_x', 'tilt_x_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_f', 'turn_clockwise'),
+    ('execute_d', 'turn_clockwise'),
     ('tilt_y', 'tilt_y_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_l', 'turn_clockwise'),
+    ('execute_l2', 'turn_180'),
     ('place', 'place')
 ]
 
@@ -53,9 +40,9 @@ def run_action(action_name, module_name):
             importlib.reload(sys.modules[module_name])
         else:
             importlib.import_module(module_name)
-        print(f"✓ {action_name} finalizado con éxito en {time.time() - t0:.2f}s.")
+        print(f"[OK] {action_name} finalizado con éxito en {time.time() - t0:.2f}s.")
     except Exception as e:
-        print(f"❌ Error al ejecutar {action_name}: {e}")
+        print(f"[ERROR] al ejecutar {action_name}: {e}")
         raise e
 
 def main():
@@ -66,7 +53,7 @@ def main():
         print(f"\n[Paso {i+1}/{len(PLAN_ACTIONS)}]")
         run_action(action, module)
         
-    print(f"\n✓ ¡Plan completado con éxito en {time.time() - t_start:.2f}s!")
+    print(f"\n[OK] Plan completado con éxito en {time.time() - t_start:.2f}s!")
 
 if __name__ == "__main__":
     main()
