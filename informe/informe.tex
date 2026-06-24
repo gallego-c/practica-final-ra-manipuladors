@@ -1,0 +1,1289 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Codificació i idioma ──────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[catalan]{babel}
+
+% ── Tipografia ────────────────────────────────────────────────────────────────
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ── Geometria ─────────────────────────────────────────────────────────────────
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+
+% ── Gràfics i colors ──────────────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds}
+\definecolor{upcblue}{RGB}{0, 82, 147}
+\definecolor{lightgray}{RGB}{245, 245, 245}
+\usepackage{soul}
+% ── Capçaleres i peus ─────────────────────────────────────────────────────────
+\usepackage{fancyhdr}
+
+% ── Hiperenllaços ─────────────────────────────────────────────────────────────
+\usepackage[hidelinks]{hyperref}
+
+% ── Matemàtiques ──────────────────────────────────────────────────────────────
+\usepackage{amsmath, amssymb}
+
+% ── Llistes i enumeracions ────────────────────────────────────────────────────
+\usepackage{enumitem}
+
+% ── Codi font ─────────────────────────────────────────────────────────────────
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{lightgray},
+  frame=single,
+  breaklines=true,
+  captionpos=b,
+}
+
+% ── Taules ────────────────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+
+% ── Figures flotants ──────────────────────────────────────────────────────────
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ── Espaiat ───────────────────────────────────────────────────────────────────
+\usepackage{setspace}
+\onehalfspacing
+
+% ── Títol de seccions ─────────────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries\color{upcblue}}{{\thesection.}}{0.5em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{{\thesubsection.}}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{{\thesubsubsection.}}{0.5em}{}
+
+
+% ═══════════════════════════════════════════════════════════════════════════════
+%  DOCUMENT
+% ═══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Portada ───────────────────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+
+  % Logos
+  \vspace*{0.5cm}
+  % \includegraphics[width=4cm]{logos/upc.png}\hfill
+  % \includegraphics[width=3cm]{logos/fib.png}
+
+  \vspace{1.5cm}
+
+  % Institució
+  {\large \textbf{Universitat Politècnica de Catalunya}}\\[0.2cm]
+  {\large Facultat d'Informàtica de Barcelona}\\[0.1cm]
+  {\normalsize Grau en Intel·ligència Artificial}
+
+  \vspace{1.5cm}
+  \noindent\rule{\textwidth}{1.5pt}
+  \vspace{0.4cm}
+
+  % Títol principal
+  {\LARGE \textbf{Resolució d'un Cub de Rubik 2$\times$2}}\\[0.5cm]
+  {\Large \textbf{amb un Braç Robot UR3}}\\[0.3cm]
+  {\large Planificació de Tasques i Moviment (TAMP)}
+
+  \vspace{0.4cm}
+  \noindent\rule{\textwidth}{1.5pt}
+
+  \vspace{1.2cm}
+
+  % Assignatura
+  {\large \textbf{Robòtica Avançada — Manipuladors}}\\[0.3cm]
+  {\normalsize Professors: Isiah Zaplana \& Anaís Zulueta}
+
+  \vfill
+
+  % Autors
+  \begin{center}
+    \large\textbf{Autors}\\[0.5cm]
+    \normalsize
+    \begin{tabular}{c}
+      Yufeng Chen \\[0.2cm]
+      Paula Esteve \\[0.2cm]
+      Sergi Flores \\[0.2cm]
+      Claudia Gallego \\[0.2cm]
+      Pau Galvez \\
+    \end{tabular}
+  \end{center}
+
+  \vspace{1.5cm}
+
+  % Data
+  {\normalsize Barcelona, juny de 2026}
+
+\end{titlepage}
+
+% ── Índex ─────────────────────────────────────────────────────────────────────
+\newpage
+\tableofcontents
+\newpage
+
+% ── Capçalera del document ────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textcolor{upcblue}{\small Robòtica Avançada — Manipuladors}}
+\lhead{\textcolor{gray}{\small Resolució d'un Cub de Rubik 2$\times$2 amb UR3}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Introducció}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Motivació i context}
+
+La robòtica de manipulació ha evolucionat enormement en les darreres dècades, passant de sistemes purament reactius a arquitectures capaces de raonar sobre les seves accions i planificar seqüències complexes d'operacions físiques. Un dels reptes actuals més interessants és la integració coherent de la planificació simbòlica d'alt nivell amb la planificació de moviment de baix nivell, paradigma conegut com a \textit{Task and Motion Planning} (TAMP).
+
+En aquest context, el cub de Rubik 2$\times$2 representa un repertori de proves especialment rellevant per a sistemes TAMP aplicats a manipuladors industrials. La seva resolució no és simplement un problema de cerca combinatòria abstracta: requereix que el robot sigui capaç de gestionar la orientació física del cub, les restriccions cinemàtiques del seu efector final i la planificació de trajectòries lliures de col·lisió, tot coordinadament i en temps real.
+
+El robot industrial \textbf{UR3} del fabricant Universal Robots, equipat amb una pinça \textbf{OnRobot RG2}, presenta unes limitacions físiques concretes que fan d'aquest problema un cas d'estudi ric: el gripper només pot agafar el cub verticalment des de dalt (\textit{top-down grasp}), de manera que no és possible executar directament qualsevol moviment estàndard del cub de Rubik. Calen reorientacions intermèdies planificades —inclinacions i reposicionaments del cub— per posar la cara correcta a la part superior i poder-hi aplicar la rotació de canell corresponent.
+
+Aquesta restricció transforma un problema que podria semblar trivial (resoldre un cub de 2$\times$2 en menys de 14 moviments) en un problema genuïnament TAMP, on cal coordinar tres nivells de planificació qualitativament diferents.
+
+\subsection{Objectius del projecte}
+
+L'objectiu principal d'aquest projecte és dissenyar i implementar un sistema complet i funcional per a la resolució autònoma d'un cub de Rubik 2$\times$2 amb el braç robot UR3, des de l'adquisició de l'estat inicial del cub fins a l'execució física de la solució. Concretament, els objectius específics són:
+
+\begin{enumerate}[leftmargin=2em, label=\textbf{\arabic*.}]
+  \item \textbf{Implementar un solver òptim del cub de Rubik 2$\times$2} basat en cerca bidireccional BFS sobre l'espai d'estats de cantonades, capaç de trobar solucions en menys de 14 moviments HTM en temps inferior a 0{,}02 segons per a qualsevol estat vàlid.
+
+  \item \textbf{Modelar les restriccions físiques del robot en PDDL} i usar el planificador \textit{Fast Downward} per obtenir automàticament la seqüència d'accions físiques (inclinacions, recollides i col·locacions) necessàries per transformar qualsevol solució abstracta del cub en una seqüència executable pel robot UR3.
+
+  \item \textbf{Generar trajectòries lliures de col·lisió} per a cada acció física de naturalesa \textbf{complexa}, interfaçant amb Kautham i l'algorisme de planificació de moviment OMPL RRT-Connect, i exportar-les en format taskfile per a la seva execució i visualització.
+
+  \item \textbf{Proporcionar una interfície d'escaneig} basada en web per capturar i interpretar l'estat inicial del cub físic a través d'una càmera USB, amb calibratge interactiu de colors i previsualització 3D de la solució.
+
+\end{enumerate}
+
+\subsection{Descripció del sistema físic}
+
+El sistema robòtic emprat en aquest projecte consta dels elements següents:
+
+\subsubsection{Braç robot UR3}
+
+El \textbf{UR3} és un robot col·laboratiu de 6 graus de llibertat (DOF) fabricat per Universal Robots, dissenyat per a aplicacions de taula en entorns industrials i de recerca. Amb un abast màxim de 500\,mm i una càrrega útil de 3\,kg, és adequat per a tasques de manipulació de peces petites com el cub de Rubik 2$\times$2 (dimensions aproximades de $50 \times 50 \times 50$\,mm).
+
+Les seves articulacions de revolució —especialment el joint 6— permeten realitzar rotacions de 90°, 180° i 270° sobre l'eix vertical, que corresponen exactament als moviments de cara del cub de Rubik quan la cara correcta es troba a la part superior.
+
+\subsubsection{Pinça OnRobot RG2}
+
+La \textbf{OnRobot RG2} és una pinça paral·lela de dos dits amb una obertura màxima de 110\,mm i una força de pinçament ajustable de fins a 40\,N. En el context d'aquest projecte s'utilitza en configuració de \textit{top-down grasp}: el robot agafa el cub verticalment des de dalt, pressionant les seves dues cares laterals. Aquesta restricció és fonamental en el disseny del sistema, ja que determina quines accions físiques de reorientació del cub són necessàries.
+
+La pinça pot agafar el cub en dues orientacions rotades 90° entre elles respecte l'eix vertical, denominades en aquest projecte \textbf{agafada-X} (\textit{holding-x}) i \textbf{agafada-Y} (\textit{holding-y}), que corresponen a premsar el cub al llarg de l'eix X o de l'eix Y del sistema de referència de la cel·la robòtica, respectivament.
+
+\subsubsection{Fixture i cel·la de treball}
+
+El cub es diposita sobre una \textbf{base fixture} muntada sobre la taula, dissenyada per mantenir el cub estable i en una posició i orientació conegudes quan el robot no l'aguanta. Aquesta base és modelada com un obstacle en l'entorn de planificació de moviment (Kautham), garantint que les trajectòries generades no entren en col·lisió amb ella.
+
+La cel·la de treball completa, incloent-hi el robot, la pinça, el cub i la base, es defineix en format URDF i XML de Kautham, i constitueix l'entorn de simulació i planificació de moviment del sistema.
+
+\subsubsection{Restriccions físiques rellevants}
+
+Les principals restriccions del sistema físic que condicionen el disseny de l'arquitectura TAMP són:
+
+\begin{itemize}[leftmargin=2em]
+  \item El gripper només pot efectuar girs de canell quan té el cub agafat i la cara objectiu es troba a la \textbf{part superior} del cub.
+  \item Per executar un moviment de cara lateral (R, L, F, B) cal primer inclinar el cub per situar aquella cara a la part superior.
+  \item Les inclinacions del cub (\textit{tilt\_x} i \textit{tilt\_y}) impliquen: agafar el cub, inclinar-lo i tornar-lo a dipositar al fixture.
+  \item Després d'una inclinació, l'orientació de la pinça respecte el cub canvia, la qual cosa ha de ser modelada explícitament al nivell de planificació de tasques.
+\end{itemize}
+
+Aquestes restriccions motiven directament l'arquitectura de tres nivells descrita als apartats següents.
+
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Preliminars i Nomenclatura}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+Per facilitar la lectura del present informe, aquesta secció estableix la nomenclatura i les convencions que s'utilitzen al llarg del document per referir-se a les cares i moviments del cub de Rubik, així com a les accions físiques del robot.
+
+% ── Comanda per als placeholders d'imatge ────────────────────────────────────
+\newcommand{\imgplaceholder}[3][8cm]{%
+  \begin{figure}[H]
+    \centering
+    \fbox{\begin{minipage}{#1}\centering\vspace{1.2cm}
+      {\large\textit{[Foto: #2]}}
+      \vspace{1.2cm}
+    \end{minipage}}
+    \caption{#3}
+  \end{figure}
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Cares del cub de Rubik}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Un cub de Rubik 2$\times$2 té \textbf{6 cares}, cadascuna identificada per una lletra que fa referència a la seva posició relativa respecte a l'observador:
+
+\begin{center}
+\begin{tabular}{clp{8cm}}
+  \toprule
+  \textbf{Codi} & \textbf{Nom} & \textbf{Descripció} \\
+  \midrule
+  \textbf{U} & \textit{Up}    & Cara superior \\
+  \textbf{D} & \textit{Down}  & Cara inferior \\
+  \textbf{F} & \textit{Front} & Cara frontal (cap a l'observador) \\
+  \textbf{B} & \textit{Back}  & Cara posterior \\
+  \textbf{L} & \textit{Left}  & Cara esquerra \\
+  \textbf{R} & \textit{Right} & Cara dreta \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+La figura~\ref{fig:cube_net} mostra el desplegament en creu del cub, és a dir, l'ordre en què es distribueixen les cares quan s'obre la superfície del cub sobre un pla.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1.0]
+    \def\s{1.0} % mida de cada casella (cm)
+
+    % Macro per dibuixar una cara 2x2 amb color i etiqueta
+    % Arguments: (x_bl, y_bl), color de fons, etiqueta de cara
+    \newcommand{\face}[4]{%
+      \fill[#3, draw=black, line width=0.6pt]
+        (#1*\s, #2*\s) rectangle (#1*\s+2*\s, #2*\s+2*\s);
+      % Línies interiors
+      \draw[black, line width=0.4pt]
+        (#1*\s+\s, #2*\s) -- (#1*\s+\s, #2*\s+2*\s);
+      \draw[black, line width=0.4pt]
+        (#1*\s, #2*\s+\s) -- (#1*\s+2*\s, #2*\s+\s);
+      % Etiqueta de la cara
+      \node[font=\bfseries\large] at (#1*\s+\s, #2*\s+\s) {#4};
+    }
+
+    % U — blanc — fila superior, columna central
+    \face{2}{4}{white}{U}
+    % L — verd  — fila central, columna 0
+    \face{0}{2}{green!60}{L}
+    % F — vermell — fila central, columna 2
+    \face{2}{2}{red!60}{F}
+    % R — blau  — fila central, columna 4
+    \face{4}{2}{blue!50}{R}
+    % B — taronja — fila central, columna 6
+    \face{6}{2}{orange!70}{B}
+    % D — groc — fila inferior, columna central
+    \face{2}{0}{yellow!80}{D}
+
+    % Marc exterior
+    \draw[black, line width=1pt]
+      (2*\s,4*\s) rectangle (4*\s,6*\s);
+    \draw[black, line width=1pt]
+      (0,2*\s) rectangle (8*\s,4*\s);
+    \draw[black, line width=1pt]
+      (2*\s,0) rectangle (4*\s,2*\s);
+  \end{tikzpicture}
+  \caption{Desplegament en creu del cub de Rubik 2$\times$2 amb els codis de cara estàndard.}
+  \label{fig:cube_net}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Notació de moviments estàndard}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Els moviments del cub de Rubik segueixen la \textbf{notació de Singmaster}, àmpliament adoptada com a estàndard. Cada moviment gira la capa associada a una cara en 90° en sentit horari mirant la cara de front. Les variants són:
+
+\begin{center}
+\begin{tabular}{cll}
+  \toprule
+  \textbf{Notació} & \textbf{Codi intern} & \textbf{Descripció} \\
+  \midrule
+  \textbf{X}   & \texttt{X}       & Rotació de 90° en sentit horari \\
+  \textbf{X'}  & \texttt{X\_PRIME} & Rotació de 90° en sentit antihorari \\
+  \textbf{X2}  & \texttt{X2}      & Rotació de 180° \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\noindent on \textbf{X} $\in$ \{U, D, F, B, L, R\}. Això dóna un total de \textbf{18 moviments} possibles. La figura~\ref{fig:move_example} il·lustra la convenció de sentit de gir per a la cara U.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1.1]
+    \def\s{0.9}
+
+    % Cara U (vista des de dalt)
+    \fill[white, draw=black, line width=0.8pt] (0,0) rectangle (2*\s,2*\s);
+    \draw[black, line width=0.4pt] (\s,0) -- (\s,2*\s);
+    \draw[black, line width=0.4pt] (0,\s) -- (2*\s,\s);
+    \node[font=\bfseries] at (\s,\s) {U};
+
+    % Fletxa U (horari)
+    \draw[-{Stealth[length=6pt]}, blue!70!black, line width=1.5pt]
+      (1.5*\s+0.15, \s) arc[start angle=0, end angle=-270, radius=0.55*\s];
+    \node[blue!70!black, font=\small\bfseries] at (2*\s+1.0, \s) {U};
+
+    % Cara U' (antihorari) — desplaçada a la dreta
+    \begin{scope}[xshift=5.5cm]
+      \fill[white, draw=black, line width=0.8pt] (0,0) rectangle (2*\s,2*\s);
+      \draw[black, line width=0.4pt] (\s,0) -- (\s,2*\s);
+      \draw[black, line width=0.4pt] (0,\s) -- (2*\s,\s);
+      \node[font=\bfseries] at (\s,\s) {U};
+
+      \draw[-{Stealth[length=6pt]}, red!70!black, line width=1.5pt]
+        (1.5*\s+0.15, \s) arc[start angle=0, end angle=270, radius=0.55*\s];
+      \node[red!70!black, font=\small\bfseries] at (2*\s+1.1, \s) {U'};
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Convenció de sentit de gir: \textbf{U} (horari en blau) i \textbf{U'} (antihorari en vermell), vistes des de la cara superior.}
+  \label{fig:move_example}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Accions físiques del robot}
+% ─────────────────────────────────────────────────────────────────────────────
+
+A diferència dels moviments abstractes del cub, el robot UR3 treballa amb un conjunt d'\textbf{accions físiques} que reflecteixen les seves restriccions cinemàtiques reals. La taula~\ref{tab:robot_actions} recull les accions definides al domini PDDL del sistema.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{lp{9cm}}
+    \toprule
+    \textbf{Acció} & \textbf{Descripció} \\
+    \midrule
+    \texttt{pick\_x}     & El robot agafa el cub des del fixture pressionant-lo al llarg de l'eix X. \\
+    \texttt{pick\_y}     & El robot agafa el cub des del fixture pressionant-lo al llarg de l'eix Y. \\
+    \texttt{place}       & El robot diposita el cub al fixture i deixa anar la pinça. \\
+    \texttt{change\_pick}& El robot fa un reagafat girant la pinça 90° sense deixar caure el cub. \\
+    \texttt{tilt\_x}     & Amb el cub agafat en X, el robot l'inclina 90° al voltant de l'eix X (cara esquerra $\to$ superior). \\
+    \texttt{tilt\_y}     & Amb el cub agafat en Y, el robot l'inclina 90° al voltant de l'eix Y (cara frontal $\to$ superior). \\
+    \texttt{execute\_*}  & Gir de canell del robot que executa el moviment estàndard corresponent (U, R, F, etc.) un cop la cara objectiu és a la part superior. \\
+    \bottomrule
+  \end{tabular}
+  \caption{Accions físiques del robot UR3 definides al domini PDDL.}
+  \label{tab:robot_actions}
+\end{table}
+
+Les figures~\ref{fig:holding_xy} i~\ref{fig:tilt_xy} mostren les dues orientacions d'agafada i les inclinacions del cub respectivament.
+
+\imgplaceholder[12cm]{Robot agafant el cub en holding-X (esquerra) i holding-Y (dreta)}{Dues orientacions d'agafada de la pinça OnRobot RG2 sobre el cub: \textit{holding-X} (eix X) i \textit{holding-Y} (eix Y).}
+\label{fig:holding_xy}
+
+\imgplaceholder[12cm]{Robot executant tilt\_x (esquerra) i tilt\_y (dreta)}{Accions de inclinació del cub: \texttt{tilt\_x} gira la cara esquerra a la part superior; \texttt{tilt\_y} gira la cara frontal a la part superior.}
+\label{fig:tilt_xy}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Elements geomètrics del cub}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Per descriure l'estat del cub s'utilitzen dos conceptes geomètrics bàsics:
+
+\begin{itemize}
+  \item \textbf{Adhesiu} (\textit{sticker}): cadascuna de les 24 caselles de color visibles (4 per cara $\times$ 6 cares). La notació d'un adhesiu té la forma \texttt{cara-cantó}, on \texttt{cara} és la lletra de la cara a la qual pertany l'adhesiu, i \texttt{cantó} són tres lletres que identifiquen el vèrtex on es troba.
+
+  \item \textbf{Cantó} (\textit{corner}): cadascun dels 8 vèrtexs físics del cub. Cada cantó agrupa exactament 3 adhesius — un per cada cara adjacent. S'identifica amb tres lletres (u/d, f/b, l/r) que indiquen en quina meitat del cub es troba en cada eix: \texttt{ufr} = meitat superior, frontal i dreta.
+\end{itemize}
+
+
+La figura~\ref{fig:corner_ufr} mostra visualment els tres adhesius del cantó UFR sobre el desplegament en creu del cub, ressaltats en groc.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[scale=1.0]
+    \def\s{1.0}
+
+    % ── Macro: cel·la individual ─────────────────────────────────────────────
+    % Ús: \cell{col}{row}{color}{label}
+    % col i row en unitats de cel·la (enters), origen baix-esquerra
+    \newcommand{\cell}[4]{%
+      \fill[#3, draw=black, line width=0.5pt]
+        (#1*\s, #2*\s) rectangle (#1*\s+\s, #2*\s+\s);
+      \node[font=\tiny\bfseries] at (#1*\s+0.5*\s, #2*\s+0.5*\s)
+        {\texttt{#4}};
+    }
+    % Cel·la ressaltada (vèrtex UFR): mateix format però color fort i vora gruixuda
+    \newcommand{\highlight}[2]{%
+      \fill[yellow!80!orange, draw=black, line width=1.2pt]
+        (#1*\s, #2*\s) rectangle (#1*\s+\s, #2*\s+\s);
+      \node[font=\tiny\bfseries] at (#1*\s+0.5*\s, #2*\s+0.5*\s)
+        {\texttt{#3}};
+    }
+
+    % ── U face — blanc (col 2-3, row 4-5) ───────────────────────────────────
+    \cell{2}{5}{white!80!gray}{u-ubl}
+    \cell{3}{5}{white!80!gray}{u-ubr}
+    \cell{2}{4}{white!80!gray}{u-ufl}
+    \fill[yellow!80!orange, draw=black, line width=1.2pt]
+      (3*\s,4*\s) rectangle (4*\s,5*\s);
+    \node[font=\tiny\bfseries] at (3.5*\s,4.5*\s) {\texttt{u-ufr}};
+    % etiqueta de cara
+    \node[font=\footnotesize\bfseries, color=black]
+      at (3*\s, 6.35*\s) {U};
+
+    % ── L face — verd (col 0-1, row 2-3) ────────────────────────────────────
+    \cell{0}{3}{green!45}{l-ubl}
+    \cell{1}{3}{green!45}{l-ufl}
+    \cell{0}{2}{green!45}{l-dbl}
+    \cell{1}{2}{green!45}{l-dfl}
+    \node[font=\footnotesize\bfseries, color=black]
+      at (-0.55*\s, 3*\s) {L};
+
+    % ── F face — vermell (col 2-3, row 2-3) ─────────────────────────────────
+    \cell{2}{3}{red!45}{f-ufl}
+    \fill[yellow!80!orange, draw=black, line width=1.2pt]
+      (3*\s,3*\s) rectangle (4*\s,4*\s);
+    \node[font=\tiny\bfseries] at (3.5*\s,3.5*\s) {\texttt{f-ufr}};
+    \cell{2}{2}{red!45}{f-dfl}
+    \cell{3}{2}{red!45}{f-dfr}
+    \node[font=\footnotesize\bfseries, color=black]
+      at (3*\s, 3*\s) {F};
+
+    % ── R face — blau (col 4-5, row 2-3) ────────────────────────────────────
+    \fill[yellow!80!orange, draw=black, line width=1.2pt]
+      (4*\s,3*\s) rectangle (5*\s,4*\s);
+    \node[font=\tiny\bfseries] at (4.5*\s,3.5*\s) {\texttt{r-ufr}};
+    \cell{5}{3}{blue!35}{r-ubr}
+    \cell{4}{2}{blue!35}{r-dfr}
+    \cell{5}{2}{blue!35}{r-dbr}
+    \node[font=\footnotesize\bfseries, color=black]
+      at (5*\s, 3*\s) {R};
+
+    % ── B face — taronja (col 6-7, row 2-3) ─────────────────────────────────
+    \cell{6}{3}{orange!55}{b-ubr}
+    \cell{7}{3}{orange!55}{b-ubl}
+    \cell{6}{2}{orange!55}{b-dbr}
+    \cell{7}{2}{orange!55}{b-dbl}
+    \node[font=\footnotesize\bfseries, color=black]
+      at (8.55*\s, 3*\s) {B};
+
+    % ── D face — groc (col 2-3, row 0-1) ────────────────────────────────────
+    \cell{2}{1}{yellow!60}{d-dfl}
+    \cell{3}{1}{yellow!60}{d-dfr}
+    \cell{2}{0}{yellow!60}{d-dbl}
+    \cell{3}{0}{yellow!60}{d-dbr}
+    \node[font=\footnotesize\bfseries, color=black]
+      at (3*\s, -0.45*\s) {D};
+
+  \end{tikzpicture}
+  \caption{Desplegament en creu del cub de Rubik 2$\times$2 amb la notació \texttt{cara-cantó} a cada adhesiu. Els tres adhesius del cantó UFR (\texttt{u-ufr}, \texttt{f-ufr}, \texttt{r-ufr}) apareixen ressaltats en groc: tot i pertànyer a cares distintes, corresponen al mateix vèrtex físic del cub.}
+  \label{fig:corner_ufr}
+\end{figure}
+
+El cub es considera \textbf{resolt} quan les 6 cares són monocromàtiques, és a dir, quan els 4 adhesius de cada cara tenen el mateix color. La solució és vàlida per a qualsevol orientació global del cub: no importa quin color queda a dalt o al davant, mentre cada cara sigui uniforme. Els colors del cub físic emprat en aquest projecte respecten la convenció estàndard de colors oposats: blanc--groc, vermell--taronja i blau--verd.
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Arquitectura TAMP}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Visió general}
+
+El paradigma \textbf{Task and Motion Planning} (TAMP) integra la planificació simbòlica d'alt nivell amb la planificació de moviment geomètric de baix nivell en una arquitectura coherent. En aquest projecte, la resolució del cub de Rubik amb el robot UR3 es descompon en \textbf{tres nivells jeràrquics}, cadascun amb el seu propi espai de representació, algoritme i eines:
+
+\begin{itemize}
+  \item \textbf{Nivell 1 — Resolució abstracta del cub:} opera sobre l'espai d'estats combinatori del cub (permutacions de cantonades) i retorna una seqüència òptima de moviments estàndard (U, R', F2, \ldots). En aquest nivell el robot no existeix; el cub es tracta com un objecte matemàtic pur.
+
+  \item \textbf{Nivell 2 — Planificació de tasques robòtiques:} tradueix els moviments abstractes en accions físiques executables pel robot UR3 (recollides, inclinacions, girs de canell). Modela les restriccions cinemàtiques del gripper i planifica les reorientacions del cub necessàries per posar cada cara objectiu a la part superior.
+
+  \item \textbf{Nivell 3 — Planificació de moviment:} per a cadascuna de les accions físiques que no es poden parametritzar directament, genera una trajectòria articular lliure de col·lisió que el robot pot executar en l'espai físic real.
+\end{itemize}
+
+Aquesta descomposició jeràrquica és clau per a la tractabilitat del problema. Resoldre directament en l'espai de trajectòries continues seria computacionalment inviable; la separació en nivells permet que cada capa treballi en la representació més adequada per al seu subproblema, passant al nivell inferior únicament el resultat abstracte necessari.
+
+\subsection{Flux complet del sistema}
+
+La figura~\ref{fig:tamp_flow} mostra el flux complet del sistema, des de la captura de l'estat inicial del cub fins a l'execució física al robot UR3.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance = 0.55cm,
+    block/.style = {
+        rectangle, rounded corners=4pt,
+        minimum width=8.5cm, minimum height=1.1cm,
+        text centered, font=\small,
+        draw=black, line width=0.8pt,
+        fill=#1
+    },
+    label/.style  = {font=\footnotesize\bfseries\color{upcblue}},
+    arrow/.style  = {-{Stealth[length=7pt]}, line width=1.2pt, color=black!70},
+    data/.style   = {font=\scriptsize\itshape, color=black!60},
+  ]
+
+  % ── Blocs principals ──────────────────────────────────────────────────────
+  \node[block=gray!15]  (scan)  {%
+    \begin{tabular}{c}
+      \textbf{Escaneig del cub}\\[1pt]
+      {\scriptsize Càmera USB · Interfície web · Calibratge de colors}
+    \end{tabular}
+  };
+
+  \node[block=blue!12, below=of scan] (l1) {%
+    \begin{tabular}{c}
+      \textbf{Nivell 1 — Solver BFS Bidireccional}\\[1pt]
+      {\scriptsize \texttt{robot/solver.py} · Espai de cantonades · Fixació del cantó DBL}
+    \end{tabular}
+  };
+
+  \node[block=red!10, below=of l1] (l2) {%
+    \begin{tabular}{c}
+      \textbf{Nivell 2 — Planificació de Tasques (PDDL)}\\[1pt]
+      {\scriptsize \texttt{manipulation\_domain.pddl} · Fast Downward}
+    \end{tabular}
+  };
+
+  \node[block=green!12, below=of l2] (l3) {%
+    \begin{tabular}{c}
+      \textbf{Nivell 3 — Planificació de Moviment}\\[1pt]
+      {\scriptsize Kautham · OMPL RRT-Connect · Taskfile XML}
+    \end{tabular}
+  };
+
+  \node[block=orange!20, below=of l3] (exec) {%
+    \begin{tabular}{c}
+      \textbf{Execució al Robot UR3}\\[1pt]
+      {\scriptsize URScript via TCP socket (port 30002) · Pinça OnRobot RG2}
+    \end{tabular}
+  };
+
+  % ── Fletxes amb dades que es passen entre nivells ─────────────────────────
+  \draw[arrow] (scan) -- (l1)
+    node[midway, right=0.2cm, data] {Estat inicial: tupla de 24 adhesius};
+
+  \draw[arrow] (l1) -- (l2)
+    node[midway, right=0.2cm, data] {Seqüència de moviments estàndard: [U, R', F2, \ldots]};
+
+  \draw[arrow] (l2) -- (l3)
+    node[midway, right=0.2cm, data] {Accions físiques: [pick\_x, tilt\_x, execute\_R, \ldots]};
+
+  \draw[arrow] (l3) -- (exec)
+    node[midway, right=0.2cm, data] {Trajectòries articulars (taskfile XML)};
+
+  % ── Etiquetes laterals de nivell ──────────────────────────────────────────
+  \node[label, left=0.4cm of scan]  {Adquisició};
+  \node[label, left=0.4cm of l1]    {Nivell 1};
+  \node[label, left=0.4cm of l2]    {Nivell 2};
+  \node[label, left=0.4cm of l3]    {Nivell 3};
+  \node[label, left=0.4cm of exec]  {Execució};
+
+\end{tikzpicture}
+\caption{Flux complet del sistema TAMP per a la resolució del cub de Rubik 2$\times$2 amb el robot UR3. Cada fletxa indica les dades que es passen d'un nivell al següent.}
+\label{fig:tamp_flow}
+\end{figure}
+
+El procés comença amb l'\textbf{escaneig} del cub físic: l'usuari situa el cub davant d'una càmera USB i la interfície web captura i interpreta el color de cada adhesiu, generant la tupla d'estat inicial de 24 enters que descriu la configuració del cub.
+
+Aquesta tupla s'envia al \textbf{Nivell 1}, el solver BFS bidireccional, que troba la seqüència òptima de moviments estàndard per resoldre el cub. Aquesta seqüència és completament agnòstica respecte al robot: expressa la solució en termes purament abstractes del cub de Rubik.
+
+El \textbf{Nivell 2} rep aquesta seqüència i la tradueix a accions físiques. Per a cada moviment estàndard, el planificador PDDL determina quines reorientacions del cub (inclinacions, canvis d'agafada) cal fer prèviament per deixar la cara correcta a la part superior, i insereix les accions de pick i place necessàries. La sortida és un pla físic complet, ordenat i executable.
+
+Finalment, el \textbf{Nivell 3} genera, per a cada acció física de naturalesa complexa, una trajectòria articular lliure de col·lisió utilitzant Kautham i l'algoritme OMPL RRT-Connect. Les trajectòries senzilles (com els girs de canell) s'obtenen per interpolació directa. Totes s'empaqueten en un fitxer taskfile XML amb els \textit{waypoints} articulars. En el moment d'execució, cada acció física s'envia al controlador del robot com un programa URScript a través d'un socket TCP (port 30002 — \textit{Secondary Client Interface}), que el UR3 interpreta i executa directament sense cap \textit{middleware} addicional.
+\newpage
+\newpage
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Nivell 1 — Resolució del Cub de Rubik}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+El Nivell 1 és responsable de trobar, donada una configuració inicial qualsevol del cub, la seqüència òptima de moviments estàndard que el resol. Opera de manera completament independent del robot: no coneix l'existència del gripper, les inclinacions ni cap restricció física. La implementació es troba a \texttt{robot/solver.py}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Justificació de l'algorisme escollit}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Abans de descriure la implementació, cal entendre per què s'escull un BFS bidireccional i no altres alternatives habituals.
+
+\subsubsection{Mida de l'espai d'estats}
+
+Un cub de Rubik 2$\times$2 té exactament \textbf{3.674.160 estats reachables}, que s'obtenen de la fórmula:
+
+\begin{equation*}
+  \frac{8! \times 3^7}{24} = 3.674.160
+\end{equation*}
+
+on $8!$ és el nombre de permutacions dels 8 cantons, $3^7$ les orientacions possibles (el darrer cantó queda determinat pels altres set), i es divideix per 24 per les simetries globals del cub. Aquesta xifra és \textbf{suficientment petita per caber en memòria}, cosa que obre la porta a algorismes exhaustius com el BFS.
+
+\subsubsection{Per què BFS i no IDA*?}
+
+IDA* és la solució habitual quan l'espai d'estats no cap en memòria (com en el cub 3$\times$3). En el nostre cas, amb 3,7 milions d'estats i representacions compactes de 16 bytes per estat, \textbf{la memòria no és el coll d'ampolla}. El BFS és preferible perquè:
+
+\begin{itemize}
+  \item Garanteix \textbf{optimalitat} sense necessitat d'una heurística admissible.
+  \item Evita \textbf{re-expansions} dels mateixos estats, que IDA* repeteix en cada aprofundiment.
+  \item És \textbf{més simple} d'implementar correctament: no cal dissenyar ni verificar una heurística.
+\end{itemize}
+
+\subsubsection{Per què bidireccional?}
+
+Un BFS unidireccional explora fins a $b^d$ estats, on $b$ és el factor de branching i $d$ la profunditat de la solució. Amb $b = 9$ moviments i solucions de fins a $d = 8$ moviments, el pitjor cas seria explorar $9^8 \approx 43$ milions d'estats. El BFS \textbf{bidireccional} redueix aquest cost a $2 \times 9^4 \approx 13.000$ estats, expandint simultàniament des de l'estat inicial i des de l'estat resolt i aturant-se quan les dues fronteres es troben (\textit{meet in the middle}). En la pràctica, el guany és d'ordres de magnitud.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Representació de l'estat}
+% ─────────────────────────────────────────────────────────────────────────────
+
+El solver usa dues representacions complementàries: una per \textbf{aplicar moviments} i una altra, més compacta, per a la \textbf{cerca}.
+
+\subsubsection{Representació per adhesius (aplicació de moviments)}
+
+L'estat del cub és una \textbf{tupla de 24 enters} (un per adhesiu), on cada valor és l'índex del color present en aquella posició. Aquesta representació s'obté directament de l'escaneig i permet aplicar qualsevol moviment com una simple reordenació d'elements:
+
+\begin{equation*}
+  \texttt{estat\_nou[i]} = \texttt{estat[perm[i]]}
+  \quad \forall\, i \in \{0, \ldots, 23\}
+\end{equation*}
+
+on \texttt{perm} és la permutació de 24 índexos que descriu el moviment.
+
+\subsubsection{Representació per cantons (cerca)}
+
+Per a la cerca, cada estat es converteix a una representació basada en els \textbf{8 cantons físics}. La idea és que, en un cub 2$\times$2, l'estat queda completament determinat per la posició i l'orientació de cada cantó, independentment de com es descriguin els adhesius individuals.
+
+Cada cantó queda descrit per dos valors:
+\begin{itemize}
+  \item \textbf{On és}: quin dels 8 cantons originals ocupa aquesta posició (\texttt{corner\_perm}).
+  \item \textbf{Com està girat}: un enter entre 0 i 2 que indica quants terços de volta de twist té respecte l'orientació resolta (\texttt{corner\_orient}).
+\end{itemize}
+
+Aquesta representació redueix l'estat a \textbf{16 bytes} (dues tuples de 8 enters) i és la clau de cerca en el BFS. La conversió des dels adhesius la fa \texttt{\_state\_to\_cubies()}, que identifica cada cantó pel conjunt de tres colors que el formen.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Generació de moviments per geometria 3D}
+% ─────────────────────────────────────────────────────────────────────────────
+
+En lloc de codificar manualment quins adhesius va on en cada moviment, el solver les \textbf{deriva automàticament per geometria vectorial 3D}. La idea és modelar cada adhesiu com un punt en l'espai: la seva posició és el parell (coordenada del cantó, normal de la cara), ambdues en $\{-1, +1\}^3$.
+
+Fer un moviment de cara (per exemple U) equival a rotar $-90°$ al voltant de l'eix vertical tots els adhesius de la cara superior. La funció \texttt{\_build\_face\_turn()} aplica aquesta rotació vectorialment i, comparant posicions abans i després, construeix automàticament la permutació corresponent. D'aquesta manera s'obtenen els 6 moviments bàsics sense cap hardcoding, i a partir d'ells es deriven els 18 del conjunt complet:
+
+\begin{center}
+\begin{tabular}{lll}
+  \toprule
+  \textbf{Tipus} & \textbf{Exemple} & \textbf{Com s'obté} \\
+  \midrule
+  Horari 90°     & U       & Directament per rotació geomètrica \\
+  Antihorari 90° & U'      & Invertint la permutació de U \\
+  180°           & U2      & Composant U amb si mateix \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{BFS bidireccional amb fixació del cantó DBL}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsubsection{Fixació del cantó DBL i reducció de l'espai}
+
+Un cub de Rubik 2$\times$2 té 24 orientacions globals que són físicament equivalents: girar tot el cub sense tocar cap peça no canvia res. Sense tenir-ho en compte, el BFS tractaria les 24 orientacions d'un mateix estat com 24 estats diferents, explorant 24 vegades més feina de l'estrictament necessari.
+
+La solució és \textbf{fixar un cantó de referència}: el solver tria el cantó DBL (inferior-posterior-esquerre) i el manté sempre en la seva posició i orientació estàndard, eliminant les 24 simetries equivalents d'un sol cop. Això redueix l'espai efectiu de 3,7M a \textbf{153.000 estats}.
+
+La canonicalització la fa \texttt{\_canonicalize\_fixed\_corner()}: prova les 24 rotacions del cub enter fins a trobar la que deixa el cantó DBL en la posició estàndard. Es guarda quina rotació s'ha aplicat per poder traduir la solució de tornada a l'orientació original del cub al final.
+
+\subsubsection{Reducció dels moviments de cerca}
+
+La fixació del DBL té una conseqüència directa: els moviments D, L i B desplacen el cantó DBL de la seva posició fixa, de manera que no es poden usar durant la cerca. Afortunadament, els tres generadors restants i els seus inversos i dobles,
+
+\begin{equation*}
+  \mathcal{M} = \{U,\; U',\; U2,\; R,\; R',\; R2,\; F,\; F',\; F2\}
+\end{equation*}
+
+\noindent són matemàticament suficients per assolir \textit{qualsevol} estat del cub mantenint el DBL fix, de manera que la cerca no perd completesa.
+
+\subsubsection{Cerca bidireccional}
+
+El BFS bidireccional manté dues fronteres simultàniament (figura~\ref{fig:bidir_bfs}):
+
+\begin{itemize}
+  \item \textbf{Frontera forward}: s'expandeix des de l'estat inicial aplicant moviments de $\mathcal{M}$.
+  \item \textbf{Frontera backward}: s'expandeix des de l'estat resolt aplicant els mateixos moviments en sentit invers.
+\end{itemize}
+
+En cada iteració s'expandeix la frontera amb \textbf{menys nodes} (balanceig actiu). La cerca s'atura quan un estat apareix a totes dues fronteres alhora (\textit{meet in the middle}). La solució final es reconstrueix concatenant el camí de la frontera forward fins al punt de trobada i el camí invers de la frontera backward.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm and 1.4cm,
+      state/.style={circle, draw=black, line width=0.7pt,
+                    minimum size=0.65cm, font=\scriptsize},
+      met/.style={circle, draw=orange!80!black, fill=orange!25,
+                  line width=1.2pt, minimum size=0.65cm, font=\scriptsize\bfseries},
+      fw/.style={-{Stealth[length=5pt]}, blue!60!black, line width=0.9pt},
+      bw/.style={-{Stealth[length=5pt]}, red!60!black, line width=0.9pt},
+    ]
+
+    % Nodes forward (esquerra cap a centre)
+    \node[state, fill=blue!20] (s0) {$s_0$};
+    \node[state, fill=blue!10, right=2cm] (s1) {};
+    \node[state, fill=blue!10, right=3.5cm] (s2) {};
+    \node[met,   right=5cm]               (m)  {$m$};
+
+    % Nodes backward (dreta cap a centre)
+    \node[state, fill=red!20, right=3.8cm of m] (sg) {$s_{\text{res}}$};
+    \node[state, fill=red!10, left=of sg]        (b1) {};
+    \node[state, fill=red!10, left=-7cm]        (b2) {};
+
+    % Fletxes forward
+    \draw[fw] (s0) -- (s1);
+    \draw[fw] (s1) -- (s2);
+    \draw[fw] (s2) -- (m);
+
+    % Fletxes backward
+    \draw[bw] (sg) -- (b1);
+    \draw[bw] (b1) -- (b2);
+    \draw[bw] (b2) -- (m);
+
+    % Etiquetes
+    \node[font=\scriptsize\bfseries, blue!70!black, above=0.1cm of s0] {Inici};
+    \node[font=\scriptsize\bfseries, red!70!black,  above=0.1cm of sg] {Resolt};
+    \node[font=\scriptsize\bfseries, orange!80!black, below=0.15cm of m] {trobada};
+
+    % Fletxa de solució completa
+    \draw[{Stealth[length=5pt]}-{Stealth[length=5pt]}, black!40, dashed, line width=0.8pt]
+      ([yshift=-0.55cm]s0.south) -- ([yshift=-0.55cm]sg.south)
+      node[midway, below, font=\scriptsize, black!55] {solució completa};
+
+  \end{tikzpicture}
+  \caption{Esquema del BFS bidireccional: la frontera blava s'expandeix des de l'estat inicial i la vermella des de l'estat resolt. La cerca acaba quan es troben en l'estat $m$.}
+  \label{fig:bidir_bfs}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Compatibilitat amb l'escàner: simetries de coordenades}
+% ─────────────────────────────────────────────────────────────────────────────
+
+L'escàner pot retornar l'estat del cub en una convenció de coordenades diferent a la interna del solver (per exemple, si el cub no s'escaneja sempre orientat de la mateixa manera). Per gestionar-ho de manera robusta, la funció \texttt{bfs\_solve()} prova totes les transformacions de coordenades possibles —les 24 rotacions del grup de simetria del cub— i accepta únicament aquella la solució de la qual, aplicada sobre l'estat original dels adhesius, dóna un cub monocromàtic. Gràcies a això, el solver és agnòstic respecte l'orientació inicial del cub.
+
+Un cop trobada la solució en l'espai canònic (amb DBL fix), cal traduir cada moviment al marc de referència original del cub. Això es fa conjugant cada moviment de la solució canònica amb la rotació canònica aplicada, via \texttt{\_move\_to\_original()}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Rendiment: temps de resolució i optimalitat}
+% ─────────────────────────────────────────────────────────────────────────────
+
+El BFS garanteix \textbf{optimalitat}: la solució trobada té el mínim nombre de moviments en l'espai $\mathcal{M}$. La taula~\ref{tab:bfs_results} recull els resultats de les 20 barreges de l'experiment.
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{ccccc}
+    \toprule
+    \textbf{ID} & \textbf{Prof. barreja} & \textbf{Seqüència de barreja} & \textbf{Movs. solució} & \textbf{Temps (s)} \\
+    \midrule
+    1  & 2 & L U                       & 2 & 0{,}0004 \\
+    2  & 2 & R' D'                     & 2 & 0{,}0003 \\
+    3  & 3 & D' F L                    & 3 & 0{,}0006 \\
+    4  & 3 & B2 R D2                   & 3 & 0{,}0004 \\
+    5  & 4 & D U R U'                  & 3 & 0{,}0004 \\
+    6  & 4 & D' F2 U B2                & 4 & 0{,}0008 \\
+    7  & 4 & U' B2 D2 D'               & 3 & 0{,}0005 \\
+    8  & 5 & R2 R' U B D2              & 4 & 0{,}0005 \\
+    9  & 5 & F' R' F U' F'             & 5 & 0{,}0008 \\
+    10 & 5 & L R U2 L B'               & 4 & 0{,}0007 \\
+    11 & 6 & B' R' D R2 B2 L          & 6 & 0{,}0028 \\
+    12 & 6 & U2 R B2 L' B' U'         & 6 & 0{,}0026 \\
+    13 & 6 & R D L' R D' L            & 4 & 0{,}0004 \\
+    14 & 6 & U2 R' R2 B' B' B'        & 3 & 0{,}0004 \\
+    15 & 7 & U' R' B B2 D' B R2       & 6 & 0{,}0027 \\
+    16 & 7 & U2 R' B2 D' F' D D       & 6 & 0{,}0023 \\
+    17 & 7 & F' U2 R' U' F' U' L2    & 7 & 0{,}0059 \\
+    18 & 8 & U2 R2 F R' F D' B2 R'   & 8 & 0{,}0118 \\
+    19 & 8 & D2 U2 B' D' F F2 L2 R   & 4 & 0{,}0007 \\
+    20 & 8 & D L F B D2 R U2 R2      & 6 & 0{,}0031 \\
+    \midrule
+    \multicolumn{3}{l}{\textbf{Mitjana}} & \textbf{4{,}45} & \textbf{0{,}0019} \\
+    \multicolumn{3}{l}{\textbf{Màxim}}  & \textbf{8}      & \textbf{0{,}0118} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Resultats del Nivell 1 sobre 20 barreges aleatòries. La longitud de la solució pot ser inferior a la profunditat de barreja quan els moviments es cancel·len parcialment entre ells.}
+  \label{tab:bfs_results}
+\end{table}
+
+El solver troba la solució òptima en menys de \textbf{12\,ms} en tots els casos, amb una mitjana de \textbf{1{,}9\,ms}. El temps creix amb la longitud de la solució (no amb la profunditat de la barreja), cosa consistent amb el BFS: a major profunditat, major nombre d'estats explorats. Els casos ID~14 i ID~19 il·lustren que barreges de 6--8 moviments poden tenir solucions de només 3--4 moviments quan hi ha cancel·lacions entre moviments consecutius.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Nivell 2 — Planificació de Tasques Robòtiques (PDDL)}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+El Nivell 2 rep la seqüència de moviments estàndard del Nivell 1 i la tradueix en un pla d'accions físiques que el robot UR3 pot executar directament. Aquesta traducció no és trivial: un moviment com R no es pot executar directament si la cara R no es troba a la part superior del cub, de manera que caldrà planificar les reorientacions prèvies necessàries. La implementació es basa en \textbf{PDDL} (Planning Domain Definition Language) i el planificador \textbf{Fast Downward}.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Justificació de l'enfocament PDDL}
+% ─────────────────────────────────────────────────────────────────────────────
+
+La traducció de moviments Rubik a accions físiques podria semblar resolta amb una taula de correspondències, però el problema real és més complex: l'acció física necessària per executar cada moviment depèn de l'\textbf{orientació actual del cub}, que canvia dinàmicament al llarg del pla. Un moviment R requereix que la cara R estigui a dalt, però si en aquell moment la cara F és a la part superior, cal primer una o dues inclinacions.
+
+Calcular manualment quines inclinacions calen i en quin ordre per a cada seqüència possible seria un problema combinatori difícil de gestionar i propens a errors. PDDL ofereix una solució elegant: \textbf{es declara el model} (quines accions existeixen, quines precondicions tenen i quins efectes produeixen), i el \textbf{planificador Fast Downward} s'encarrega automàticament de trobar la seqüència mínima d'accions que arriba a l'objectiu. Això separa la lògica del problema de l'algoritme de cerca, facilitant el manteniment i garantint la completesa.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Modelització del domini}
+% ─────────────────────────────────────────────────────────────────────────────
+
+El domini PDDL (\texttt{manipulation\_domain.pddl}) modela l'estat físic complet del sistema en dos grups de predicats:
+
+\subsubsection{Estat físic del robot}
+
+\begin{itemize}
+  \item \texttt{(cube-on-fixture)}: el cub reposa a la base.
+  \item \texttt{(robot-holding)}: el robot té el cub agafat.
+  \item \texttt{(holding-x)} / \texttt{(holding-y)}: el robot agafa el cub premsant-lo al llarg de l'eix X o de l'eix Y, respectivament. Aquesta distinció és necessària perquè la inclinació que és possible fer depèn de com és l'agafada.
+\end{itemize}
+
+\subsubsection{Orientació 3D del cub}
+
+Sis predicats rastreen quina cara del cub es troba en cada posició espacial en tot moment:
+
+\begin{center}
+\texttt{(top-face ?f)} \quad \texttt{(bottom-face ?f)} \quad \texttt{(front-face ?f)}\\[2pt]
+\texttt{(back-face ?f)} \quad \texttt{(left-face ?f)} \quad \texttt{(right-face ?f)}
+\end{center}
+
+L'estat inicial és l'orientació canònica: cara U a dalt, D a baix, F al davant, B al darrere, L a l'esquerra, R a la dreta. Cada acció que reorienta el cub (inclinació) actualitza aquests sis predicats.
+
+\subsubsection{Seguiment de la seqüència de moviments}
+
+El domini modela la seqüència a executar com una cadena de passos (\texttt{step}). Cada pas té un tipus associat (\texttt{step-type-U}, \texttt{step-type-R-prime}, etc.) i es marca com a completat un cop executat. Això permet al planificador saber quin moviment Rubik correspon a cada pas i en quin ordre s'han d'executar.
+
+\subsubsection{Accions del domini}
+
+El domini defineix dos grups d'accions:
+
+\paragraph{Accions de manipulació física:}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{lp{9.5cm}}
+    \toprule
+    \textbf{Acció} & \textbf{Descripció i efectes principals} \\
+    \midrule
+    \texttt{pick\_x} & Agafa el cub des del fixture premsant per l'eix X. Activa \texttt{robot-holding} i \texttt{holding-x}. \\
+    \texttt{pick\_y} & Ídem per l'eix Y. Activa \texttt{holding-y}. \\
+    \texttt{place}   & Diposita el cub al fixture. Desactiva \texttt{robot-holding}, \texttt{holding-x} i \texttt{holding-y}. \\
+    \texttt{change\_pick} & Reagafada: gira la pinça 90° sense soltar el cub, intercanviant \texttt{holding-x} i \texttt{holding-y}. \\
+    \texttt{tilt\_x} & Amb agafada-X, inclina el cub 90° al voltant de l'eix X (cara esquerra → superior). Actualitza els 6 predicats d'orientació i retorna el cub al fixture. \\
+    \texttt{tilt\_y} & Amb agafada-Y, inclina el cub 90° al voltant de l'eix Y (cara frontal → superior). \\
+    \bottomrule
+  \end{tabular}
+  \caption{Accions de manipulació física del domini PDDL.}
+  \label{tab:pddl_manip}
+\end{table}
+
+\paragraph{Accions d'execució de moviments Rubik:}
+
+Hi ha 18 accions \texttt{execute\_*}, una per a cada moviment estàndard (U, U', U2, D, D', D2, R, \ldots, B2). Totes comparteixen la mateixa estructura: requereixen que el robot tingui el cub agafat i que la \textbf{cara correcta estigui a la part superior}, i marquen el pas actual com a completat.
+
+Un aspecte clau del disseny és que cada parella de cares oposades (U/D, R/L, F/B) \textbf{comparteix la mateixa acció física de gir de canell}. Per exemple, \texttt{execute\_U} pot executar tant un moviment U (quan la cara U és a dalt) com un moviment D (quan la cara D és a dalt, que físicament s'executa com un gir U vist des de l'altra banda). En el cas dels moviments D, L i B l'acció també actualitza els predicats d'orientació horitzontal de les cares laterals, ja que el gir de canell les reordena.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Generació automàtica del problema PDDL}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Per a cada nova solució del Nivell 1, la funció \texttt{generate\_manipulation\_problem()} genera automàticament el fitxer \texttt{manipulation\_problem.pddl}. El procés és el següent:
+
+\begin{enumerate}
+  \item Es creen $n$ objectes de tipus \texttt{step} (un per cada moviment de la solució BFS).
+  \item L'estat inicial fixa l'orientació canònica del cub i el robot sense agafada.
+  \item Es declara la cadena de passos: \texttt{(next-step step$_i$ step$_{i+1}$)} per a cada $i$.
+  \item Per a cada pas, s'activa el predicat de tipus corresponent al moviment: per exemple, si el moviment és R', s'afegeix \texttt{(step-type-R-prime step$_i$)}.
+  \item L'objectiu declara que tots els passos han d'estar marcats com a completats.
+\end{enumerate}
+
+El fragment~\ref{lst:pddl_problem} mostra un exemple real del fitxer generat per a una solució de 8 moviments.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=Lisp, caption={Fragment de \texttt{manipulation\_problem.pddl} generat automàticament per a la solució [U', R, U', R, U, R', B, R].}, label=lst:pddl_problem, basicstyle=\ttfamily\scriptsize]
+(:objects step1 step2 step3 step4 step5 step6 step7 step8 - step)
+(:init
+  (cube-on-fixture)   (top-face face_u)  (bottom-face face_d)
+  (front-face face_f) (back-face face_b) (left-face face_l)
+  (right-face face_r) (current-step step1)
+
+  (next-step step1 step2) (step-type-U-prime step1)
+  (next-step step2 step3) (step-type-R step2)
+  (next-step step3 step4) (step-type-U-prime step3)
+  (next-step step4 step5) (step-type-R step4)
+  (next-step step5 step6) (step-type-U step5)
+  (next-step step6 step7) (step-type-R-prime step6)
+  (next-step step7 step8) (step-type-B step7)
+  (next-step step8 step9) (step-type-R step8) )
+(:goal (and (step-completed step1) ... (step-completed step8)))
+\end{lstlisting}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Resultats del planificador Fast Downward}
+% ─────────────────────────────────────────────────────────────────────────────
+
+La taula~\ref{tab:fd_results} recull els resultats del Nivell 2 sobre les 20 barreges de l'experiment. En tots els casos Fast Downward troba un pla vàlid.
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{cccccc}
+    \toprule
+    \textbf{ID} & \textbf{Movs. BFS} & \textbf{Accions robot} & \textbf{Temps FD (s)} & \textbf{Resultat} \\
+    \midrule
+    1  & 2 &  5 & 0{,}604 & \textsc{ok} \\
+    2  & 2 &  5 & 0{,}523 & \textsc{ok} \\
+    3  & 3 & 10 & 0{,}457 & \textsc{ok} \\
+    4  & 3 &  8 & 0{,}488 & \textsc{ok} \\
+    5  & 3 &  8 & 0{,}566 & \textsc{ok} \\
+    6  & 4 & 13 & 0{,}578 & \textsc{ok} \\
+    7  & 3 &  8 & 0{,}488 & \textsc{ok} \\
+    8  & 4 & 11 & 0{,}601 & \textsc{ok} \\
+    9  & 5 & 16 & 0{,}580 & \textsc{ok} \\
+    10 & 4 & 13 & 0{,}586 & \textsc{ok} \\
+    11 & 6 & 19 & 0{,}501 & \textsc{ok} \\
+    12 & 6 & 17 & 0{,}462 & \textsc{ok} \\
+    13 & 4 & 13 & 0{,}601 & \textsc{ok} \\
+    14 & 3 & 10 & 0{,}619 & \textsc{ok} \\
+    15 & 6 & 17 & 0{,}493 & \textsc{ok} \\
+    16 & 6 & 17 & 0{,}521 & \textsc{ok} \\
+    17 & 7 & 22 & 0{,}551 & \textsc{ok} \\
+    18 & 8 & 25 & 0{,}628 & \textsc{ok} \\
+    19 & 4 & 13 & 0{,}631 & \textsc{ok} \\
+    20 & 6 & 19 & 0{,}670 & \textsc{ok} \\
+    \midrule
+    \multicolumn{2}{l}{\textbf{Mitjana}} & \textbf{13{,}2} & \textbf{0{,}558} & — \\
+    \multicolumn{2}{l}{\textbf{Màxim}}  & \textbf{25}     & \textbf{0{,}670} & — \\
+    \bottomrule
+  \end{tabular}
+  \caption{Resultats del Nivell 2 sobre 20 barreges. «Accions robot» és el nombre d'accions físiques del pla generat per Fast Downward.}
+  \label{tab:fd_results}
+\end{table}
+
+Els resultats mostren un temps de planificació \textbf{pràcticament constant} al voltant de \textbf{0{,}55\,s}, independent del nombre de moviments de la solució. Això és consistent amb el funcionament de Fast Downward: el planificador explora un espai d'estats de mida similar independentment de la profunditat del pla, ja que la representació PDDL codifica la seqüència com una cadena lineal de passos. El nombre d'accions físiques creix linealment amb els moviments BFS: de mitjana, cada moviment estàndard requereix \textbf{2–3 accions físiques} addicionals de reorientació (inclinació, pick, place).
+
+
+\newpage
+\newpage
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Nivell 3 — Planificació de Moviment (Kautham + OMPL)}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+El Nivell 3 rep el pla d'accions físiques del Nivell 2 i genera, per a cada acció, la trajectòria articular concreta que el robot UR3 ha d'executar. L'eina principal és \textbf{Kautham}, un entorn de planificació de moviment que integra l'algorisme \textbf{OMPL RRT-Connect} per trobar camins lliures de col·lisió en l'espai de configuració del robot.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Configuració de l'espai de treball}
+% ─────────────────────────────────────────────────────────────────────────────
+
+L'espai de treball es defineix al fitxer \texttt{kautham/ur3\_rubik\_kautham.xml}, que especifica tots els elements de la cel·la robòtica:
+
+\subsubsection{Robot i model cinemàtic}
+
+El robot es carrega des del fitxer URDF \texttt{ur3\_robotiq\_85\_gripper.urdf.xacro}, que modela els 6 joints del braç UR3 més el joint de la pinça, donant un total de \textbf{7 graus de llibertat} en el model de simulació. La posició de la base del robot dins la cel·la és $(X, Y, Z) = (0{,}294,\; 0{,}539,\; {-0{,}07})$\,m respecte l'origen del món.
+
+\subsubsection{Obstacles}
+
+La cel·la conté dos obstacles estàtics rellevants per a la planificació de col·lisions:
+
+\begin{itemize}
+  \item \textbf{Taula}: superfície plana que limita els moviments per sota.
+  \item \textbf{Fixture}: base quadrada de $5{,}8 \times 5{,}8 \times 7{,}5$\,cm que sosté el cub. És l'obstacle críticament rellevant per a les inclinacions, ja que el robot ha d'elevar el cub per sobre d'ell durant el tilt.
+\end{itemize}
+
+El cub de Rubik s'inclou com a obstacle estàtic als fitxers de planificació de les inclinacions, de manera que RRT-Connect el té en compte per a la detecció de col·lisions.
+
+\subsubsection{Normalització de l'espai de configuració}
+
+Kautham treballa amb valors de joints normalitzats a l'interval $[0, 1]$. La conversió des de radians és diferent segons el joint:
+
+\begin{itemize}
+  \item \textbf{Joints 1, 2, 4, 5 i 6} — rang $[-2\pi,\, 2\pi]$\,rad:
+  \begin{equation*}
+    q_{\text{norm}} = \frac{q_{\text{rad}} + 2\pi}{4\pi}
+  \end{equation*}
+  \item \textbf{Joint 3 (colze)} — rang $[-\pi,\, \pi]$\,rad (expressable via trigonometria):
+  \begin{equation*}
+    q_{\text{norm}} = \frac{q_{\text{rad}} + \pi}{2\pi}
+  \end{equation*}
+\end{itemize}
+
+La funció \texttt{deg\_to\_kautham()} aplica aquesta conversió automàticament convertint primer de graus a radians i tractant el joint 3 per separat.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Planificació amb RRT-Connect: les inclinacions}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Les inclinacions (\texttt{tilt\_x} i \texttt{tilt\_y}) són els únics moviments planificats amb RRT-Connect, ja que la presència del fixture com a obstacle fa que la trajectòria no sigui trivial. Cada inclinació té el seu fitxer XML de Kautham —\texttt{task\_tilt\_x.xml} i \texttt{task\_tilt\_y.xml}— que defineix la \textit{query} corresponent:
+
+\begin{itemize}
+  \item \textbf{\texttt{task\_tilt\_x.xml}}: init = IDLE\_X\_LIFT, goal = TILT\_X.
+  \item \textbf{\texttt{task\_tilt\_y.xml}}: init = IDLE\_Y\_LIFT, goal = TILT\_Y.
+\end{itemize}
+
+En ambdós fitxers el cub és present com a \textbf{obstacle estàtic}, de manera que RRT-Connect el té en compte per a la detecció de col·lisions. El paràmetre \texttt{\_Simplify Solution} s'estableix a \textbf{1} (una sola passa de simplificació): una simplificació més agressiva (valor 2) produïa camins massa rectes que xocaven amb el fixture.
+
+El moviment físic complet des que el robot agafa el cub segueix la seqüència de la figura~\ref{fig:tilt_configs}: primer s'eleva el cub $\sim$30\,mm per sobre del fixture per interpolació directa (IDLE→IDLE\_LIFT), i a continuació RRT-Connect planifica la trajectòria lliure de col·lisió fins a la posició final (IDLE\_LIFT→TILT\_LIFT→TILT).
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      box/.style={rectangle, rounded corners=3pt, draw=upcblue, fill=blue!8,
+                  minimum width=2.2cm, minimum height=0.85cm,
+                  font=\small\bfseries, text centered},
+      arr/.style={-{Stealth[length=6pt]}, line width=1pt, upcblue},
+      lbl/.style={font=\scriptsize\itshape, text=black!60},
+      rrt/.style={-{Stealth[length=6pt]}, line width=1.5pt, red!70!black, dashed},
+    ]
+    \node[box] (idle)   {IDLE};
+    \node[box, right=1.4cm of idle]  (lift)  {IDLE\_LIFT};
+    \node[box, right=1.4cm of lift]  (tlift) {TILT\_LIFT};
+    \node[box, right=1.4cm of tlift] (tilt)  {TILT};
+
+    \draw[arr] (idle)  -- (lift)  node[midway,above,lbl] {eleva};
+    \draw[rrt] (lift)  -- (tlift) node[midway,above,lbl] {RRT-Connect};
+    \draw[rrt] (tlift) -- (tilt)  node[midway,above,lbl] {RRT-Connect};
+
+    \node[lbl, below=0.25cm of idle]  {cub agafat};
+    \node[lbl, below=0.25cm of lift]  {query init};
+    \node[lbl, below=0.25cm of tlift] {};
+    \node[lbl, below=0.25cm of tilt]  {query goal};
+  \end{tikzpicture}
+  \caption{Seqüència del moviment de tilt. El pas IDLE→IDLE\_LIFT s'executa per interpolació directa; la trajectòria IDLE\_LIFT→TILT\_LIFT→TILT és planificada per RRT-Connect a Kautham.}
+  \label{fig:tilt_configs}
+\end{figure}
+
+\begin{figure}[H]
+\begin{lstlisting}[language=XML, caption={Fragment de \texttt{task\_tilt\_x.xml}: query RRT-Connect de la inclinació en X. El cub és obstacle estàtic i la query especifica configuració inicial i final.}, basicstyle=\ttfamily\scriptsize]
+<Planner>
+  <Parameters>
+    <Name>omplRRTConnect</Name>
+    <Parameter name="_Max Planning Time">10</Parameter>
+    <Parameter name="_Simplify Solution">1</Parameter>
+    <Parameter name="Range">0.5</Parameter>
+  </Parameters>
+  <Queries>
+    <Query>
+      <!-- init = IDLE_X_LIFT,  goal = TILT_X -->
+      <RobotControl name="ur3_right_shoulder_pan_joint"  init="0.5672" goal="0.6279"/>
+      <RobotControl name="ur3_right_shoulder_lift_joint" init="0.4214" goal="0.4575"/>
+      <RobotControl name="ur3_right_elbow_joint"         init="0.5854" goal="0.7507"/>
+      <RobotControl name="ur3_right_wrist_1_joint"       init="0.4098" goal="0.3364"/>
+      <RobotControl name="ur3_right_wrist_2_joint"       init="0.3749" goal="0.2536"/>
+      <RobotControl name="ur3_right_wrist_3_joint"       init="0.5710" goal="0.6526"/>
+      <RobotControl name="ur3_right_gripper_joint"       init="0.500"  goal="0.500"/>
+    </Query>
+  </Queries>
+</Planner>
+\end{lstlisting}
+\end{figure}
+
+Un cop Kautham ha planificat la trajectòria, el script \texttt{tilt\_x\_ur3.py} o \texttt{tilt\_y\_ur3.py} envia els waypoints al controlador del UR3 via socket TCP (port 30002) com a programa URScript.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Moviments per interpolació directa}
+% ─────────────────────────────────────────────────────────────────────────────
+
+La resta de moviments no requereixen planificació de col·lisions i s'executen sense Kautham:
+
+\subsubsection{Pick, place i change\_pick}
+
+Les accions \texttt{pick\_x}, \texttt{pick\_y}, \texttt{place} i \texttt{change\_pick} s'executen per interpolació directa entre configuracions predefinides i mesurades al robot real (IDLE\_X, IDLE\_Y, HOME). La trajectòria no presenta obstacles intermedis, de manera que la interpolació lineal en l'espai articular és suficient.
+
+\subsubsection{Girs de canell}
+
+Les accions \texttt{execute\_*} s'executen directament via URScript com a rotacions relatives del joint 6 ($\pm90°$ o $180°$), mentre la pinça aguanta la meitat superior del cub i el fixture subjecta la inferior. Kautham no intervé en aquests moviments.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=13cm]{tiltx.png}
+  \caption{Visualització de l'espai de treball a Kautham: robot UR3, fixture i cub de Rubik 2$\times$2, amb la trajectòria planificada per RRT-Connect per al moviment de tilt.}
+  \label{fig:kautham_gui}
+\end{figure}
+
+
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Orquestrador d'execució}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+L'orquestrador és el component que tanca el bucle entre la planificació simbòlica i l'execució física: rep el pla d'accions PDDL generat pel Nivell 2 i el tradueix en una seqüència de crides als scripts de control del robot.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Pipeline d'execució: \texttt{try\_robot\_solve.py}}
+% ─────────────────────────────────────────────────────────────────────────────
+
+El punt d'entrada del sistema per a cada nou problema és \texttt{robot/try\_robot\_solve.py}. Per a cada barreja del cub, aquest script executa el pipeline complet dels tres nivells i genera automàticament el script d'execució per al robot:
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      box/.style={rectangle, rounded corners=3pt, draw=upcblue, fill=blue!8,
+                  minimum width=5.5cm, minimum height=0.8cm,
+                  font=\small, text centered},
+      arr/.style={-{Stealth[length=6pt]}, line width=1pt, upcblue},
+      lbl/.style={font=\scriptsize\itshape, text=black!55, align=left},
+    ]
+    \node[box] (bfs)   {\textbf{BFS} \texttt{(solver.py)}};
+    \node[box, below=0.6cm of bfs]  (prob) {\texttt{generate\_manipulation\_problem()}};
+    \node[box, below=0.6cm of prob] (fd)   {\texttt{run\_fast\_downward()}};
+    \node[box, below=0.6cm of fd]   (orch) {\texttt{orchestrator.generate\_execution\_script()}};
+    \node[box, below=0.6cm of orch, fill=green!10, draw=green!60!black] (exec) {\texttt{execute\_plan.py}};
+
+    \draw[arr] (bfs)   -- (prob) node[midway,right=0.2cm,lbl] {solució BFS};
+    \draw[arr] (prob)  -- (fd)   node[midway,right=0.2cm,lbl] {\texttt{manipulation\_problem.pddl}};
+    \draw[arr] (fd)    -- (orch) node[midway,right=0.2cm,lbl] {pla PDDL (accions físiques)};
+    \draw[arr] (orch)  -- (exec) node[midway,right=0.2cm,lbl] {generat automàticament};
+
+    \node[lbl, left=0.4cm of bfs]  {Nivell 1};
+    \node[lbl, left=0.4cm of prob] {Nivell 2};
+    \node[lbl, left=0.4cm of fd]   {Nivell 2};
+    \node[lbl, left=0.4cm of orch] {Orquestrador};
+    \node[lbl, left=0.4cm of exec] {Execució};
+  \end{tikzpicture}
+  \caption{Pipeline d'execució de \texttt{try\_robot\_solve.py}. A partir de la barreja inicial, genera automàticament \texttt{execute\_plan.py} amb la seqüència de crides als scripts del robot.}
+  \label{fig:pipeline}
+\end{figure}
+
+Un cop generat \texttt{execute\_plan.py}, l'usuari l'executa manualment per enviar les accions al robot real. Les inclinacions (\texttt{tilt\_x}, \texttt{tilt\_y}) requereixen que prèviament s'hagi consultat Kautham per obtenir la trajectòria lliure de col·lisió.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Mapatge d'accions PDDL a scripts}
+% ─────────────────────────────────────────────────────────────────────────────
+
+El fitxer \texttt{robot/orchestrator.py} defineix la taula de correspondència entre els noms d'acció PDDL i els mòduls Python de la carpeta \texttt{scripts/}:
+
+\begin{table}[H]
+  \centering
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Acció PDDL} & \textbf{Script} \\
+    \midrule
+    \texttt{pick\_x}, \texttt{pick\_y}             & \texttt{pick\_x.py}, \texttt{pick\_y.py} \\
+    \texttt{place}                                  & \texttt{place.py} \\
+    \texttt{change\_pick}                           & \texttt{turn\_90\_regrasp.py} \\
+    \texttt{tilt\_x}, \texttt{tilt\_x\_pos/neg}    & \texttt{tilt\_x\_ur3.py} \\
+    \texttt{tilt\_y}, \texttt{tilt\_y\_pos/neg}    & \texttt{tilt\_y\_ur3.py} \\
+    \texttt{execute\_*} (gir simple)                & \texttt{turn\_clockwise.py} \\
+    \texttt{execute\_*\_prime} (gir invers)         & \texttt{turn\_counterclockwise.py} \\
+    \texttt{execute\_*2} (gir doble)                & \texttt{turn\_180.py} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Mapatge d'accions PDDL als scripts d'execució del robot.}
+  \label{tab:action_mapping}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Generació i execució del pla}
+% ─────────────────────────────────────────────────────────────────────────────
+
+A partir del pla PDDL, l'orquestrador genera automàticament el fitxer \texttt{robot/execute\_plan.py}, que conté la llista ordenada de tuples \texttt{(acció, mòdul)} i s'executa seqüencialment. El pla sempre comença i acaba amb un \texttt{place} per garantir que el cub queda al fixture en un estat conegut.
+
+\begin{figure}[H]
+\begin{lstlisting}[language=Python, caption={Fragment de \texttt{execute\_plan.py} autogenerat. Cada tupla associa el nom d'acció PDDL amb el mòdul Python que l'executa al robot real.}, basicstyle=\ttfamily\scriptsize]
+PLAN_ACTIONS = [
+    ('place',           'place'),
+    ('pick_y',          'pick_y'),
+    ('execute_u_prime', 'turn_counterclockwise'),
+    ('tilt_x',          'tilt_x_ur3'),
+    ('pick_x',          'pick_x'),
+    ('execute_l',       'turn_clockwise'),
+    ('tilt_y',          'tilt_y_ur3'),
+    ...
+    ('place',           'place'),
+]
+\end{lstlisting}
+\end{figure}
+
+Cada mòdul s'importa dinàmicament amb \texttt{importlib} en el moment d'execució. Si un mòdul ja havia estat importat en un pas anterior, es recarrega (\texttt{importlib.reload}) per garantir que s'executa de nou des del principi. En cas d'error en qualsevol pas, l'execució s'atura immediatament i es notifica l'acció fallida.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Scripts d'execució}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Tots els scripts de la carpeta \texttt{scripts/} segueixen el mateix patró: obren un socket TCP a \texttt{10.10.73.239:30002} (Secondary Client Interface del UR3), envien un programa URScript com a cadena de text i esperen que el robot l'executi.
+
+\subsubsection{\texttt{pick\_x.py} i \texttt{pick\_y.py}}
+
+Mouen el robot a la configuració d'agafada sobre el fixture (IDLE\_X o IDLE\_Y) amb un \texttt{movej} i, un cop arribats, tanquen la pinça a 10\,mm via el script \texttt{gripper/pinza10UR3.py}. La diferència entre els dos és únicament la configuració articular de destí: \texttt{pick\_y} té el joint 6 girat 90° respecte \texttt{pick\_x}.
+
+\subsubsection{\texttt{place.py}}
+
+Obre la pinça a 40\,mm i mou el robot a la posició HOME via \texttt{go\_home.py}. S'executa sempre al principi i al final del pla per deixar el cub al fixture en estat conegut.
+
+\subsubsection{\texttt{tilt\_x\_ur3.py} i \texttt{tilt\_y\_ur3.py}}
+
+Executen la trajectòria de inclinació seguint una llista de \textit{waypoints} articulars (en radians) generada a partir de la trajectòria planificada per Kautham. Cada waypoint s'envia com a \texttt{movej} amb \texttt{blend=0.002\,m} per garantir fluïdesa. Un cop el robot arriba a la posició final (cub sobre el fixture en la nova orientació), s'obre la pinça a 40\,mm.
+
+\subsubsection{\texttt{turn\_clockwise.py}, \texttt{turn\_counterclockwise.py} i \texttt{turn\_180.py}}
+
+Implementen els girs de cara del cub (moviments \texttt{execute\_*}). Tots tres segueixen la mateixa seqüència de tres passos per evitar fricció i trencament del cub:
+
+\begin{enumerate}
+  \item \textbf{Elevar}: el robot puja lleugerament a una configuració intermèdia fixada, mantenint el joint 6 en la posició actual.
+  \item \textbf{Girar}: es rota el joint 6 en $+1{,}621$\,rad ($\approx+92{,}8°$), $-1{,}621$\,rad o $\pi+0{,}1$\,rad respectivament.
+  \item \textbf{Baixar}: el robot torna a la configuració original però amb el joint 6 ja rotat.
+\end{enumerate}
+
+L'angle de gir és lleugerament superior a $\pi/2$ (92,8° en lloc de 90°) per compensar el lliscament mecànic entre la pinça i el cub.
+
+\subsubsection{\texttt{turn\_90\_regrasp.py}}
+
+Implementa l'acció \texttt{change\_pick}: obre la pinça a 75\,mm, gira el joint 6 en $\pi/2$\,rad i torna a tancar la pinça a 51\,mm. Això permet canviar l'eix d'agafada de X a Y (o viceversa) sense dipositar el cub al fixture.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Interfície d'escaneig web}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+Per facilitar l'entrada de l'estat inicial del cub al sistema, s'ha desenvolupat una interfície web que permet escanejar visualment les sis cares del cub i llançar el pipeline complet des del navegador. El servidor s'inicia amb \texttt{python3 scan/2x2scaner.py} i serveix la interfície al port 8000.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Arquitectura client-servidor}
+% ─────────────────────────────────────────────────────────────────────────────
+
+El sistema segueix una arquitectura simple de dos components:
+
+\begin{itemize}
+  \item \textbf{Servidor} (\texttt{2x2scaner.py}): servidor HTTP Python basat en \texttt{http.server}. Serveix els fitxers estàtics (\texttt{index.html}, \texttt{cube-interp.js}, icones) i exposa dos endpoints POST:
+  \begin{itemize}
+    \item \texttt{POST /solve}: rep la configuració del cub en JSON, executa BFS + Fast Downward i genera \texttt{execute\_plan.py}. Retorna el pla físic d'accions.
+    \item \texttt{POST /execute}: llança \texttt{execute\_plan.py} com a subprocés i retorna el resultat de l'execució (timeout de 5 minuts).
+  \end{itemize}
+  \item \textbf{Client} (\texttt{index.html}): interfície web que accedeix a la càmera del dispositiu via \texttt{getUserMedia}, escaneja les cares del cub i es comunica amb el servidor via \texttt{fetch}.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Procés d'escaneig}
+% ─────────────────────────────────────────────────────────────────────────────
+
+La interfície guia l'usuari cara per cara (ordre: U, F, R, B, L, D). Per a cada cara:
+
+\begin{enumerate}
+  \item La càmera mostra el \textbf{previsualitzador en directe} superposat amb una graella de 2×2 cel·les.
+  \item La funció \texttt{sampleColorsFromVideo()} mostra continuament el color detectat a cada cel·la.
+  \item La funció \texttt{classifyColorRGB(r, g, b)} classifica cada píxel en un dels 6 colors del cub (blanc, groc, vermell, taronja, blau, verd) per distància euclidiana als centroides de calibratge emmagatzemats a \texttt{color\_calib.json}.
+  \item L'usuari prem \textit{Captura} per fixar els colors de la cara actual.
+  \item Si algun color es detecta malament, es pot corregir manualment fent clic a l'adhesiu del mapa 2D.
+\end{enumerate}
+
+Un cop les sis cares estan capturades i validades (cada color apareix exactament 4 vegades), el botó \textit{Resolve} envia la configuració al servidor.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Calibratge de colors}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Les condicions d'il·luminació afecten directament la classificació de colors. Per adaptar-se a l'entorn, la pàgina \texttt{calibrate.html} permet capturar mostres de cada color del cub real i desar-ne els centroides RGB a \texttt{color\_calib.json}. Alternativament, \texttt{USBCameraScanner.py} ofereix un mode de calibratge (\texttt{--calibrate}) per a càmeres USB externes, útil quan la càmera integrada no té prou qualitat.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Resolució i execució des de la web}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Quan l'usuari prem \textit{Resolve}, la funció \texttt{sendToSolver()} envia un \texttt{POST /solve} amb les sis cares en JSON. El servidor:
+
+\begin{enumerate}
+  \item Construeix la tupla d'estat de 24 enters via \texttt{build\_solver\_state()}, fent la correspondència entre l'ordre de captura de la càmera i l'ordre intern del solver.
+  \item Executa el BFS bidireccional (amb timeout de 12\,s) i després Fast Downward per obtenir el pla físic d'accions.
+  \item Genera automàticament \texttt{execute\_plan.py} via \texttt{orchestrator.generate\_execution\_script()}.
+  \item Retorna el pla al client en JSON, que el mostra a la interfície.
+\end{enumerate}
+
+Finalment, el botó \textit{Execute} envia un \texttt{POST /execute} que llança \texttt{execute\_plan.py} com a subprocés, enviant les accions al robot real seqüencialment.
+
+\imgplaceholder[13cm]{Captura de la interfície web d'escaneig mostrant el previsualitzador de càmera, la graella 2×2 i el mapa 2D del cub}{Interfície web d'escaneig: previsualitzador de càmera en directe, graella de captura i mapa 2D per revisar i corregir els colors detectats.}
+
+% ═══════════════════════════════════════════════════════════════════════════════
+%  (Continua amb la resta de seccions...)
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\end{document}
