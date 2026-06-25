@@ -340,6 +340,16 @@ Els moviments del cub de Rubik segueixen la \textbf{notació de Singmaster}, àm
   \label{fig:move_example}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=8cm]{notacio2x2.png}
+  \caption{Notació completa dels moviments del cub de Rubik 2$\times$2.}
+  \label{fig:notacio2x2}
+\end{figure}
+
+
+
+
 % ─────────────────────────────────────────────────────────────────────────────
 \subsection{Accions físiques del robot}
 % ─────────────────────────────────────────────────────────────────────────────
@@ -348,7 +358,7 @@ A diferència dels moviments abstractes del cub, el robot UR3 treballa amb un co
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{lp{9cm}}
+  \begin{tabular}{lp{8cm}}
     \toprule
     \textbf{Acció} & \textbf{Descripció} \\
     \midrule
@@ -369,9 +379,9 @@ Les figures~\ref{fig:holding_xy} i~\ref{fig:tilt_xy} mostren les dues orientacio
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=6cm]{idle_x.jpeg}
+  \includegraphics[width=5cm]{idle_x.jpeg}
   \hfill
-  \includegraphics[width=6cm]{idle_y.jpeg}
+  \includegraphics[width=5cm]{idle_y.jpeg}
   \caption{Dues orientacions d'agafada de la pinça OnRobot RG2 sobre el cub: \textit{holding-X} (eix X) i \textit{holding-Y} (eix Y).}
   \label{fig:holding_xy}
 \end{figure}
@@ -379,9 +389,9 @@ Les figures~\ref{fig:holding_xy} i~\ref{fig:tilt_xy} mostren les dues orientacio
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=6cm]{tiltx_real.jpeg}
+  \includegraphics[width=5cm]{tiltx_real.jpeg}
   \hfill
-  \includegraphics[width=6cm]{tilty_real.jpeg}
+  \includegraphics[width=5cm]{tilty_real.jpeg}
   \caption{Accions de inclinació del cub: \texttt{tilt\_x} gira la cara esquerra a la part superior; \texttt{tilt\_y} gira la cara frontal a la part superior.}
   \label{fig:tilt_xy}
 \end{figure}
@@ -415,7 +425,7 @@ La figura~\ref{fig:corner_ufr} mostra visualment els tres adhesius del cantó UF
         {\texttt{#4}};
     }
     % Cel·la ressaltada (vèrtex UFR): mateix format però color fort i vora gruixuda
-    \newcommand{\highlight}[2]{%
+    \newcommand{\highlight}[3]{%
       \fill[yellow!80!orange, draw=black, line width=1.2pt]
         (#1*\s, #2*\s) rectangle (#1*\s+\s, #2*\s+\s);
       \node[font=\tiny\bfseries] at (#1*\s+0.5*\s, #2*\s+0.5*\s)
@@ -1327,14 +1337,18 @@ Finalment, el botó \textit{Execute} envia un \texttt{POST /execute} que llança
   \includegraphics[width=13cm]{web1.png}
   \caption{Interfície web d'escaneig: previsualitzador de càmera en directe, graella de captura i mapa 2D per revisar i corregir els colors detectats.}
   \label{fig:scanner}
-
+\end{figure}
+% ═══════════════════════════════════════════════════════════════════════════════
+%  (Continua amb la resta de seccions...)
+% 
 
 \section{Demostració de l'execució}
 
 Per validar la solució del cub de Rubik amb el braç robòtic, hem registrat
-dos vídeos que mostren l'execució completa del pla: un en \textbf{simulació}
-i un altre amb el \textbf{robot real}. Feu clic sobre cada imatge per accedir
-al vídeo corresponent.
+tres vídeos que mostren l'execució completa del pla: un en \textbf{simulació},
+un amb una execució bàsica del \textbf{robot real} i una demo real més
+complexa, amb una barreja menys trivial del cub. Feu clic sobre cada imatge o
+requadre per accedir al vídeo corresponent.
 
 \begin{figure}[htbp]
     \centering
@@ -1352,6 +1366,15 @@ al vídeo corresponent.
         \includegraphics[width=\textwidth]{img/miniatura_real.png}}
     \caption{Execució amb el robot real UR3}
     \label{fig:video-real}
+\end{subfigure}
+    \vspace{0.5cm}
+
+    \begin{subfigure}[t]{0.7\textwidth}
+    \centering
+    \href{https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view?usp=sharing}{%{%
+        \includegraphics[width=\textwidth]{img/miniatura_demo_final.png}}
+    \caption{Execució real amb una barreja més complexa}
+    \label{fig:video-real-complex}
 \end{subfigure}
     \caption{Vídeos de l'execució del pla. Cliqueu sobre cada miniatura per
     reproduir el vídeo corresponent.}
@@ -1373,10 +1396,10 @@ L'execució real (Figura~\ref{fig:video-real}) s'ha realitzat amb un braç
 \textbf{UR3} dels laboratoris de la facultat, equipat amb la pinça
 \textbf{OnRobot RG2}. La mateixa trajectòria validada en simulació s'envia al
 controlador del robot i se sincronitzen els moviments del braç amb les
-obertures i tancaments de la pinça per manipular el cub. El vídeo mostra la
-resolució completa sobre el muntatge físic.
+obertures i tancaments de la pinça per manipular el cub. Els vídeos mostren la
+resolució completa sobre el muntatge físic, incloent-hi una demo addicional
+amb una configuració inicial més complexa i representativa d'un cas menys
+trivial (Figura~\ref{fig:video-real-complex}).
 
-
-═══════════════════════════════════════════════════════════════════════════════
 
 \end{document}
