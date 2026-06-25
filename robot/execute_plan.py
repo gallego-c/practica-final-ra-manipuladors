@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 execute_plan.py - Script de ejecución autogenerado para el robot UR3.
-Generado el: 2026-06-25 00:56:15
+Generado el: 2026-06-25 14:47:11
 """
 import sys
 import os
@@ -20,13 +20,16 @@ PLAN_ACTIONS = [
     ('pick_x', 'pick_x'),
     ('tilt_x', 'tilt_x_ur3'),
     ('pick_y', 'pick_y'),
-    ('execute_l_prime', 'turn_counterclockwise'),
+    ('execute_l', 'turn_clockwise'),
+    ('tilt_x', 'tilt_x_ur3'),
+    ('pick_y', 'pick_y'),
+    ('execute_f', 'turn_clockwise'),
+    ('tilt_x', 'tilt_x_ur3'),
+    ('pick_y', 'pick_y'),
+    ('execute_r', 'turn_clockwise'),
     ('tilt_x', 'tilt_x_ur3'),
     ('pick_x', 'pick_x'),
-    ('execute_d', 'turn_clockwise'),
-    ('tilt_y', 'tilt_y_ur3'),
-    ('pick_x', 'pick_x'),
-    ('execute_l2', 'turn_180'),
+    ('execute_b', 'turn_clockwise'),
     ('place', 'place')
 ]
 
