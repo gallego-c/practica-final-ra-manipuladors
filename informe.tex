@@ -877,6 +877,21 @@ El domini defineix dos grups d'accions:
   \label{tab:pddl_manip}
 \end{table}
 
+\paragraph{Restriccions de l'eix d'agafada i dinàmica de rotació del gripper:}
+
+La modelització física del domini PDDL inclou dues restriccions cinemàtiques crucials del nostre muntatge de laboratori, garantint que el planificador Fast Downward generi seqüències físicament viables:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Dependència eix-agafada/eix-inclinació:} Per realitzar una inclinació \texttt{tilt\_x} (volcar el cub al voltant de l'eix X), la pinça OnRobot RG2 ha d'estar premsant el cub necessàriament al llarg de l'eix X (\texttt{holding-x}), el que obliga al planificador a haver executat un \texttt{pick\_x} previ. Igualment, per a un \texttt{tilt\_y} és precondició estar en configuració \texttt{holding-y} (recollit mitjançant \texttt{pick\_y}). Això modela la restricció física del braç: per a cada eix de volcat, els dits del gripper han de pressionar les cares paral·leles adequades per acompanyar la rotació de la articulació del canell sense col·lisionar amb el fixture de la taula.
+  
+  \item \textbf{Canvi passiu de l'eix d'agafada per rotació de 90°:} Quan el robot té el cub agafat i realitza una rotació de canell de 90° (\texttt{execute\_U}, \texttt{execute\_U\_prime}, etc.), la pinça gira solidàriament amb la meitat superior del cub, mentre que la meitat inferior es manté estàtica al fixture. Físicament, un cop finalitzat el gir de 90°, l'eix dels dits de la pinça respecte a la base s'ha girat exactament 90°. Això s'ha modelat de forma molt elegant al domini PDDL com un efecte passiu:
+  \begin{lstlisting}[language=Lisp, basicstyle=\ttfamily\scriptsize]
+(when (holding-x) (and (not (holding-x)) (holding-y)))
+(when (holding-y) (and (not (holding-y)) (holding-x)))
+  \end{lstlisting}
+  Això estalvia girs de canell i reagafades innecessàries (\texttt{change\_pick}), ja que el planificador sap que després d'un gir de 90° l'eix d'agafada canvia automàticament de X a Y (o viceversa). Per contra, en rotacions de 180° (\texttt{execute\_U2}, etc.), la pinça torna a quedar alineada amb el mateix eix, per la qual cosa aquest efecte no s'aplica, mantenint una coherència física total.
+\end{enumerate}
+
 \paragraph{Accions d'execució de moviments Rubik i optimització de cares oposades:}
 
 Hi ha 18 accions \texttt{execute\_*}, una per a cada moviment estàndard (U, U', U2, D, D', D2, R, \ldots, B2). Totes comparteixen la mateixa estructura: requereixen que el robot tingui el cub agafat i que la cara objectiu estigui a la part superior, i marquen el pas actual com a completat.
