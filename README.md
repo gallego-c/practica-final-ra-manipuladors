@@ -2,9 +2,10 @@
 
 Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical **2×2 Rubik’s cube** with a **UR3** arm and **OnRobot RG2** gripper: scan → optimal cube solution → PDDL physical plan → Kautham trajectories → robot execution.
 
-![UR3 solving a complex 2x2 scramble](assets/gifs/demo-real-complex.gif)
-
-*Real robot demo (complex scramble) — mild speed-up (~4×). Full video: [Drive](https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view)*
+<p align="center">
+  <img src="assets/gifs/demo-real-complex.gif" width="560" alt="UR3 solving a complex 2x2 scramble" />
+</p>
+<p align="center"><em>Real robot demo (complex scramble, ~4×) — <a href="https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view">full video on Drive</a></em></p>
 
 ---
 
@@ -17,9 +18,10 @@ Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical *
 | 3 | Collision-free joint motion | Kautham + OMPL RRT-Connect |
 | UI | Scan faces, review colors, trigger solve/execute | Web app (`scan/`) |
 
-![Web scanner UI](assets/images/web/scanner-ui.png)
-
-*Scanner UI: live camera grid, 2D cross map, Level‑1 moves and Level‑2 robot plan.*
+<p align="center">
+  <img src="assets/images/web/scanner-ui.png" width="620" alt="Web scanner UI" />
+</p>
+<p align="center"><em>Scanner UI: live camera grid, 2D cross map, Level‑1 moves and Level‑2 robot plan.</em></p>
 
 ---
 
@@ -30,24 +32,33 @@ Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical *
     - Solves any valid scramble in less than a millisecond by fixing the bottom-back-left (DBL) corner to reduce the search space.
     - **Corrected 3D Symmetries**: The state permutations, face rotations, and whole-cube rotations are mathematically modeled to match the physical rotations of a 3D Rubik's cube.
 
-![2x2 cube move notation](assets/images/notation/cube-move-notation.png)
+<p align="center">
+  <img src="assets/images/notation/cube-move-notation.png" width="480" alt="2x2 cube move notation" />
+</p>
 
 2. **Robotic Task Planning (Level 2 - PDDL & Fast Downward)**:
    - Models the physical constraints of a vertical-only top-down robotic gripper (UR3 + OnRobot RG2) and table base fixture in [manipulation_domain.pddl](robot/manipulation_domain.pddl).
    - Fast Downward plans the physical sequence of reorientations (`tilt_x`, `tilt_y`, `pick`, `place`) and regrasps to bring the required faces to the top layer for wrist rotations.
 
-![tilt_x on real robot](assets/images/hardware/tilt-x-real.jpeg)
+<p align="center">
+  <img src="assets/images/hardware/holding-x.jpeg" width="280" alt="Holding-X grasp" />
+  <img src="assets/images/hardware/holding-y.jpeg" width="280" alt="Holding-Y grasp" />
+</p>
+<p align="center"><em>Holding-X vs holding-Y grasps on the real cell.</em></p>
 
-![tilt_y on real robot](assets/images/hardware/tilt-y-real.jpeg)
-
-*`tilt_x` (left → top) and `tilt_y` (front → top) on the real setup.*
+<p align="center">
+  <img src="assets/images/hardware/tilt-x-real.jpeg" width="280" alt="tilt_x on real robot" />
+  <img src="assets/images/hardware/tilt-y-real.jpeg" width="280" alt="tilt_y on real robot" />
+</p>
+<p align="center"><em><code>tilt_x</code> (left → top) and <code>tilt_y</code> (front → top).</em></p>
 
 3. **Motion Planning (Level 3 - OMPL RRT-Connect & Kautham)**:
    - Interfaces with **Kautham** through ROS 2 to plan collision-free joint trajectories, generating a native taskfile with the precise physical grasp, lift, tilt, and wrist rotation curves.
 
-![Kautham RRT-Connect tilt trajectory](assets/images/simulation/kautham-tilt-trajectory.png)
-
-*Kautham: RRT-Connect trajectory for a tilt in the UR3 cell.*
+<p align="center">
+  <img src="assets/images/simulation/kautham-tilt-trajectory.png" width="560" alt="Kautham RRT-Connect tilt trajectory" />
+</p>
+<p align="center"><em>Kautham: RRT-Connect trajectory for a tilt in the UR3 cell.</em></p>
 
 4. **Web Scanner Interface**:
    - Web application serving a 2D scanner calibration grid, interactive 3D preview, and real-time visualization of Level 1 (standard moves) and Level 2 (physical robot actions) plans.
@@ -56,19 +67,15 @@ Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical *
 
 ## Demos
 
-![Kautham simulation playback](assets/gifs/demo-simulation.gif)
+<p align="center">
+  <img src="assets/gifs/demo-simulation.gif" width="520" alt="Kautham simulation playback" />
+</p>
+<p align="center"><em>Kautham simulation (~4×) — <a href="https://drive.google.com/file/d/1iu62JWyneBOtNVx8bEn5hemZH1a0-Awy/view">Drive</a></em></p>
 
-*Kautham simulation of the planned trajectories (≈4×). Full: [Drive](https://drive.google.com/file/d/1iu62JWyneBOtNVx8bEn5hemZH1a0-Awy/view)*
-
-![Basic real-robot execution](assets/gifs/demo-real-basic.gif)
-
-*Basic real-robot run (≈5×). Full: [Drive](https://drive.google.com/file/d/1bTmDpjsrtFj3eMfIZJTSGgMCqJCQd3Uv/view)*
-
-![Holding-X grasp on the UR3](assets/images/hardware/holding-x.jpeg)
-
-![Holding-Y grasp on the UR3](assets/images/hardware/holding-y.jpeg)
-
-*Physical cell: UR3 + RG2 — `holding-X` vs `holding-Y`.*
+<p align="center">
+  <img src="assets/gifs/demo-real-basic.gif" width="220" alt="Basic real-robot execution" />
+</p>
+<p align="center"><em>Basic real-robot run (~5×) — <a href="https://drive.google.com/file/d/1bTmDpjsrtFj3eMfIZJTSGgMCqJCQd3Uv/view">Drive</a></em></p>
 
 Media catalog: [`assets/README.md`](assets/README.md).
 
@@ -79,10 +86,9 @@ Media catalog: [`assets/README.md`](assets/README.md).
 ```
 robotica/cub/
 ├── README.md                          # Project documentation
-├── assets/                            # Images, GIFs, demo videos for docs
+├── assets/                            # Images + GIFs for docs (videos via Drive)
 │   ├── gifs/                          # Sped-up README previews
-│   ├── images/                        # notation, hardware, simulation, web, demos
-│   └── videos/                        # Full Kautham / real-robot recordings
+│   └── images/                        # notation, hardware, simulation, web, demos
 ├── requirements.txt                   # Dependency and system setup specification
 ├── robot/
 │   ├── solver.py                      # Level 1: Optimal Bidirectional BFS Rubik's solver
