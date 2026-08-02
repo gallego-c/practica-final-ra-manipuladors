@@ -1,25 +1,76 @@
 # UR3 Robot Arm 2×2 Rubik's Cube Solver
 
-This repository contains the Task and Motion Planning (TAMP) implementation for a UR3 robotic arm to solve a 2×2 Rubik's cube under physical constraints (such as a top-down vertical gripper and a table fixture).
+Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical **2×2 Rubik’s cube** with a **UR3** arm and **OnRobot RG2** gripper: scan → optimal cube solution → PDDL physical plan → Kautham trajectories → robot execution.
+
+![UR3 solving a complex 2x2 scramble](assets/gifs/demo-real-complex.gif)
+
+*Real robot demo (complex scramble) — mild speed-up (~4×). Full video: [Drive](https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view)*
+
+---
+
+## Pipeline overview
+
+| Level | Role | Tech |
+|-------|------|------|
+| 1 | Abstract cube solution (face turns) | Bidirectional BFS (`robot/solver.py`) |
+| 2 | Physical actions under gripper/fixture constraints | PDDL + Fast Downward |
+| 3 | Collision-free joint motion | Kautham + OMPL RRT-Connect |
+| UI | Scan faces, review colors, trigger solve/execute | Web app (`scan/`) |
+
+![Web scanner UI](assets/images/web/scanner-ui.png)
+
+*Scanner UI: live camera grid, 2D cross map, Level‑1 moves and Level‑2 robot plan.*
 
 ---
 
 ## Key Features
 
 1. **Agnostic Rubik's Solver (Level 1 - Bidirectional BFS)**:
-   - Uses an optimal **Bidirectional BFS (Breadth-First Search)** algorithm to solve the cube.
-   - Solves any valid scramble in less than a millisecond by fixing the bottom-back-left (DBL) corner to reduce the search space.
-   - **Corrected 3D Symmetries**: The state permutations, face rotations, and whole-cube rotations are mathematically modeled to match the physical rotations of a 3D Rubik's cube.
+    - Uses an optimal **Bidirectional BFS (Breadth-First Search)** algorithm to solve the cube.
+    - Solves any valid scramble in less than a millisecond by fixing the bottom-back-left (DBL) corner to reduce the search space.
+    - **Corrected 3D Symmetries**: The state permutations, face rotations, and whole-cube rotations are mathematically modeled to match the physical rotations of a 3D Rubik's cube.
+
+![2x2 cube move notation](assets/images/notation/cube-move-notation.png)
 
 2. **Robotic Task Planning (Level 2 - PDDL & Fast Downward)**:
-   - Models the physical constraints of a vertical-only top-down robotic gripper (UR3 + Robotiq 85) and table base fixture in [manipulation_domain.pddl](robot/manipulation_domain.pddl).
+   - Models the physical constraints of a vertical-only top-down robotic gripper (UR3 + OnRobot RG2) and table base fixture in [manipulation_domain.pddl](robot/manipulation_domain.pddl).
    - Fast Downward plans the physical sequence of reorientations (`tilt_x`, `tilt_y`, `pick`, `place`) and regrasps to bring the required faces to the top layer for wrist rotations.
+
+![tilt_x on real robot](assets/images/hardware/tilt-x-real.jpeg)
+
+![tilt_y on real robot](assets/images/hardware/tilt-y-real.jpeg)
+
+*`tilt_x` (left → top) and `tilt_y` (front → top) on the real setup.*
 
 3. **Motion Planning (Level 3 - OMPL RRT-Connect & Kautham)**:
    - Interfaces with **Kautham** through ROS 2 to plan collision-free joint trajectories, generating a native taskfile with the precise physical grasp, lift, tilt, and wrist rotation curves.
 
+![Kautham RRT-Connect tilt trajectory](assets/images/simulation/kautham-tilt-trajectory.png)
+
+*Kautham: RRT-Connect trajectory for a tilt in the UR3 cell.*
+
 4. **Web Scanner Interface**:
    - Web application serving a 2D scanner calibration grid, interactive 3D preview, and real-time visualization of Level 1 (standard moves) and Level 2 (physical robot actions) plans.
+
+---
+
+## Demos
+
+![Kautham simulation playback](assets/gifs/demo-simulation.gif)
+
+*Kautham simulation of the planned trajectories (≈4×). Full: [Drive](https://drive.google.com/file/d/1iu62JWyneBOtNVx8bEn5hemZH1a0-Awy/view)*
+
+![Basic real-robot execution](assets/gifs/demo-real-basic.gif)
+
+*Basic real-robot run (≈5×). Full: [Drive](https://drive.google.com/file/d/1bTmDpjsrtFj3eMfIZJTSGgMCqJCQd3Uv/view)*
+
+![Holding-X grasp on the UR3](assets/images/hardware/holding-x.jpeg)
+
+![Holding-Y grasp on the UR3](assets/images/hardware/holding-y.jpeg)
+
+*Physical cell: UR3 + RG2 — `holding-X` vs `holding-Y`.*
+
+Media catalog: [`assets/README.md`](assets/README.md).
 
 ---
 
@@ -28,6 +79,10 @@ This repository contains the Task and Motion Planning (TAMP) implementation for 
 ```
 robotica/cub/
 ├── README.md                          # Project documentation
+├── assets/                            # Images, GIFs, demo videos for docs
+│   ├── gifs/                          # Sped-up README previews
+│   ├── images/                        # notation, hardware, simulation, web, demos
+│   └── videos/                        # Full Kautham / real-robot recordings
 ├── requirements.txt                   # Dependency and system setup specification
 ├── robot/
 │   ├── solver.py                      # Level 1: Optimal Bidirectional BFS Rubik's solver

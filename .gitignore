@@ -12,3 +12,6 @@ env/
 
 # System files
 .DS_Store
+
+# Full demo videos (too large for GitHub; keep GIFs + Drive links in README)
+assets/videos/
