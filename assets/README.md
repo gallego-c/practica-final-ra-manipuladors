@@ -8,7 +8,7 @@ Sped-up palette GIFs for GitHub README embedding.
 
 | File | Source | Settings | Size |
 |------|--------|----------|------|
-| `demo-real-complex.gif` | `videos/real-complex.mp4` | highlight ~45 s of robot work, **~4×**, 440 px, 8 fps | ~6 MB |
+| `demo-real-complex.gif` | `videos/real-complex.mp4` | clip **0:19–1:32**, **~8×**, 480 px, 10 fps | ~6.9 MB |
 | `demo-simulation.gif` | `videos/simulation-kautham.mp4` | full clip, **4×**, 640 px, 10 fps | ~1.9 MB |
 | `demo-real-basic.gif` | `videos/real-basic.mp4` | full clip, **5×**, height 400, 8 fps | ~2.8 MB |
 

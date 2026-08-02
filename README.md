@@ -5,7 +5,7 @@ Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical *
 <p align="center">
   <img src="assets/gifs/demo-real-complex.gif" width="560" alt="UR3 solving a complex 2x2 scramble" />
 </p>
-<p align="center"><em>Real robot demo (complex scramble, ~4×) — <a href="https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view">full video on Drive</a></em></p>
+<p align="center"><em>Real robot demo (complex scramble, 0:19–1:32 sped up) — <a href="https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view">full video on Drive</a></em></p>
 
 ---
 
@@ -67,15 +67,18 @@ Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical *
 
 ## Demos
 
-<p align="center">
-  <img src="assets/gifs/demo-simulation.gif" width="520" alt="Kautham simulation playback" />
-</p>
-<p align="center"><em>Kautham simulation (~4×) — <a href="https://drive.google.com/file/d/1iu62JWyneBOtNVx8bEn5hemZH1a0-Awy/view">Drive</a></em></p>
-
-<p align="center">
-  <img src="assets/gifs/demo-real-basic.gif" width="220" alt="Basic real-robot execution" />
-</p>
-<p align="center"><em>Basic real-robot run (~5×) — <a href="https://drive.google.com/file/d/1bTmDpjsrtFj3eMfIZJTSGgMCqJCQd3Uv/view">Drive</a></em></p>
+<table>
+  <tr>
+    <td align="center" valign="top" width="65%">
+      <img src="assets/gifs/demo-simulation.gif" width="420" alt="Kautham simulation playback" /><br/>
+      <em>Kautham simulation — <a href="https://drive.google.com/file/d/1iu62JWyneBOtNVx8bEn5hemZH1a0-Awy/view">Drive</a></em>
+    </td>
+    <td align="center" valign="top" width="35%">
+      <img src="assets/gifs/demo-real-basic.gif" width="180" alt="Basic real-robot execution" /><br/>
+      <em>Real robot (basic) — <a href="https://drive.google.com/file/d/1bTmDpjsrtFj3eMfIZJTSGgMCqJCQd3Uv/view">Drive</a></em>
+    </td>
+  </tr>
+</table>
 
 Media catalog: [`assets/README.md`](assets/README.md).
 
