@@ -5,7 +5,7 @@ Hierarchical **Task and Motion Planning (TAMP)** system that solves a physical *
 <p align="center">
   <img src="assets/gifs/demo-real-complex.gif" width="560" alt="UR3 solving a complex 2x2 scramble" />
 </p>
-<p align="center"><em>Real robot demo (complex scramble, 0:19–1:32 sped up) — <a href="https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view">full video on Drive</a></em></p>
+<p align="center"><em>Real robot demo (complex scramble, sped up) — <a href="https://drive.google.com/file/d/1kVuA_HTYCjWttAMZSw8lqLtLuxzHSrzg/view">full video on Drive</a></em></p>
 
 ---
 
